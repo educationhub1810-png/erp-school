@@ -2,7 +2,8 @@ import type { NextAuthConfig } from "next-auth";
 import { ROLE_DASHBOARDS, ROLE_ALLOWED_PREFIXES, type AppRole } from "@/lib/roles";
 
 const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password"];
-const PUBLIC_API_PATHS = ["/api/public"];
+// These paths are accessible to everyone regardless of session state
+const OPEN_PATHS = ["/api/public", "/api/admin-access", "/admin-access"];
 
 // Lightweight config — no Prisma, safe for Edge Runtime (middleware)
 export const authConfig = {
@@ -15,7 +16,7 @@ export const authConfig = {
     authorized({ auth, request }) {
       const { pathname } = request.nextUrl;
 
-      if (PUBLIC_API_PATHS.some((p) => pathname.startsWith(p))) return true;
+      if (OPEN_PATHS.some((p) => pathname.startsWith(p))) return true;
 
       const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 
@@ -52,6 +53,7 @@ export const authConfig = {
         token.id = user.id;
         token.role = (user as { role: AppRole }).role;
         token.schoolId = (user as { schoolId?: string }).schoolId;
+        token.isImpersonating = (user as { isImpersonating?: boolean }).isImpersonating ?? false;
       }
       return token;
     },
@@ -60,6 +62,7 @@ export const authConfig = {
         session.user.id = token.id as string;
         (session.user as { role: AppRole }).role = token.role as AppRole;
         (session.user as { schoolId?: string }).schoolId = token.schoolId as string | undefined;
+        (session.user as { isImpersonating?: boolean }).isImpersonating = token.isImpersonating as boolean | undefined;
       }
       return session;
     },
