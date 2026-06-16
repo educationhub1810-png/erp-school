@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
+import { getUser } from "@/lib/session";
 import { ok, badRequest, unauthorized, forbidden, notFound, serverError } from "@/lib/api-response";
 import { z } from "zod";
 
@@ -27,6 +28,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (error === "forbidden") return forbidden();
 
   const { id } = await params;
+  const user = getUser(session!);
+
+  // SCHOOL_ADMIN can only view their own school
+  if (user.role === "SCHOOL_ADMIN" && user.schoolId !== id) return forbidden();
 
   try {
     const school = await prisma.school.findUnique({
@@ -49,15 +54,26 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (error === "forbidden") return forbidden();
 
   const { id } = await params;
+  const user = getUser(session!);
+
+  // SCHOOL_ADMIN can only update their own school; cannot change isActive
+  if (user.role === "SCHOOL_ADMIN") {
+    if (user.schoolId !== id) return forbidden();
+  }
 
   try {
     const body = await req.json();
     const parsed = updateSchema.safeParse(body);
     if (!parsed.success) return badRequest(parsed.error.issues[0].message);
 
+    // Only SUPER_ADMIN can enable/disable schools
+    const data = user.role === "SCHOOL_ADMIN"
+      ? { ...parsed.data, isActive: undefined }
+      : parsed.data;
+
     const school = await prisma.school.update({
       where: { id },
-      data: { ...parsed.data, email: parsed.data.email || null },
+      data: { ...data, email: data.email || null },
     });
     return ok(school);
   } catch (e) {

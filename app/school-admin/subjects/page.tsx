@@ -1,15 +1,18 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getUser } from "@/lib/session";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export default async function SubjectsPage() {
   const session = await auth();
   if (!session) redirect("/login");
+  const { schoolId } = getUser(session);
+  if (!schoolId) redirect("/login");
 
   const subjects = await prisma.subject.findMany({
-    where: { schoolId: (session.user as any).schoolId },
+    where: { schoolId },
     orderBy: { name: "asc" },
   });
 
