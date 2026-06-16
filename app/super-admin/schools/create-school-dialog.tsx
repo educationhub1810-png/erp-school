@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -42,6 +42,7 @@ export function CreateSchoolDialog() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -49,6 +50,7 @@ export function CreateSchoolDialog() {
   });
 
   const onSubmit = async (data: FormValues) => {
+    setError(null);
     setLoading(true);
     try {
       const res = await fetch("/api/v1/schools", {
@@ -58,20 +60,23 @@ export function CreateSchoolDialog() {
       });
       const json = await res.json();
       if (!res.ok) {
-        toast.error(json.error || "Failed to create school");
+        setError(json.error || "Failed to create school");
         return;
       }
       toast.success(`School "${json.data.name}" created`);
       reset();
+      setError(null);
       setOpen(false);
       router.refresh();
+    } catch (e) {
+      setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setError(null); }}>
       <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700" />}>
         <Plus className="w-4 h-4 mr-2" /> Add School
       </DialogTrigger>
@@ -80,6 +85,12 @@ export function CreateSchoolDialog() {
           <DialogTitle>Create New School</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
+          {error && (
+            <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              {error}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-1.5">
               <Label>School Name *</Label>
