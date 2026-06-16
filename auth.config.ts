@@ -2,6 +2,7 @@ import type { NextAuthConfig } from "next-auth";
 import { ROLE_DASHBOARDS, ROLE_ALLOWED_PREFIXES, type AppRole } from "@/lib/roles";
 
 const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password"];
+const PUBLIC_API_PATHS = ["/api/public"];
 
 // Lightweight config — no Prisma, safe for Edge Runtime (middleware)
 export const authConfig = {
@@ -13,6 +14,8 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request }) {
       const { pathname } = request.nextUrl;
+
+      if (PUBLIC_API_PATHS.some((p) => pathname.startsWith(p))) return true;
 
       const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 
