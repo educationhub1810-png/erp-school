@@ -38,7 +38,7 @@ export function LoginForm() {
   const [schoolsLoading, setSchoolsLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/public/schools")
+    fetch("/api/public/schools", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => setSchools(d.data ?? []))
       .catch(() => setSchools([]))
