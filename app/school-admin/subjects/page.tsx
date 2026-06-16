@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getUser } from "@/lib/session";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 export default async function SubjectsPage() {
   const session = await auth();
@@ -32,7 +31,7 @@ export default async function SubjectsPage() {
                 <tr className="border-b bg-gray-50">
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Subject</th>
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Code</th>
-                  <th className="text-left px-6 py-3 font-medium text-gray-500">Type</th>
+                  <th className="text-right px-6 py-3 font-medium text-gray-500">Total Marks</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -40,11 +39,7 @@ export default async function SubjectsPage() {
                   <tr key={s.id} className="hover:bg-gray-50">
                     <td className="px-6 py-3 font-medium text-gray-900">{s.name}</td>
                     <td className="px-6 py-3 text-gray-500 font-mono text-xs">{s.code ?? "—"}</td>
-                    <td className="px-6 py-3">
-                      <Badge className={s.isElective ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}>
-                        {s.isElective ? "Elective" : "Core"}
-                      </Badge>
-                    </td>
+                    <td className="px-6 py-3 text-right text-gray-700">{s.totalMarks}</td>
                   </tr>
                 ))}
               </tbody>
