@@ -31,7 +31,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   const user = getUser(session!);
 
-  // SCHOOL_ADMIN can only view their own school
   if (user.role === "SCHOOL_ADMIN" && user.schoolId !== id) return forbidden();
 
   try {
@@ -57,17 +56,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params;
   const user = getUser(session!);
 
-  // SCHOOL_ADMIN can only update their own school; cannot change isActive
-  if (user.role === "SCHOOL_ADMIN") {
-    if (user.schoolId !== id) return forbidden();
-  }
+  if (user.role === "SCHOOL_ADMIN" && user.schoolId !== id) return forbidden();
 
   try {
     const body = await req.json();
     const parsed = updateSchema.safeParse(body);
     if (!parsed.success) return badRequest(parsed.error.issues[0].message);
 
-    // Only SUPER_ADMIN can enable/disable schools
     const data = user.role === "SCHOOL_ADMIN"
       ? { ...parsed.data, isActive: undefined }
       : parsed.data;
@@ -78,6 +73,25 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     });
     revalidatePath("/super-admin/schools");
     return ok(school);
+  } catch (e) {
+    return serverError(e);
+  }
+}
+
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { error } = await requireAuth(["SUPER_ADMIN"]);
+  if (error === "unauthorized") return unauthorized();
+  if (error === "forbidden") return forbidden();
+
+  const { id } = await params;
+
+  try {
+    const school = await prisma.school.findUnique({ where: { id }, select: { id: true, name: true } });
+    if (!school) return notFound("School not found");
+
+    await prisma.school.delete({ where: { id } });
+    revalidatePath("/super-admin/schools");
+    return ok({ deleted: true, name: school.name });
   } catch (e) {
     return serverError(e);
   }
