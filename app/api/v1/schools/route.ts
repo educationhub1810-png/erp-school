@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -60,6 +61,7 @@ export async function POST(req: Request) {
         email: data.email || null,
       },
     });
+    revalidatePath("/super-admin/schools");
     return created(school);
   } catch (e) {
     return serverError(e);
