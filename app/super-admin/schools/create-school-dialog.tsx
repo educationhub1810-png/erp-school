@@ -58,18 +58,24 @@ export function CreateSchoolDialog() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      const json = await res.json();
-      if (!res.ok) {
-        setError(json.error || "Failed to create school");
+      let json: { data?: { name?: string }; error?: string } = {};
+      try {
+        json = await res.json();
+      } catch {
+        setError(`Server returned an unexpected response (HTTP ${res.status}). Check Vercel logs.`);
         return;
       }
-      toast.success(`School "${json.data.name}" created`);
+      if (!res.ok) {
+        setError(json.error || `Request failed (HTTP ${res.status})`);
+        return;
+      }
+      toast.success(`School "${json.data?.name}" created`);
       reset();
       setError(null);
       setOpen(false);
       router.refresh();
     } catch (e) {
-      setError("Network error. Please try again.");
+      setError(`Network error: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setLoading(false);
     }
