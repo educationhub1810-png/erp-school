@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -11,11 +11,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Eye, EyeOff, GraduationCap, Loader2 } from "lucide-react";
+import { Eye, EyeOff, GraduationCap, Loader2, ChevronDown } from "lucide-react";
+
+interface School {
+  id: string;
+  name: string;
+  code: string;
+}
 
 const schema = z.object({
   schoolCode: z.string().optional(),
-  email: z.string().min(1, "Email or mobile is required"),
+  username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -28,12 +34,26 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [schoolsLoading, setSchoolsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/public/schools")
+      .then((r) => r.json())
+      .then((d) => setSchools(d.data ?? []))
+      .catch(() => setSchools([]))
+      .finally(() => setSchoolsLoading(false));
+  }, []);
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
+
+  const selectedSchoolCode = watch("schoolCode");
+  const isStudentSchool = !!selectedSchoolCode && selectedSchoolCode !== "";
 
   const onSubmit = async (data: FormValues) => {
     setError(null);
@@ -41,7 +61,7 @@ export function LoginForm() {
     try {
       const result = await signIn("credentials", {
         schoolCode: data.schoolCode ?? "",
-        email: data.email,
+        username: data.username,
         password: data.password,
         redirect: false,
       });
@@ -83,42 +103,66 @@ export function LoginForm() {
                 </Alert>
               )}
 
+              {/* School dropdown */}
               <div className="space-y-1.5">
-                <Label htmlFor="schoolCode">
-                  School Code{" "}
-                  <span className="text-gray-400 font-normal text-xs">
-                    (leave blank for Super Admin)
-                  </span>
-                </Label>
-                <Input
-                  id="schoolCode"
-                  placeholder="e.g. SCH001"
-                  {...register("schoolCode")}
-                  className="uppercase"
-                />
+                <Label htmlFor="schoolCode">School</Label>
+                <div className="relative">
+                  <select
+                    id="schoolCode"
+                    {...register("schoolCode")}
+                    disabled={schoolsLoading}
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm appearance-none pr-8 focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+                  >
+                    <option value="">
+                      {schoolsLoading ? "Loading schools…" : "Super Admin (no school)"}
+                    </option>
+                    {schools.map((s) => (
+                      <option key={s.id} value={s.code}>
+                        {s.name} — {s.code}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                </div>
               </div>
 
+              {/* Username */}
               <div className="space-y-1.5">
-                <Label htmlFor="email">Email / Mobile</Label>
+                <Label htmlFor="username">
+                  Username
+                  {isStudentSchool && (
+                    <span className="text-gray-400 font-normal text-xs ml-1">
+                      (admission no. for students)
+                    </span>
+                  )}
+                </Label>
                 <Input
-                  id="email"
+                  id="username"
                   type="text"
-                  placeholder="admin@school.com or 9876543210"
-                  {...register("email")}
+                  placeholder={isStudentSchool ? "Admission number or email" : "Email or mobile"}
+                  {...register("username")}
                   autoComplete="username"
                 />
-                {errors.email && (
-                  <p className="text-xs text-red-500">{errors.email.message}</p>
+                {errors.username && (
+                  <p className="text-xs text-red-500">{errors.username.message}</p>
                 )}
               </div>
 
+              {/* Password */}
               <div className="space-y-1.5">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">
+                  Password
+                  {isStudentSchool && (
+                    <span className="text-gray-400 font-normal text-xs ml-1">
+                      (DOB as DDMMYYYY for students)
+                    </span>
+                  )}
+                </Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
+                    placeholder={isStudentSchool ? "e.g. 15082005" : "Enter your password"}
                     {...register("password")}
                     autoComplete="current-password"
                     className="pr-10"
@@ -137,25 +181,14 @@ export function LoginForm() {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-xs text-red-500">
-                    {errors.password.message}
-                  </p>
+                  <p className="text-xs text-red-500">{errors.password.message}</p>
                 )}
-              </div>
-
-              <div className="flex items-center justify-end">
-                <a
-                  href="/forgot-password"
-                  className="text-xs text-indigo-600 hover:underline"
-                >
-                  Forgot password?
-                </a>
               </div>
 
               <Button
                 type="submit"
                 className="w-full bg-indigo-600 hover:bg-indigo-700"
-                disabled={loading}
+                disabled={loading || schoolsLoading}
               >
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Sign In
