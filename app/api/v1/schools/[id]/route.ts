@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, badRequest, unauthorized, forbidden, notFound, serverError } from "@/lib/api-response";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -75,6 +76,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       where: { id },
       data: { ...data, email: data.email || null },
     });
+    revalidatePath("/super-admin/schools");
     return ok(school);
   } catch (e) {
     return serverError(e);
