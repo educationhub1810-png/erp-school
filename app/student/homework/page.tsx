@@ -17,8 +17,7 @@ export default async function StudentHomeworkPage() {
     where: { classId: student.classId },
     include: {
       subject: { select: { name: true } },
-      teacher: { include: { user: { select: { name: true } } } },
-      submissions: { where: { studentId: student.id }, select: { id: true, submittedAt: true, status: true } },
+      submissions: { where: { studentId: student.id }, select: { id: true, submittedAt: true } },
     },
     orderBy: { dueDate: "asc" },
   }) : [];

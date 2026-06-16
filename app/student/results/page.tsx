@@ -23,7 +23,7 @@ export default async function StudentResultsPage() {
         },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { examId: "asc" },
   }) : [];
 
   const byExam = results.reduce((acc, r) => {
@@ -55,7 +55,7 @@ export default async function StudentResultsPage() {
       ) : (
         Object.entries(byExam).map(([exam, rows]) => {
           const total = rows.reduce((s, r) => s + (r.marksObtained ?? 0), 0);
-          const max   = rows.reduce((s, r) => s + (r.maxMarks ?? 0), 0);
+          const max   = rows.reduce((s, r) => s + (r.examSchedule?.totalMarks ?? 0), 0);
           const pct   = max > 0 ? Math.round((total / max) * 100) : 0;
 
           return (
@@ -82,7 +82,7 @@ export default async function StudentResultsPage() {
                     {rows.map((r) => (
                       <tr key={r.id} className="hover:bg-gray-50">
                         <td className="px-6 py-2.5 font-medium text-gray-900">{r.examSchedule?.subject?.name}</td>
-                        <td className="px-6 py-2.5 text-right text-gray-700">{r.marksObtained ?? "—"} / {r.maxMarks ?? "—"}</td>
+                        <td className="px-6 py-2.5 text-right text-gray-700">{r.marksObtained ?? "—"} / {r.examSchedule?.totalMarks ?? "—"}</td>
                         <td className="px-6 py-2.5">
                           <Badge className={gradeColor(r.grade)}>{r.grade ?? "—"}</Badge>
                         </td>
