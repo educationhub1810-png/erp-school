@@ -95,6 +95,19 @@ After seeding (`npm run db:seed`):
 | Teacher | `teacher@sch001.com` | `Admin@123` | `SCH001` |
 | Student | `student@sch001.com` | `Admin@123` | `SCH001` |
 
+### Login Flow
+
+The login page has three fields:
+
+1. **School** — dropdown listing all active schools. Leave as "Super Admin" to log in as platform owner.
+2. **Username**
+   - Students: admission number (e.g. `ADM2024001`)
+   - Staff / Teacher / School Admin: email or mobile number
+   - Super Admin: email or mobile number
+3. **Password**
+   - Students: date of birth in `DDMMYYYY` format (e.g. `15082005` for 15 Aug 2005)
+   - All other roles: their account password (bcrypt-hashed)
+
 ## Project Structure
 
 ```
