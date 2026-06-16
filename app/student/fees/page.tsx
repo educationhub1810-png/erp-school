@@ -16,7 +16,7 @@ export default async function StudentFeesPage() {
 
   const payments = student ? await prisma.feePayment.findMany({
     where: { studentId: student.id },
-    include: { feeStructure: { select: { name: true, amount: true, feeType: true } } },
+    include: { feeStructure: { select: { amount: true, feeType: true } } },
     orderBy: { paymentDate: "desc" },
   }) : [];
 
@@ -63,7 +63,7 @@ export default async function StudentFeesPage() {
               <tbody className="divide-y">
                 {payments.map((p) => (
                   <tr key={p.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 font-medium text-gray-900">{p.feeStructure?.name ?? "—"}</td>
+                    <td className="px-6 py-3 font-medium text-gray-900">{p.feeStructure?.feeType ?? "—"}</td>
                     <td className="px-6 py-3 text-right text-gray-700">₹{Number(p.amount).toLocaleString("en-IN")}</td>
                     <td className="px-6 py-3 text-gray-500">
                       {p.paymentDate
