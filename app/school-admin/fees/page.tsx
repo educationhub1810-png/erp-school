@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getUser } from "@/lib/session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/shared/stat-card";
@@ -9,7 +10,8 @@ import { DollarSign } from "lucide-react";
 export default async function FeesPage() {
   const session = await auth();
   if (!session) redirect("/login");
-  const schoolId = (session.user as any).schoolId;
+  const { schoolId } = getUser(session);
+  if (!schoolId) redirect("/login");
 
   const [payments, structures] = await Promise.all([
     prisma.feePayment.findMany({
