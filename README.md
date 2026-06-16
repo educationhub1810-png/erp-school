@@ -15,6 +15,7 @@ A full-stack, multi-tenant School ERP built with Next.js 16, supporting 12 roles
 | Forms | React Hook Form + Zod |
 | Font | Inter |
 
+
 ## Roles
 
 | Role | Dashboard |
