@@ -18,12 +18,12 @@ export default async function FeesPage() {
       where: { schoolId },
       include: {
         student: { include: { user: { select: { name: true } } } },
-        feeStructure: { select: { name: true } },
+        feeStructure: { select: { feeType: true } },
       },
       orderBy: { createdAt: "desc" },
       take: 50,
     }),
-    prisma.feeStructure.findMany({ where: { schoolId }, orderBy: { name: "asc" } }),
+    prisma.feeStructure.findMany({ where: { schoolId }, orderBy: { feeType: "asc" } }),
   ]);
 
   const totalCollected = payments.filter((p) => p.status === "PAID").reduce((s, p) => s + Number(p.amount), 0);
@@ -66,7 +66,7 @@ export default async function FeesPage() {
                 {payments.map((p) => (
                   <tr key={p.id} className="hover:bg-gray-50">
                     <td className="px-6 py-3 font-medium text-gray-900">{p.student?.user?.name ?? "—"}</td>
-                    <td className="px-6 py-3 text-gray-500">{p.feeStructure?.name ?? "—"}</td>
+                    <td className="px-6 py-3 text-gray-500">{p.feeStructure?.feeType ?? "—"}</td>
                     <td className="px-6 py-3 text-right text-gray-700">₹{Number(p.amount).toLocaleString("en-IN")}</td>
                     <td className="px-6 py-3 text-gray-500 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString("en-IN") : "—"}</td>
                     <td className="px-6 py-3"><Badge className={statusStyle[p.status] ?? ""}>{p.status}</Badge></td>
