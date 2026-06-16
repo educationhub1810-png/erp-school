@@ -6,7 +6,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -58,13 +57,13 @@ export function Header({ user }: HeaderProps) {
             </div>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel>
-              <p className="text-sm">{user.name}</p>
+          <DropdownMenuContent align="end" className="w-48 min-w-[192px]" style={{ width: "192px" }}>
+            <div className="px-2 py-1.5">
+              <p className="text-sm font-medium">{user.name}</p>
               {user.email && (
-                <p className="text-xs text-gray-500 font-normal">{user.email}</p>
+                <p className="text-xs text-gray-500">{user.email}</p>
               )}
-            </DropdownMenuLabel>
+            </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <User className="w-4 h-4 mr-2" />
