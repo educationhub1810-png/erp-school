@@ -20,8 +20,8 @@ export default async function StudentFeesPage() {
     orderBy: { paymentDate: "desc" },
   }) : [];
 
-  const totalPaid = payments.filter((p) => p.status === "PAID").reduce((s, p) => s + Number(p.amount), 0);
-  const totalDue  = payments.filter((p) => p.status === "PENDING").reduce((s, p) => s + Number(p.amount), 0);
+  const totalPaid = payments.filter((p) => p.status === "PAID").reduce((s, p) => s + Number(p.amountPaid), 0);
+  const totalDue  = payments.filter((p) => p.status === "PENDING").reduce((s, p) => s + Number(p.amountPaid), 0);
 
   const statusStyle: Record<string, string> = {
     PAID:      "bg-green-100 text-green-700",
@@ -64,7 +64,7 @@ export default async function StudentFeesPage() {
                 {payments.map((p) => (
                   <tr key={p.id} className="hover:bg-gray-50">
                     <td className="px-6 py-3 font-medium text-gray-900">{p.feeStructure?.feeType ?? "—"}</td>
-                    <td className="px-6 py-3 text-right text-gray-700">₹{Number(p.amount).toLocaleString("en-IN")}</td>
+                    <td className="px-6 py-3 text-right text-gray-700">₹{Number(p.amountPaid).toLocaleString("en-IN")}</td>
                     <td className="px-6 py-3 text-gray-500">
                       {p.paymentDate
                         ? new Date(p.paymentDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
