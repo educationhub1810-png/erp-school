@@ -18,6 +18,9 @@ export const authConfig = {
 
       if (OPEN_PATHS.some((p) => pathname.startsWith(p))) return true;
 
+      // API routes handle their own auth via requireAuth — don't role-check them here
+      if (pathname.startsWith("/api/")) return true;
+
       const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 
       if (isPublic) {
