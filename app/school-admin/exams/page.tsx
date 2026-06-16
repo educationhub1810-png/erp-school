@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getUser } from "@/lib/session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText } from "lucide-react";
@@ -8,9 +9,11 @@ import { FileText } from "lucide-react";
 export default async function ExamsPage() {
   const session = await auth();
   if (!session) redirect("/login");
+  const { schoolId } = getUser(session);
+  if (!schoolId) redirect("/login");
 
   const exams = await prisma.exam.findMany({
-    where: { schoolId: (session.user as any).schoolId },
+    where: { schoolId },
     include: { _count: { select: { schedules: true } } },
     orderBy: { startDate: "desc" },
   });

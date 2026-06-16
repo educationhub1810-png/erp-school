@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getUser } from "@/lib/session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Briefcase } from "lucide-react";
@@ -8,9 +9,11 @@ import { Briefcase } from "lucide-react";
 export default async function StaffPage() {
   const session = await auth();
   if (!session) redirect("/login");
+  const { schoolId } = getUser(session);
+  if (!schoolId) redirect("/login");
 
   const staff = await prisma.staff.findMany({
-    where: { schoolId: (session.user as any).schoolId },
+    where: { schoolId },
     include: { user: { select: { name: true, email: true, mobile: true, isActive: true } } },
     orderBy: { createdAt: "desc" },
   });
