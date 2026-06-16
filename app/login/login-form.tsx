@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Eye, EyeOff, GraduationCap, Loader2, ChevronDown } from "lucide-react";
+import { Eye, EyeOff, GraduationCap, Loader2, ChevronDown, ShieldCheck } from "lucide-react";
 
 interface School {
   id: string;
@@ -36,6 +36,9 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [schools, setSchools] = useState<School[]>([]);
   const [schoolsLoading, setSchoolsLoading] = useState(true);
+  const [adminCode, setAdminCode] = useState("");
+  const [adminError, setAdminError] = useState<string | null>(null);
+  const [adminLoading, setAdminLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/public/schools", { cache: "no-store" })
@@ -54,6 +57,25 @@ export function LoginForm() {
 
   const selectedSchoolCode = watch("schoolCode");
   const isStudentSchool = !!selectedSchoolCode && selectedSchoolCode !== "";
+
+  const handleAdminAccess = async () => {
+    setAdminError(null);
+    setAdminLoading(true);
+    try {
+      const res = await fetch("/api/admin-access/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: adminCode }),
+      });
+      if (!res.ok) {
+        setAdminError("Invalid code. Try again.");
+        return;
+      }
+      window.location.href = "/admin-access";
+    } finally {
+      setAdminLoading(false);
+    }
+  };
 
   const onSubmit = async (data: FormValues) => {
     setError(null);
@@ -197,7 +219,37 @@ export function LoginForm() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        {/* Administrative Access */}
+        <div className="mt-6 border border-orange-200 rounded-xl p-4 bg-orange-50/60">
+          <div className="flex items-center gap-1.5 mb-3">
+            <ShieldCheck className="w-4 h-4 text-orange-500" />
+            <span className="text-xs font-semibold text-orange-700 uppercase tracking-wide">
+              Administrative Access
+            </span>
+          </div>
+          {adminError && (
+            <p className="text-xs text-red-500 mb-2">{adminError}</p>
+          )}
+          <div className="flex gap-2">
+            <input
+              type="password"
+              value={adminCode}
+              onChange={(e) => setAdminCode(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAdminAccess()}
+              placeholder="Enter secret code"
+              className="flex-1 h-8 rounded-md border border-orange-200 bg-white px-3 text-sm focus:outline-none focus:ring-1 focus:ring-orange-400"
+            />
+            <button
+              onClick={handleAdminAccess}
+              disabled={adminLoading || !adminCode}
+              className="h-8 px-3 rounded-md bg-orange-500 text-white text-xs font-medium hover:bg-orange-600 disabled:opacity-50 flex items-center gap-1"
+            >
+              {adminLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Enter →"}
+            </button>
+          </div>
+        </div>
+
+        <p className="text-center text-xs text-gray-400 mt-4">
           © {new Date().getFullYear()} EduERP. All rights reserved.
         </p>
       </div>
