@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Eye, EyeOff, GraduationCap, Loader2, ChevronDown, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, GraduationCap, Loader2, ChevronDown } from "lucide-react";
 
 interface School {
   id: string;
@@ -219,34 +219,36 @@ export function LoginForm() {
           </CardContent>
         </Card>
 
-        {/* Administrative Access */}
-        <div className="mt-6 border border-orange-200 rounded-xl p-4 bg-orange-50/60">
-          <div className="flex items-center gap-1.5 mb-3">
-            <ShieldCheck className="w-4 h-4 text-orange-500" />
-            <span className="text-xs font-semibold text-orange-700 uppercase tracking-wide">
-              Administrative Access
-            </span>
-          </div>
-          {adminError && (
-            <p className="text-xs text-red-500 mb-2">{adminError}</p>
-          )}
-          <div className="flex gap-2">
-            <input
-              type="password"
-              value={adminCode}
-              onChange={(e) => setAdminCode(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAdminAccess()}
-              placeholder="Enter secret code"
-              className="flex-1 h-8 rounded-md border border-orange-200 bg-white px-3 text-sm focus:outline-none focus:ring-1 focus:ring-orange-400"
-            />
+        {/* Support access — intentionally low-profile */}
+        <div className="mt-4 text-center">
+          {!adminCode && !adminError ? (
             <button
-              onClick={handleAdminAccess}
-              disabled={adminLoading || !adminCode}
-              className="h-8 px-3 rounded-md bg-orange-500 text-white text-xs font-medium hover:bg-orange-600 disabled:opacity-50 flex items-center gap-1"
+              onClick={() => setAdminCode(" ")}
+              className="text-xs text-gray-300 hover:text-gray-400 transition-colors"
             >
-              {adminLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Enter →"}
+              Support
             </button>
-          </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2">
+              <input
+                type="password"
+                value={adminCode.trim()}
+                onChange={(e) => setAdminCode(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAdminAccess()}
+                placeholder="Access code"
+                autoFocus
+                className="w-36 h-7 rounded border border-gray-200 bg-white px-2.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-gray-300"
+              />
+              <button
+                onClick={handleAdminAccess}
+                disabled={adminLoading || !adminCode.trim()}
+                className="h-7 px-2.5 rounded border border-gray-200 text-gray-400 text-xs hover:text-gray-600 disabled:opacity-40"
+              >
+                {adminLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Go"}
+              </button>
+              {adminError && <span className="text-xs text-red-400">{adminError}</span>}
+            </div>
+          )}
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-4">
