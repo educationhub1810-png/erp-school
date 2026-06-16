@@ -20,14 +20,14 @@ export default async function FeesPage() {
         student: { include: { user: { select: { name: true } } } },
         feeStructure: { select: { feeType: true } },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { paymentDate: "desc" },
       take: 50,
     }),
     prisma.feeStructure.findMany({ where: { schoolId }, orderBy: { feeType: "asc" } }),
   ]);
 
-  const totalCollected = payments.filter((p) => p.status === "PAID").reduce((s, p) => s + Number(p.amount), 0);
-  const totalPending   = payments.filter((p) => p.status === "PENDING").reduce((s, p) => s + Number(p.amount), 0);
+  const totalCollected = payments.filter((p) => p.status === "PAID").reduce((s, p) => s + Number(p.amountPaid), 0);
+  const totalPending   = payments.filter((p) => p.status === "PENDING").reduce((s, p) => s + Number(p.amountPaid), 0);
 
   const statusStyle: Record<string, string> = {
     PAID: "bg-green-100 text-green-700", PENDING: "bg-yellow-100 text-yellow-700",
@@ -67,7 +67,7 @@ export default async function FeesPage() {
                   <tr key={p.id} className="hover:bg-gray-50">
                     <td className="px-6 py-3 font-medium text-gray-900">{p.student?.user?.name ?? "—"}</td>
                     <td className="px-6 py-3 text-gray-500">{p.feeStructure?.feeType ?? "—"}</td>
-                    <td className="px-6 py-3 text-right text-gray-700">₹{Number(p.amount).toLocaleString("en-IN")}</td>
+                    <td className="px-6 py-3 text-right text-gray-700">₹{Number(p.amountPaid).toLocaleString("en-IN")}</td>
                     <td className="px-6 py-3 text-gray-500 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString("en-IN") : "—"}</td>
                     <td className="px-6 py-3"><Badge className={statusStyle[p.status] ?? ""}>{p.status}</Badge></td>
                   </tr>
