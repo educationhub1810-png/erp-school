@@ -17,7 +17,15 @@
       "Bash(dpkg -l nodejs)",
       "Bash(/usr/bin/node --version)",
       "Read(//usr/lib/nodejs/**)",
-      "Read(//usr/share/nodejs/**)"
+      "Read(//usr/share/nodejs/**)",
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "PowerShell(Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force)",
+      "PowerShell(Get-ExecutionPolicy -List)",
+      "Bash(npx prisma *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ],
     "additionalDirectories": [
       "/home/yagya/.claude/projects/-home-yagya-works-erp-school/memory"
