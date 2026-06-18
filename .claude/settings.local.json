@@ -25,7 +25,9 @@
       "Bash(npx prisma *)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"EXIT:$?\")"
     ],
     "additionalDirectories": [
       "/home/yagya/.claude/projects/-home-yagya-works-erp-school/memory"

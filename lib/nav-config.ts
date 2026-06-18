@@ -34,6 +34,7 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
   SUPER_ADMIN: [
     { label: "Dashboard", href: "/super-admin/dashboard", icon: LayoutDashboard },
     { label: "Schools", href: "/super-admin/schools", icon: School },
+    { label: "Students", href: "/super-admin/students", icon: GraduationCap },
     { label: "Users", href: "/super-admin/users", icon: Users },
     { label: "Reports", href: "/super-admin/reports", icon: BarChart3 },
     { label: "Settings", href: "/super-admin/settings", icon: Settings },
