@@ -1,0 +1,118 @@
+import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth-guard";
+import { getUser } from "@/lib/session";
+import { ok, badRequest, unauthorized, forbidden, notFound, serverError } from "@/lib/api-response";
+import { z } from "zod";
+
+const updateSchema = z.object({
+  firstName: z.string().min(1).optional(),
+  middleName: z.string().optional(),
+  lastName: z.string().min(1).optional(),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+  dob: z.string().optional(),
+  bloodGroup: z.string().optional(),
+  category: z.string().optional(),
+  religion: z.string().optional(),
+  aadhaar: z.string().optional(),
+  classId: z.string().min(1).optional(),
+  sectionId: z.string().optional(),
+  rollNumber: z.string().optional(),
+  house: z.string().optional(),
+  previousSchool: z.string().optional(),
+  transportRequired: z.boolean().optional(),
+  hostelRequired: z.boolean().optional(),
+  medicalNotes: z.string().optional(),
+  email: z.string().email().optional().or(z.literal("")),
+  mobile: z.string().optional(),
+  isActive: z.boolean().optional(),
+});
+
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { session, error } = await requireAuth(["SUPER_ADMIN", "SCHOOL_ADMIN"]);
+  if (error === "unauthorized") return unauthorized();
+  if (error === "forbidden") return forbidden();
+
+  const { id } = await params;
+  const user = getUser(session!);
+
+  try {
+    const student = await prisma.student.findUnique({ where: { id } });
+    if (!student) return notFound("Student not found");
+    if (user.role === "SCHOOL_ADMIN" && user.schoolId !== student.schoolId) return forbidden();
+
+    const body = await req.json();
+    const parsed = updateSchema.safeParse(body);
+    if (!parsed.success) return badRequest(parsed.error.issues[0].message);
+
+    const data = parsed.data;
+
+    if (data.classId) {
+      const cls = await prisma.class.findFirst({ where: { id: data.classId, schoolId: student.schoolId } });
+      if (!cls) return badRequest("Selected class does not belong to this student's school");
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.student.update({
+        where: { id },
+        data: {
+          firstName: data.firstName,
+          middleName: data.middleName,
+          lastName: data.lastName,
+          gender: data.gender,
+          dob: data.dob ? new Date(data.dob) : undefined,
+          bloodGroup: data.bloodGroup,
+          category: data.category,
+          religion: data.religion,
+          aadhaar: data.aadhaar,
+          classId: data.classId,
+          sectionId: data.sectionId,
+          rollNumber: data.rollNumber,
+          house: data.house,
+          previousSchool: data.previousSchool,
+          transportRequired: data.transportRequired,
+          hostelRequired: data.hostelRequired,
+          medicalNotes: data.medicalNotes,
+        },
+      });
+
+      if (data.email !== undefined || data.mobile !== undefined || data.isActive !== undefined) {
+        await tx.user.update({
+          where: { id: student.userId },
+          data: {
+            email: data.email || undefined,
+            mobile: data.mobile,
+            isActive: data.isActive,
+          },
+        });
+      }
+
+      return result;
+    });
+
+    return ok(updated);
+  } catch (e) {
+    return serverError(e);
+  }
+}
+
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { session, error } = await requireAuth(["SUPER_ADMIN", "SCHOOL_ADMIN"]);
+  if (error === "unauthorized") return unauthorized();
+  if (error === "forbidden") return forbidden();
+
+  const { id } = await params;
+  const user = getUser(session!);
+
+  try {
+    const student = await prisma.student.findUnique({ where: { id }, select: { id: true, userId: true, schoolId: true, firstName: true, lastName: true } });
+    if (!student) return notFound("Student not found");
+    if (user.role === "SCHOOL_ADMIN" && user.schoolId !== student.schoolId) return forbidden();
+
+    // Deleting the linked User cascades the Student (and Parent) records.
+    await prisma.user.delete({ where: { id: student.userId } });
+
+    return ok({ deleted: true, name: `${student.firstName} ${student.lastName}` });
+  } catch (e) {
+    return serverError(e);
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(netstat -ano)",
+      "Bash(rm -f /tmp/cookies.txt)",
+      "Bash(curl -s -c /tmp/cookies.txt http://localhost:3000/api/auth/csrf)",
+      "Bash(curl -s -b /tmp/cookies.txt -c /tmp/cookies.txt http://localhost:3000/api/auth/csrf)",
+      "Bash(curl -s -b /tmp/cookies.txt -c /tmp/cookies.txt -X POST http://localhost:3000/api/auth/callback/credentials -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode csrfToken=__TRACKED_VAR__ --data-urlencode username=superadmin --data-urlencode password=admin123 --data-urlencode schoolCode= --data-urlencode redirect=false --data-urlencode json=true -w '\\\\nHTTP_STATUS:%{http_code}\\\\n')",
+      "Bash(curl -s -b /tmp/cookies.txt http://localhost:3000/api/v1/schools -w \"\\\\nHTTP_STATUS:%{http_code}\\\\n\")",
+      "Bash(curl -s -b /tmp/cookies.txt -X POST http://localhost:3000/api/v1/schools -H 'Content-Type: application/json' -d '{\"name\":\"Test School DOB\",\"code\":\"TSTDOB1\",\"email\":\"\",\"phone\":\"\",\"principalName\":\"\",\"establishedDate\":\"2024-01-15\",\"address\":\"\",\"city\":\"\",\"state\":\"\",\"country\":\"India\",\"timezone\":\"Asia/Kolkata\",\"currency\":\"INR\"}' -w '\\\\nHTTP_STATUS:%{http_code}\\\\n')",
+      "Bash(curl -s -b /tmp/cookies.txt -X POST http://localhost:3000/api/v1/schools -H 'Content-Type: application/json' -d '{\"name\":\"Test School NoDOB\",\"code\":\"TSTND1\",\"email\":\"\",\"phone\":\"\",\"principalName\":\"\",\"address\":\"\",\"city\":\"\",\"state\":\"\",\"country\":\"India\",\"timezone\":\"Asia/Kolkata\",\"currency\":\"INR\"}' -w '\\\\nHTTP_STATUS:%{http_code}\\\\n')",
+      "Bash(curl -s -b /tmp/cookies.txt -X POST http://localhost:3000/api/v1/schools -H 'Content-Type: application/json' -d '{\"name\":\"Minimal Test\",\"code\":\"MINTEST1\"}' -w '\\\\nHTTP_STATUS:%{http_code}\\\\n')",
+      "Bash(wmic process *)",
+      "Bash(taskkill //PID 34412 //F)",
+      "Bash(npm run *)",
+      "Bash(echo \"started pid $!\")",
+      "Read(//tmp/**)",
+      "Bash(npx eslint *)",
+      "Bash(node check_classes.mjs)",
+      "Bash(npx tsx *)",
+      "Bash(git check-ignore *)"
+    ]
+  }
+}

@@ -10,6 +10,7 @@ const createSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
   principalName: z.string().optional(),
+  establishedDate: z.string().optional().or(z.literal("")),
   address: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
@@ -59,6 +60,7 @@ export async function POST(req: Request) {
         ...data,
         code: data.code.toUpperCase(),
         email: data.email || null,
+        establishedDate: data.establishedDate ? new Date(data.establishedDate) : null,
       },
     });
     revalidatePath("/super-admin/schools");

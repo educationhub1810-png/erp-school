@@ -8,9 +8,9 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Loader2, AlertCircle } from "lucide-react";
+import { Plus, Loader2, AlertCircle, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -19,6 +19,7 @@ const schema = z.object({
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   phone: z.string().optional(),
   principalName: z.string().optional(),
+  establishedDate: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
@@ -43,6 +44,9 @@ export function CreateSchoolDialog() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [createdCode, setCreatedCode] = useState<string | null>(null);
+  const [createdDate, setCreatedDate] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<"code" | "date" | null>(null);
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -58,7 +62,7 @@ export function CreateSchoolDialog() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      let json: { data?: { name?: string }; error?: string } = {};
+      let json: { data?: { name?: string; code?: string; establishedDate?: string | null }; error?: string } = {};
       try {
         json = await res.json();
       } catch {
@@ -73,6 +77,8 @@ export function CreateSchoolDialog() {
       reset();
       setError(null);
       setOpen(false);
+      setCreatedCode(json.data?.code ?? null);
+      setCreatedDate(json.data?.establishedDate ?? null);
       router.refresh();
     } catch (e) {
       setError(`Network error: ${e instanceof Error ? e.message : String(e)}`);
@@ -81,7 +87,14 @@ export function CreateSchoolDialog() {
     }
   };
 
+  const handleCopy = async (field: "code" | "date", value: string) => {
+    await navigator.clipboard.writeText(value);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 1500);
+  };
+
   return (
+    <>
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setError(null); }}>
       <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700" />}>
         <Plus className="w-4 h-4 mr-2" /> Add School
@@ -113,6 +126,11 @@ export function CreateSchoolDialog() {
             <div className="space-y-1.5">
               <Label>Principal Name</Label>
               <Input placeholder="Dr. Ramesh Sharma" {...register("principalName")} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Date of Establishment</Label>
+              <Input type="date" {...register("establishedDate")} />
             </div>
 
             <div className="space-y-1.5">
@@ -183,5 +201,49 @@ export function CreateSchoolDialog() {
         </form>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={!!createdCode} onOpenChange={(o) => { if (!o) { setCreatedCode(null); setCreatedDate(null); } }}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>School Created Successfully</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          Share this school code with the school admin to log in.
+        </p>
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">School Code</Label>
+            <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
+              <span className="font-mono text-base font-semibold tracking-wide">{createdCode}</span>
+              <Button type="button" variant="outline" size="sm" onClick={() => createdCode && handleCopy("code", createdCode)}>
+                {copiedField === "code" ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                {copiedField === "code" ? "Copied" : "Copy"}
+              </Button>
+            </div>
+          </div>
+
+          {createdDate && (
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Date of Establishment</Label>
+              <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
+                <span className="font-mono text-base font-semibold tracking-wide">
+                  {new Date(createdDate).toLocaleDateString()}
+                </span>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleCopy("date", new Date(createdDate).toLocaleDateString())}>
+                  {copiedField === "date" ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                  {copiedField === "date" ? "Copied" : "Copy"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button type="button" className="bg-indigo-600 hover:bg-indigo-700" onClick={() => { setCreatedCode(null); setCreatedDate(null); }}>
+            OK
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
