@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,8 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
+import { getStudentAvatarSrc } from "@/lib/student-avatar";
+
+const MAX_PHOTO_BYTES = 1_500_000;
 
 const schema = z.object({
   firstName: z.string().min(1, "Required"),
@@ -23,6 +28,7 @@ const schema = z.object({
   bloodGroup: z.string().optional(),
   category: z.string().optional(),
   religion: z.string().optional(),
+  photoUrl: z.string().optional(),
   rollNumber: z.string().optional(),
   classId: z.string().min(1, "Class is required"),
   sectionId: z.string().optional(),
@@ -51,7 +57,7 @@ interface Class {
 export interface EditableStudent {
   id: string;
   schoolId: string;
-  admissionNumber: string;
+  studentCode: string;
   rollNumber: string | null;
   firstName: string;
   middleName: string | null;
@@ -61,6 +67,7 @@ export interface EditableStudent {
   bloodGroup: string | null;
   category: string | null;
   religion: string | null;
+  photoUrl: string | null;
   classId: string;
   sectionId: string | null;
   house: string | null;
@@ -92,6 +99,25 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
 
   const selectedClassId = watch("classId");
   const selectedClass = classes.find((c) => c.id === selectedClassId);
+  const photoUrl = watch("photoUrl");
+  const gender = watch("gender");
+
+  const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      toast.error("Photo must be smaller than 1.5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setValue("photoUrl", reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -104,6 +130,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
       bloodGroup: student.bloodGroup || "",
       category: student.category || "",
       religion: student.religion || "",
+      photoUrl: student.photoUrl || "",
       rollNumber: student.rollNumber || "",
       classId: student.classId,
       sectionId: student.sectionId || "",
@@ -145,16 +172,43 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(v, eventDetails) => {
+        if (!v && eventDetails.reason !== "close-press") return;
+        onOpenChange(v);
+      }}
+    >
       <DialogContent className="max-w-4xl sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Student</DialogTitle>
         </DialogHeader>
         <p className="text-xs text-gray-500 -mt-2">
-          {student.school.name} ({student.school.code}) · Admission No. {student.admissionNumber}
+          {student.school.name} ({student.school.code}) · Student Code: {student.studentCode}
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
+          <div className="flex items-center gap-4">
+            <Avatar className="size-16">
+              <AvatarImage src={getStudentAvatarSrc(photoUrl, gender)} alt="Student photo" />
+            </Avatar>
+            <div className="space-y-1.5">
+              <Label>Student Photo</Label>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" nativeButton={false} render={<label className="cursor-pointer" />}>
+                  <Upload className="w-3.5 h-3.5 mr-1.5" /> Upload Photo
+                  <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+                </Button>
+                {photoUrl && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setValue("photoUrl", "")}>
+                    <X className="w-3.5 h-3.5 mr-1" /> Remove
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-gray-400">If no photo is uploaded, a default avatar based on gender is used.</p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>First Name *</Label>
@@ -176,7 +230,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             <div className="space-y-1.5">
               <Label>Gender *</Label>
               <Select value={watch("gender")} onValueChange={(v) => setValue("gender", v as "MALE" | "FEMALE" | "OTHER")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="MALE">Male</SelectItem>
                   <SelectItem value="FEMALE">Female</SelectItem>
@@ -186,12 +240,12 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>Date of Birth</Label>
-              <Input type="date" {...register("dob")} />
+              <DatePicker value={watch("dob")} onChange={(v) => setValue("dob", v)} placeholder="Select date of birth" />
             </div>
             <div className="space-y-1.5">
               <Label>Blood Group</Label>
               <Select value={watch("bloodGroup")} onValueChange={(v) => setValue("bloodGroup", v as string)}>
-                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
                   {BLOOD_GROUPS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
                 </SelectContent>
@@ -203,7 +257,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             <div className="space-y-1.5">
               <Label>Category</Label>
               <Select value={watch("category")} onValueChange={(v) => setValue("category", v as string)}>
-                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
                   {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
@@ -212,7 +266,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             <div className="space-y-1.5">
               <Label>Religion</Label>
               <Select value={watch("religion")} onValueChange={(v) => setValue("religion", v as string)}>
-                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
                   {RELIGIONS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                 </SelectContent>
@@ -232,7 +286,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
                 disabled={classesLoading}
                 onValueChange={(v) => { setValue("classId", v as string, { shouldValidate: true }); setValue("sectionId", ""); }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder={classesLoading ? "Loading..." : "Select class"}>
                     {(value: string) => classes.find((cls) => cls.id === value)?.name ?? "Select class"}
                   </SelectValue>
@@ -246,7 +300,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             <div className="space-y-1.5">
               <Label>Section</Label>
               <Select value={watch("sectionId")} onValueChange={(v) => setValue("sectionId", v as string)} disabled={!selectedClass?.sections.length}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select section">
                     {(value: string) => {
                       const section = selectedClass?.sections.find((s) => s.id === value);
@@ -265,7 +319,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             <div className="space-y-1.5">
               <Label>House</Label>
               <Select value={watch("house")} onValueChange={(v) => setValue("house", v as string)}>
-                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
                   {HOUSES.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
                 </SelectContent>

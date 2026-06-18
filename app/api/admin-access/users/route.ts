@@ -27,7 +27,7 @@ export async function GET(req: Request) {
         mobile: true,
         role: true,
         schoolId: true,
-        student: { select: { admissionNumber: true } },
+        student: { select: { studentCode: true } },
       },
       orderBy: { name: "asc" },
       take: 200,

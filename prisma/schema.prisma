@@ -350,7 +350,7 @@ model Student {
   id               String   @id @default(cuid())
   schoolId         String
   userId           String   @unique
-  admissionNumber  String
+  studentCode      String
   rollNumber       String?
   firstName        String
   middleName       String?
@@ -390,7 +390,7 @@ model Student {
   hostelAllocation HostelAllocation?
   homeworkSubmissions HomeworkSubmission[]
 
-  @@unique([schoolId, admissionNumber])
+  @@unique([schoolId, studentCode])
   @@map("students")
 }
 
@@ -479,6 +479,11 @@ model Staff {
   ifscCode    String?
   pan         String?
   aadhaar     String?
+  qualification   String?
+  experienceYears Int?
+  licenseNumber   String?
+  vehicleNumber   String?
+  assignedBlock   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

@@ -17,6 +17,7 @@ const createSchema = z.object({
   category: z.string().optional(),
   religion: z.string().optional(),
   aadhaar: z.string().optional(),
+  photoUrl: z.string().max(2_000_000, "Photo is too large").optional(),
   // Contact
   email: z.string().email().optional().or(z.literal("")),
   mobile: z.string().optional(),
@@ -25,7 +26,6 @@ const createSchema = z.object({
   classId: z.string().min(1, "Class is required"),
   sectionId: z.string().optional(),
   rollNumber: z.string().optional(),
-  admissionNumber: z.string().min(1, "Admission number required"),
   admissionDate: z.string().optional(),
   house: z.string().optional(),
   previousSchool: z.string().optional(),
@@ -72,7 +72,7 @@ export async function GET(req: Request) {
         OR: [
           { firstName: { contains: search, mode: "insensitive" as const } },
           { lastName: { contains: search, mode: "insensitive" as const } },
-          { admissionNumber: { contains: search, mode: "insensitive" as const } },
+          { studentCode: { contains: search, mode: "insensitive" as const } },
           { rollNumber: { contains: search, mode: "insensitive" as const } },
         ],
       }),
@@ -100,6 +100,16 @@ export async function GET(req: Request) {
   }
 }
 
+async function generateStudentCode(schoolId: string): Promise<string> {
+  const last = await prisma.student.findFirst({
+    where: { schoolId },
+    orderBy: { studentCode: "desc" },
+    select: { studentCode: true },
+  });
+  const lastNumber = last ? parseInt(last.studentCode.replace("STD", ""), 10) || 0 : 0;
+  return `STD${String(lastNumber + 1).padStart(5, "0")}`;
+}
+
 export async function POST(req: Request) {
   const { session, error } = await requireAuth(["SUPER_ADMIN", "SCHOOL_ADMIN"]);
   if (error === "unauthorized") return unauthorized();
@@ -119,81 +129,89 @@ export async function POST(req: Request) {
     const cls = await prisma.class.findFirst({ where: { id: data.classId, schoolId } });
     if (!cls) return badRequest("Selected class does not belong to the chosen school");
 
-    // Check admission number uniqueness
-    const existing = await prisma.student.findFirst({
-      where: { schoolId, admissionNumber: data.admissionNumber },
-    });
-    if (existing) return badRequest("Admission number already exists");
-
     // Create user account for student
     const email = data.email || null;
     const mobile = data.mobile || null;
     const password = await bcrypt.hash("Student@123", 12);
 
-    const result = await prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: {
-          schoolId,
-          name: `${data.firstName} ${data.lastName}`,
-          email,
-          mobile,
-          passwordHash: password,
-          role: "STUDENT",
-          isActive: true,
-          createdBy: session!.user.id,
-        },
-      });
+    let studentCode = await generateStudentCode(schoolId);
 
-      const student = await tx.student.create({
-        data: {
-          schoolId,
-          userId: user.id,
-          admissionNumber: data.admissionNumber,
-          rollNumber: data.rollNumber || null,
-          firstName: data.firstName,
-          middleName: data.middleName || null,
-          lastName: data.lastName,
-          gender: data.gender,
-          dob: data.dob ? new Date(data.dob) : null,
-          bloodGroup: data.bloodGroup || null,
-          category: data.category || null,
-          religion: data.religion || null,
-          aadhaar: data.aadhaar || null,
-          classId: data.classId,
-          sectionId: data.sectionId || null,
-          house: data.house || null,
-          previousSchool: data.previousSchool || null,
-          admissionDate: data.admissionDate ? new Date(data.admissionDate) : new Date(),
-          transportRequired: data.transportRequired,
-          hostelRequired: data.hostelRequired,
-          medicalNotes: data.medicalNotes || null,
-        },
-      });
+    let result;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        result = await prisma.$transaction(async (tx) => {
+          const user = await tx.user.create({
+            data: {
+              schoolId,
+              name: `${data.firstName} ${data.lastName}`,
+              email,
+              mobile,
+              passwordHash: password,
+              role: "STUDENT",
+              isActive: true,
+              createdBy: session!.user.id,
+            },
+          });
 
-      // Create parent record if any parent info provided
-      const hasParentInfo = data.fatherName || data.motherName || data.guardianName;
-      if (hasParentInfo) {
-        await tx.parent.create({
-          data: {
-            schoolId,
-            studentId: student.id,
-            fatherName: data.fatherName || null,
-            fatherMobile: data.fatherMobile || null,
-            fatherEmail: data.fatherEmail || null,
-            fatherOccupation: data.fatherOccupation || null,
-            motherName: data.motherName || null,
-            motherMobile: data.motherMobile || null,
-            motherEmail: data.motherEmail || null,
-            motherOccupation: data.motherOccupation || null,
-            guardianName: data.guardianName || null,
-            guardianMobile: data.guardianMobile || null,
-            guardianRelation: data.guardianRelation || null,
-          },
+          const student = await tx.student.create({
+            data: {
+              schoolId,
+              userId: user.id,
+              studentCode,
+              rollNumber: data.rollNumber || null,
+              firstName: data.firstName,
+              middleName: data.middleName || null,
+              lastName: data.lastName,
+              gender: data.gender,
+              dob: data.dob ? new Date(data.dob) : null,
+              bloodGroup: data.bloodGroup || null,
+              category: data.category || null,
+              religion: data.religion || null,
+              aadhaar: data.aadhaar || null,
+              photoUrl: data.photoUrl || null,
+              classId: data.classId,
+              sectionId: data.sectionId || null,
+              house: data.house || null,
+              previousSchool: data.previousSchool || null,
+              admissionDate: data.admissionDate ? new Date(data.admissionDate) : new Date(),
+              transportRequired: data.transportRequired,
+              hostelRequired: data.hostelRequired,
+              medicalNotes: data.medicalNotes || null,
+            },
+          });
+
+          // Create parent record if any parent info provided
+          const hasParentInfo = data.fatherName || data.motherName || data.guardianName;
+          if (hasParentInfo) {
+            await tx.parent.create({
+              data: {
+                schoolId,
+                studentId: student.id,
+                fatherName: data.fatherName || null,
+                fatherMobile: data.fatherMobile || null,
+                fatherEmail: data.fatherEmail || null,
+                fatherOccupation: data.fatherOccupation || null,
+                motherName: data.motherName || null,
+                motherMobile: data.motherMobile || null,
+                motherEmail: data.motherEmail || null,
+                motherOccupation: data.motherOccupation || null,
+                guardianName: data.guardianName || null,
+                guardianMobile: data.guardianMobile || null,
+                guardianRelation: data.guardianRelation || null,
+              },
+            });
+          }
+
+          return student;
         });
+        break;
+      } catch (e) {
+        const isDuplicateCode = (e as { code?: string })?.code === "P2002" && attempt < 4;
+        if (!isDuplicateCode) throw e;
+        const nextNumber = parseInt(studentCode.replace("STD", ""), 10) + 1;
+        studentCode = `STD${String(nextNumber).padStart(5, "0")}`;
       }
-
-      return student;
-    });
+    }
 
     return created(result);
   } catch (e) {

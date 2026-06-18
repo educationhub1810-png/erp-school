@@ -3,10 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { CreateStudentDialog } from "./create-student-dialog";
 import { StudentFilters } from "./student-filters";
 import { StudentRowActions } from "./student-row-actions";
 import { GraduationCap } from "lucide-react";
+import { getStudentAvatarSrc } from "@/lib/student-avatar";
 
 interface Props {
   searchParams: Promise<{ schoolId?: string; classId?: string; sectionId?: string; search?: string; page?: string }>;
@@ -28,7 +30,7 @@ export default async function SuperAdminStudentsPage({ searchParams }: Props) {
       OR: [
         { firstName: { contains: sp.search, mode: "insensitive" as const } },
         { lastName: { contains: sp.search, mode: "insensitive" as const } },
-        { admissionNumber: { contains: sp.search, mode: "insensitive" as const } },
+        { studentCode: { contains: sp.search, mode: "insensitive" as const } },
         { rollNumber: { contains: sp.search, mode: "insensitive" as const } },
       ],
     }),
@@ -80,7 +82,7 @@ export default async function SuperAdminStudentsPage({ searchParams }: Props) {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
-                  <TableHead>Admission No.</TableHead>
+                  <TableHead>Student Code</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>School</TableHead>
                   <TableHead>Class</TableHead>
@@ -94,16 +96,21 @@ export default async function SuperAdminStudentsPage({ searchParams }: Props) {
                 {students.map((student) => (
                   <TableRow key={student.id} className="hover:bg-gray-50">
                     <TableCell className="font-mono text-sm text-gray-600">
-                      {student.admissionNumber}
+                      {student.studentCode}
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {student.firstName} {student.middleName} {student.lastName}
-                        </p>
-                        {student.rollNumber && (
-                          <p className="text-xs text-gray-400">Roll: {student.rollNumber}</p>
-                        )}
+                      <div className="flex items-center gap-2.5">
+                        <Avatar className="size-8">
+                          <AvatarImage src={getStudentAvatarSrc(student.photoUrl, student.gender)} alt="" />
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {student.firstName} {student.middleName} {student.lastName}
+                          </p>
+                          {student.rollNumber && (
+                            <p className="text-xs text-gray-400">Roll: {student.rollNumber}</p>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-gray-600">

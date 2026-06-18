@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,9 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { UserPlus, Loader2, ChevronRight, ChevronLeft, Check } from "lucide-react";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { DatePicker } from "@/components/ui/date-picker";
+import { UserPlus, Loader2, ChevronRight, ChevronLeft, Check, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getStudentAvatarSrc } from "@/lib/student-avatar";
+
+const MAX_PHOTO_BYTES = 1_500_000;
 
 const schema = z.object({
   schoolId: z.string().min(1, "School is required"),
@@ -27,8 +32,8 @@ const schema = z.object({
   category: z.string().optional(),
   religion: z.string().optional(),
   aadhaar: z.string().optional(),
+  photoUrl: z.string().optional(),
   // Step 2: Academic
-  admissionNumber: z.string().min(1, "Required"),
   rollNumber: z.string().optional(),
   classId: z.string().min(1, "Class is required"),
   sectionId: z.string().optional(),
@@ -59,6 +64,11 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 const STEPS = ["Personal", "Academic", "Contact", "Parent"];
+const FIELD_STEP: Partial<Record<keyof FormValues, number>> = {
+  schoolId: 0, firstName: 0, lastName: 0, gender: 0,
+  classId: 1,
+  email: 2,
+};
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const CATEGORIES = ["General", "OBC", "SC", "ST", "EWS", "Other"];
 const RELIGIONS = ["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Other"];
@@ -91,6 +101,9 @@ export function CreateStudentDialog({ schools }: Props) {
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
+      schoolId: "",
+      classId: "",
+      sectionId: "",
       gender: "MALE",
       transportRequired: false,
       hostelRequired: false,
@@ -101,6 +114,25 @@ export function CreateStudentDialog({ schools }: Props) {
   const selectedSchoolId = watch("schoolId");
   const selectedClassId = watch("classId");
   const selectedClass = classes.find((c) => c.id === selectedClassId);
+  const photoUrl = watch("photoUrl");
+  const gender = watch("gender");
+
+  const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      toast.error("Photo must be smaller than 1.5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setValue("photoUrl", reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     if (!selectedSchoolId) {
@@ -140,8 +172,24 @@ export function CreateStudentDialog({ schools }: Props) {
   const nextStep = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
   const prevStep = () => setStep((s) => Math.max(s - 1, 0));
 
+  const onInvalid = (invalidFields: typeof errors) => {
+    const steps = Object.keys(invalidFields).map((key) => FIELD_STEP[key as keyof FormValues] ?? 0);
+    if (steps.length) setStep(Math.min(...steps));
+  };
+
+  const handleFormKeyDown = (e: KeyboardEvent<HTMLFormElement>) => {
+    if (e.key === "Enter" && step < STEPS.length - 1) e.preventDefault();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { reset(); setStep(0); setClasses([]); } }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v, eventDetails) => {
+        if (!v && eventDetails.reason !== "close-press") return;
+        setOpen(v);
+        if (!v) { reset(); setStep(0); setClasses([]); }
+      }}
+    >
       <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700" />}>
         <UserPlus className="w-4 h-4 mr-2" /> Add Student
       </DialogTrigger>
@@ -177,7 +225,7 @@ export function CreateStudentDialog({ schools }: Props) {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto">
+        <form onSubmit={handleSubmit(onSubmit, onInvalid)} onKeyDown={handleFormKeyDown} className="flex-1 overflow-y-auto">
           <div className="space-y-4 pr-1">
 
             {/* Step 1: Personal */}
@@ -192,7 +240,7 @@ export function CreateStudentDialog({ schools }: Props) {
                       setValue("sectionId", "");
                     }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select school">
                         {(value: string) => {
                           const school = schools.find((s) => s.id === value);
@@ -205,6 +253,27 @@ export function CreateStudentDialog({ schools }: Props) {
                     </SelectContent>
                   </Select>
                   {errors.schoolId && <p className="text-xs text-red-500">{errors.schoolId.message}</p>}
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <Avatar className="size-16">
+                    <AvatarImage src={getStudentAvatarSrc(photoUrl, gender)} alt="Student photo" />
+                  </Avatar>
+                  <div className="space-y-1.5">
+                    <Label>Student Photo</Label>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" nativeButton={false} render={<label className="cursor-pointer" />}>
+                        <Upload className="w-3.5 h-3.5 mr-1.5" /> Upload Photo
+                        <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+                      </Button>
+                      {photoUrl && (
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setValue("photoUrl", "")}>
+                          <X className="w-3.5 h-3.5 mr-1" /> Remove
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-400">If no photo is uploaded, a default avatar based on gender is used.</p>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
@@ -228,7 +297,7 @@ export function CreateStudentDialog({ schools }: Props) {
                   <div className="space-y-1.5">
                     <Label>Gender *</Label>
                     <Select defaultValue="MALE" onValueChange={(v) => setValue("gender", v as "MALE" | "FEMALE" | "OTHER")}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="MALE">Male</SelectItem>
                         <SelectItem value="FEMALE">Female</SelectItem>
@@ -238,12 +307,12 @@ export function CreateStudentDialog({ schools }: Props) {
                   </div>
                   <div className="space-y-1.5">
                     <Label>Date of Birth</Label>
-                    <Input type="date" {...register("dob")} />
+                    <DatePicker value={watch("dob")} onChange={(v) => setValue("dob", v)} placeholder="Select date of birth" />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Blood Group</Label>
                     <Select onValueChange={(v) => setValue("bloodGroup", v as string)}>
-                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent>
                         {BLOOD_GROUPS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
                       </SelectContent>
@@ -255,7 +324,7 @@ export function CreateStudentDialog({ schools }: Props) {
                   <div className="space-y-1.5">
                     <Label>Category</Label>
                     <Select onValueChange={(v) => setValue("category", v as string)}>
-                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent>
                         {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                       </SelectContent>
@@ -264,7 +333,7 @@ export function CreateStudentDialog({ schools }: Props) {
                   <div className="space-y-1.5">
                     <Label>Religion</Label>
                     <Select onValueChange={(v) => setValue("religion", v as string)}>
-                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent>
                         {RELIGIONS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                       </SelectContent>
@@ -283,9 +352,8 @@ export function CreateStudentDialog({ schools }: Props) {
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label>Admission Number *</Label>
-                    <Input placeholder="ADM2025001" {...register("admissionNumber")} />
-                    {errors.admissionNumber && <p className="text-xs text-red-500">{errors.admissionNumber.message}</p>}
+                    <Label>Student Code</Label>
+                    <Input value="Auto-generated (e.g. STD00001)" disabled className="text-gray-400" />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Roll Number</Label>
@@ -300,7 +368,7 @@ export function CreateStudentDialog({ schools }: Props) {
                       disabled={!selectedSchoolId || classesLoading}
                       onValueChange={(v) => { setValue("classId", v as string, { shouldValidate: true }); setValue("sectionId", ""); }}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder={!selectedSchoolId ? "Select school first" : classesLoading ? "Loading..." : "Select class"}>
                           {(value: string) => classes.find((cls) => cls.id === value)?.name ?? "Select class"}
                         </SelectValue>
@@ -314,7 +382,7 @@ export function CreateStudentDialog({ schools }: Props) {
                   <div className="space-y-1.5">
                     <Label>Section</Label>
                     <Select onValueChange={(v) => setValue("sectionId", v as string)} disabled={!selectedClass?.sections.length}>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select section">
                           {(value: string) => {
                             const section = selectedClass?.sections.find((s) => s.id === value);
@@ -332,12 +400,12 @@ export function CreateStudentDialog({ schools }: Props) {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>Admission Date</Label>
-                    <Input type="date" {...register("admissionDate")} />
+                    <DatePicker value={watch("admissionDate")} onChange={(v) => setValue("admissionDate", v)} placeholder="Select admission date" />
                   </div>
                   <div className="space-y-1.5">
                     <Label>House</Label>
                     <Select onValueChange={(v) => setValue("house", v as string)}>
-                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent>
                         {HOUSES.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
                       </SelectContent>

@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
+import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
 const createSchema = z.object({
+  schoolId: z.string().optional(),
   name: z.string().min(1, "Name required"),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   mobile: z.string().optional(),
@@ -28,8 +30,9 @@ export async function GET(req: Request) {
   if (error === "unauthorized") return unauthorized();
   if (error === "forbidden") return forbidden();
 
+  const user = getUser(session!);
   const { searchParams } = new URL(req.url);
-  const schoolId = session!.user.schoolId;
+  const schoolId = user.role === "SUPER_ADMIN" ? (searchParams.get("schoolId") || undefined) : user.schoolId;
   const search = searchParams.get("search");
   const page = parseInt(searchParams.get("page") ?? "1");
   const limit = parseInt(searchParams.get("limit") ?? "20");
@@ -52,6 +55,7 @@ export async function GET(req: Request) {
       prisma.teacher.findMany({
         where,
         include: {
+          school: { select: { name: true, code: true } },
           user: { select: { name: true, email: true, mobile: true, isActive: true } },
         },
         orderBy: { createdAt: "desc" },
@@ -72,8 +76,7 @@ export async function POST(req: Request) {
   if (error === "unauthorized") return unauthorized();
   if (error === "forbidden") return forbidden();
 
-  const schoolId = session!.user.schoolId;
-  if (!schoolId) return forbidden();
+  const user = getUser(session!);
 
   try {
     const body = await req.json();
@@ -81,6 +84,8 @@ export async function POST(req: Request) {
     if (!parsed.success) return badRequest(parsed.error.issues[0].message);
 
     const data = parsed.data;
+    const schoolId = user.role === "SUPER_ADMIN" ? data.schoolId : user.schoolId;
+    if (!schoolId) return badRequest("School is required");
 
     // Check employee ID uniqueness
     const existing = await prisma.teacher.findFirst({ where: { schoolId, employeeId: data.employeeId } });
@@ -89,7 +94,7 @@ export async function POST(req: Request) {
     const password = await bcrypt.hash("Teacher@123", 12);
 
     const result = await prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
+      const newUser = await tx.user.create({
         data: {
           schoolId,
           name: data.name,
@@ -98,14 +103,14 @@ export async function POST(req: Request) {
           passwordHash: password,
           role: "TEACHER",
           isActive: true,
-          createdBy: session!.user.id,
+          createdBy: user.id,
         },
       });
 
       const teacher = await tx.teacher.create({
         data: {
           schoolId,
-          userId: user.id,
+          userId: newUser.id,
           employeeId: data.employeeId,
           gender: data.gender || null,
           dob: data.dob ? new Date(data.dob) : null,
@@ -122,7 +127,7 @@ export async function POST(req: Request) {
         },
       });
 
-      return { ...teacher, user };
+      return { ...teacher, user: newUser };
     });
 
     return created(result);
