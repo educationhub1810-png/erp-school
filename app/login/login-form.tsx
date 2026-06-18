@@ -154,14 +154,14 @@ export function LoginForm() {
                   Username
                   {isStudentSchool && (
                     <span className="text-gray-400 font-normal text-xs ml-1">
-                      (admission no. for students)
+                      (student code for students)
                     </span>
                   )}
                 </Label>
                 <Input
                   id="username"
                   type="text"
-                  placeholder={isStudentSchool ? "Admission number or email" : "Email or mobile"}
+                  placeholder={isStudentSchool ? "Student code or email" : "Email or mobile"}
                   {...register("username")}
                   autoComplete="username"
                 />

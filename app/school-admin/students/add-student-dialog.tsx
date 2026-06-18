@@ -28,7 +28,6 @@ const schema = z.object({
   religion: z.string().optional(),
   aadhaar: z.string().optional(),
   // Step 2: Academic
-  admissionNumber: z.string().min(1, "Required"),
   rollNumber: z.string().optional(),
   classId: z.string().min(1, "Class is required"),
   sectionId: z.string().optional(),
@@ -239,9 +238,8 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label>Admission Number *</Label>
-                    <Input placeholder="ADM2025001" {...register("admissionNumber")} />
-                    {errors.admissionNumber && <p className="text-xs text-red-500">{errors.admissionNumber.message}</p>}
+                    <Label>Student Code</Label>
+                    <Input value="Auto-generated (e.g. STD00001)" disabled className="text-gray-400" />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Roll Number</Label>
