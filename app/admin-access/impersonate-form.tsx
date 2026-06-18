@@ -12,7 +12,7 @@ import { ROLE_DASHBOARDS, ROLE_LABELS, type AppRole } from "@/lib/roles";
 interface School { id: string; name: string; code: string; }
 interface UserItem {
   id: string; name: string; email?: string | null; mobile?: string | null;
-  role: string; student?: { admissionNumber: string } | null;
+  role: string; student?: { studentCode: string } | null;
 }
 
 const ROLES: AppRole[] = [
@@ -131,7 +131,7 @@ export function ImpersonateForm({ schools }: { schools: School[] }) {
               {users.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.name}
-                  {u.student?.admissionNumber ? ` (${u.student.admissionNumber})` : u.email ? ` (${u.email})` : ""}
+                  {u.student?.studentCode ? ` (${u.student.studentCode})` : u.email ? ` (${u.email})` : ""}
                 </option>
               ))}
             </select>

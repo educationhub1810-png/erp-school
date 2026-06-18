@@ -19,7 +19,27 @@
       "Bash(node check_classes.mjs)",
       "Bash(npx tsx *)",
       "Bash(git check-ignore *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(git pull *)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/zod/package.json'\\).version\\)\")",
+      "Bash(npm view *)",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/react-day-picker/package.json'\\).version\\)\")",
+      "Bash(node -e \"console.log\\(JSON.stringify\\(require\\('./node_modules/react-day-picker/package.json'\\).exports, null, 2\\)\\)\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP_STATUS:%{http_code}\\\\n\" http://localhost:3000/super-admin/students)",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(chromium-cli --help)",
+      "Bash(npx playwright *)",
+      "Bash(node check_students_page.mjs)",
+      "Bash(npm uninstall *)",
+      "PowerShell($dirs = @\\('hr-managers','warden-managers','parents','reports','settings','users','transport-managers'\\); foreach \\($d in $dirs\\) { $p = \"g:\\\\ERP\\\\erp-school\\\\app\\\\super-admin\\\\$d\\\\loading.tsx\"; Write-Output \"$d -> exists: $\\(Test-Path $p\\)\" })",
+      "PowerShell(echo $LASTEXITCODE)",
+      "PowerShell(cd g:\\\\ERP\\\\erp-school; npx tsc --noEmit; Write-Output \"EXITCODE=$LASTEXITCODE\")",
+      "PowerShell(Get-Process -Name node -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"Name='node.exe'\")",
+      "PowerShell(Stop-Process -Id 27860,1088,18864,32296,5436 -Force -ErrorAction SilentlyContinue)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/login)"
     ]
   }
 }

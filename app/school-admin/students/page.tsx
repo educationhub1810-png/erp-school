@@ -30,7 +30,7 @@ export default async function StudentsPage({ searchParams }: Props) {
       OR: [
         { firstName: { contains: sp.search, mode: "insensitive" as const } },
         { lastName: { contains: sp.search, mode: "insensitive" as const } },
-        { admissionNumber: { contains: sp.search, mode: "insensitive" as const } },
+        { studentCode: { contains: sp.search, mode: "insensitive" as const } },
         { rollNumber: { contains: sp.search, mode: "insensitive" as const } },
       ],
     }),
@@ -82,7 +82,7 @@ export default async function StudentsPage({ searchParams }: Props) {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
-                  <TableHead>Admission No.</TableHead>
+                  <TableHead>Student Code</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Class</TableHead>
                   <TableHead>Roll No.</TableHead>
@@ -95,7 +95,7 @@ export default async function StudentsPage({ searchParams }: Props) {
                 {students.map((student) => (
                   <TableRow key={student.id} className="hover:bg-gray-50">
                     <TableCell className="font-mono text-sm text-gray-600">
-                      {student.admissionNumber}
+                      {student.studentCode}
                     </TableCell>
                     <TableCell>
                       <div>

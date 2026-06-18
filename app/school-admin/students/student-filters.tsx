@@ -45,7 +45,7 @@ export function StudentFilters({ classes }: { classes: Class[] }) {
       <div className="relative flex-1 min-w-[200px]">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <Input
-          placeholder="Search by name, admission no..."
+          placeholder="Search by name, student code..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && apply()}

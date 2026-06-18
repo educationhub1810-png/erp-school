@@ -101,9 +101,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
         if (!school || !school.isActive) return null;
 
-        // 1. Try student — username = admissionNumber, password = DOB (DDMMYYYY)
+        // 1. Try student — username = studentCode, password = DOB (DDMMYYYY)
         const student = await prisma.student.findFirst({
-          where: { schoolId: school.id, admissionNumber: username },
+          where: { schoolId: school.id, studentCode: username },
           include: {
             user: {
               select: { id: true, name: true, email: true, role: true, isActive: true },

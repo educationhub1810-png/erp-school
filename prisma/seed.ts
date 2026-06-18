@@ -191,7 +191,7 @@ async function main() {
     create: {
       schoolId: school.id,
       userId: studentUserId,
-      admissionNumber: "ADM2025001",
+      studentCode: "STD00001",
       rollNumber: "10A01",
       firstName: "Rahul",
       lastName: "Verma",
