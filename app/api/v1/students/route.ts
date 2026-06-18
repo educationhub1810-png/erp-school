@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
+import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
 const createSchema = z.object({
+  schoolId: z.string().optional(),
   // Personal
   firstName: z.string().min(1, "First name required"),
   middleName: z.string().optional(),
@@ -50,8 +52,9 @@ export async function GET(req: Request) {
   if (error === "unauthorized") return unauthorized();
   if (error === "forbidden") return forbidden();
 
+  const user = getUser(session!);
   const { searchParams } = new URL(req.url);
-  const schoolId = session!.user.schoolId;
+  const schoolId = user.role === "SUPER_ADMIN" ? (searchParams.get("schoolId") || undefined) : user.schoolId;
   const classId = searchParams.get("classId");
   const sectionId = searchParams.get("sectionId");
   const search = searchParams.get("search");
@@ -79,6 +82,7 @@ export async function GET(req: Request) {
       prisma.student.findMany({
         where,
         include: {
+          school: { select: { name: true, code: true } },
           class: { select: { name: true } },
           section: { select: { name: true } },
           user: { select: { email: true, mobile: true, isActive: true } },
@@ -101,8 +105,7 @@ export async function POST(req: Request) {
   if (error === "unauthorized") return unauthorized();
   if (error === "forbidden") return forbidden();
 
-  const schoolId = session!.user.schoolId;
-  if (!schoolId) return forbidden();
+  const user = getUser(session!);
 
   try {
     const body = await req.json();
@@ -110,6 +113,11 @@ export async function POST(req: Request) {
     if (!parsed.success) return badRequest(parsed.error.issues[0].message);
 
     const data = parsed.data;
+    const schoolId = user.role === "SUPER_ADMIN" ? data.schoolId : user.schoolId;
+    if (!schoolId) return badRequest("School is required");
+
+    const cls = await prisma.class.findFirst({ where: { id: data.classId, schoolId } });
+    if (!cls) return badRequest("Selected class does not belong to the chosen school");
 
     // Check admission number uniqueness
     const existing = await prisma.student.findFirst({
