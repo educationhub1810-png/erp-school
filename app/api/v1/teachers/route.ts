@@ -17,7 +17,6 @@ const createSchema = z.object({
   specialization: z.string().optional(),
   joiningDate: z.string().optional(),
   salary: z.number().optional(),
-  employeeId: z.string().min(1, "Employee ID required"),
   pan: z.string().optional(),
   aadhaar: z.string().optional(),
   bankName: z.string().optional(),
@@ -71,6 +70,23 @@ export async function GET(req: Request) {
   }
 }
 
+async function generateTeacherCode(schoolId: string): Promise<string> {
+  const school = await prisma.school.findUnique({ where: { id: schoolId }, select: { name: true } });
+  const letter = (school?.name.trim()[0] || "X").toUpperCase();
+  const prefix = `${letter}-TCH`;
+
+  const teachers = await prisma.teacher.findMany({
+    where: { employeeId: { startsWith: prefix } },
+    select: { employeeId: true },
+  });
+  const codePattern = new RegExp(`^${letter}-TCH(\\d+)$`);
+  const lastNumber = teachers.reduce((max, t) => {
+    const match = t.employeeId.match(codePattern);
+    return match ? Math.max(max, parseInt(match[1], 10)) : max;
+  }, 0);
+  return `${prefix}${String(lastNumber + 1).padStart(5, "0")}`;
+}
+
 export async function POST(req: Request) {
   const { session, error } = await requireAuth(["SUPER_ADMIN", "SCHOOL_ADMIN", "HR_MANAGER"]);
   if (error === "unauthorized") return unauthorized();
@@ -87,10 +103,7 @@ export async function POST(req: Request) {
     const schoolId = user.role === "SUPER_ADMIN" ? data.schoolId : user.schoolId;
     if (!schoolId) return badRequest("School is required");
 
-    // Check employee ID uniqueness
-    const existing = await prisma.teacher.findFirst({ where: { schoolId, employeeId: data.employeeId } });
-    if (existing) return badRequest("Employee ID already exists");
-
+    const employeeId = await generateTeacherCode(schoolId);
     const password = await bcrypt.hash("Teacher@123", 12);
 
     const result = await prisma.$transaction(async (tx) => {
@@ -111,7 +124,7 @@ export async function POST(req: Request) {
         data: {
           schoolId,
           userId: newUser.id,
-          employeeId: data.employeeId,
+          employeeId,
           gender: data.gender || null,
           dob: data.dob ? new Date(data.dob) : null,
           qualification: data.qualification || null,

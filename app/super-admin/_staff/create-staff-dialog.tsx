@@ -11,16 +11,16 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { UserPlus, Loader2 } from "lucide-react";
+import { UserPlus, Loader2, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { ROLE_FIELDS, type StaffRole } from "./role-fields";
 
-const schema = z.object({
+const baseSchema = z.object({
   schoolId: z.string().min(1, "School is required"),
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   mobile: z.string().optional(),
-  employeeId: z.string().min(1, "Employee ID is required"),
+  employeeId: z.string().optional(),
   department: z.string().optional(),
   designation: z.string().optional(),
   joiningDate: z.string().optional(),
@@ -37,7 +37,7 @@ const schema = z.object({
   assignedBlock: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<typeof baseSchema>;
 
 interface School {
   id: string;
@@ -51,15 +51,40 @@ interface Props {
   schools: School[];
 }
 
+const CODE_LABEL: Partial<Record<StaffRole, string>> = { PRINCIPAL: "Principal Code" };
+const CODE_PREFIX: Partial<Record<StaffRole, string>> = { PRINCIPAL: "PRN" };
+
 export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [createdCode, setCreatedCode] = useState<string | null>(null);
+  const [createdDob, setCreatedDob] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<"code" | "dob" | null>(null);
+
+  const hasAutoCode = role in CODE_LABEL;
+  const codeLabel = CODE_LABEL[role];
+  const codePrefix = CODE_PREFIX[role];
+
+  const schema = hasAutoCode
+    ? baseSchema
+    : baseSchema.superRefine((data, ctx) => {
+        if (!data.employeeId) ctx.addIssue({ code: "custom", message: "Employee ID is required", path: ["employeeId"] });
+      });
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { schoolId: "" },
   });
+
+  const selectedSchoolId = watch("schoolId");
+  const codePreviewLetter = (schools.find((s) => s.id === selectedSchoolId)?.name.trim()[0] || "X").toUpperCase();
+
+  const handleCopy = async (field: "code" | "dob", value: string) => {
+    await navigator.clipboard.writeText(value);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 1500);
+  };
 
   const onSubmit = async (data: FormValues) => {
     setLoading(true);
@@ -80,6 +105,8 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
         return;
       }
       toast.success(`${roleLabel} added successfully`);
+      setCreatedCode(json.data?.employeeId ?? null);
+      setCreatedDob(json.data?.dob ?? null);
       reset();
       setOpen(false);
       router.refresh();
@@ -89,6 +116,7 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
   };
 
   return (
+    <>
     <Dialog
       open={open}
       onOpenChange={(v, eventDetails) => {
@@ -107,9 +135,19 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
+          {hasAutoCode && (
+            <div className="space-y-1.5">
+              <Label>{codeLabel}</Label>
+              <Input value={`Auto-generated (e.g. ${codePreviewLetter}-${codePrefix}00001)`} disabled className="text-gray-400" />
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <Label>School *</Label>
-            <Select onValueChange={(v) => setValue("schoolId", v as string, { shouldValidate: true })}>
+            <Select
+              value={selectedSchoolId}
+              onValueChange={(v) => { if (v != null) setValue("schoolId", v as string, { shouldValidate: true }); }}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select school">
                   {(value: string) => {
@@ -125,17 +163,19 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
             {errors.schoolId && <p className="text-xs text-red-500">{errors.schoolId.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className={hasAutoCode ? "" : "grid grid-cols-2 gap-3"}>
             <div className="space-y-1.5">
               <Label>Full Name *</Label>
               <Input {...register("name")} />
               {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
             </div>
-            <div className="space-y-1.5">
-              <Label>Employee ID *</Label>
-              <Input placeholder="EMP2025001" {...register("employeeId")} />
-              {errors.employeeId && <p className="text-xs text-red-500">{errors.employeeId.message}</p>}
-            </div>
+            {!hasAutoCode && (
+              <div className="space-y-1.5">
+                <Label>Employee ID *</Label>
+                <Input placeholder="EMP2025001" {...register("employeeId")} />
+                {errors.employeeId && <p className="text-xs text-red-500">{errors.employeeId.message}</p>}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -180,20 +220,22 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label>Bank Name</Label>
-              <Input {...register("bankName")} />
+          {!hasAutoCode && (
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label>Bank Name</Label>
+                <Input {...register("bankName")} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Account Number</Label>
+                <Input {...register("accountNumber")} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>IFSC Code</Label>
+                <Input {...register("ifscCode")} />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label>Account Number</Label>
-              <Input {...register("accountNumber")} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>IFSC Code</Label>
-              <Input {...register("ifscCode")} />
-            </div>
-          </div>
+          )}
 
           <div className="p-3 bg-blue-50 rounded-lg">
             <p className="text-xs text-blue-700">
@@ -211,5 +253,49 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
         </form>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={!!createdCode} onOpenChange={(o) => { if (!o) { setCreatedCode(null); setCreatedDob(null); } }}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>{roleLabel} Added Successfully</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          Share this {codeLabel?.toLowerCase() ?? "employee id"} with the {roleLabel.toLowerCase()} to log in.
+        </p>
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">{codeLabel ?? "Employee ID"}</Label>
+            <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
+              <span className="font-mono text-base font-semibold tracking-wide">{createdCode}</span>
+              <Button type="button" variant="outline" size="sm" onClick={() => createdCode && handleCopy("code", createdCode)}>
+                {copiedField === "code" ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                {copiedField === "code" ? "Copied" : "Copy"}
+              </Button>
+            </div>
+          </div>
+
+          {createdDob && (
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Date of Birth</Label>
+              <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
+                <span className="font-mono text-base font-semibold tracking-wide">
+                  {new Date(createdDob).toLocaleDateString()}
+                </span>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleCopy("dob", new Date(createdDob).toLocaleDateString())}>
+                  {copiedField === "dob" ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                  {copiedField === "dob" ? "Copied" : "Copy"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button type="button" className="bg-indigo-600 hover:bg-indigo-700" onClick={() => { setCreatedCode(null); setCreatedDob(null); }}>
+            OK
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

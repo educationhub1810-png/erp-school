@@ -126,7 +126,7 @@ export function EditTeacherDialog({ teacher, open, onOpenChange }: Props) {
           <DialogTitle>Edit Teacher</DialogTitle>
         </DialogHeader>
         <p className="text-xs text-gray-500 -mt-2">
-          {teacher.school.name} ({teacher.school.code}) · Employee ID {teacher.employeeId}
+          {teacher.school.name} ({teacher.school.code}) · Teacher Code {teacher.employeeId}
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">

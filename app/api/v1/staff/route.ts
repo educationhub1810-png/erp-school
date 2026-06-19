@@ -13,7 +13,7 @@ const createSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   mobile: z.string().optional(),
-  employeeId: z.string().min(1, "Employee ID is required"),
+  employeeId: z.string().optional(),
   department: z.string().optional(),
   designation: z.string().optional(),
   joiningDate: z.string().optional(),
@@ -81,6 +81,23 @@ export async function GET(req: Request) {
   }
 }
 
+async function generatePrincipalCode(schoolId: string): Promise<string> {
+  const school = await prisma.school.findUnique({ where: { id: schoolId }, select: { name: true } });
+  const letter = (school?.name.trim()[0] || "X").toUpperCase();
+  const prefix = `${letter}-PRN`;
+
+  const principals = await prisma.staff.findMany({
+    where: { employeeId: { startsWith: prefix } },
+    select: { employeeId: true },
+  });
+  const codePattern = new RegExp(`^${letter}-PRN(\\d+)$`);
+  const lastNumber = principals.reduce((max, p) => {
+    const match = p.employeeId.match(codePattern);
+    return match ? Math.max(max, parseInt(match[1], 10)) : max;
+  }, 0);
+  return `${prefix}${String(lastNumber + 1).padStart(5, "0")}`;
+}
+
 export async function POST(req: Request) {
   const { session, error } = await requireAuth(["SUPER_ADMIN", "SCHOOL_ADMIN", "HR_MANAGER"]);
   if (error === "unauthorized") return unauthorized();
@@ -97,8 +114,15 @@ export async function POST(req: Request) {
     const schoolId = user.role === "SUPER_ADMIN" ? data.schoolId : user.schoolId;
     if (!schoolId) return badRequest("School is required");
 
-    const existing = await prisma.staff.findFirst({ where: { schoolId, employeeId: data.employeeId } });
-    if (existing) return badRequest("Employee ID already exists");
+    let employeeId: string;
+    if (data.role === "PRINCIPAL") {
+      employeeId = await generatePrincipalCode(schoolId);
+    } else {
+      if (!data.employeeId) return badRequest("Employee ID is required");
+      const existing = await prisma.staff.findFirst({ where: { schoolId, employeeId: data.employeeId } });
+      if (existing) return badRequest("Employee ID already exists");
+      employeeId = data.employeeId;
+    }
 
     const password = await bcrypt.hash("Staff@123", 12);
 
@@ -120,7 +144,7 @@ export async function POST(req: Request) {
         data: {
           schoolId,
           userId: newUser.id,
-          employeeId: data.employeeId,
+          employeeId,
           department: data.department || null,
           designation: data.designation || null,
           joiningDate: data.joiningDate ? new Date(data.joiningDate) : null,

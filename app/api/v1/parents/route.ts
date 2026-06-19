@@ -133,7 +133,7 @@ export async function POST(req: Request) {
 
     const password = await bcrypt.hash("Parent@123", 12);
     const usedCodes = new Set<string>();
-    const createdAccounts: { role: string; name: string; parentCode: string }[] = [];
+    const createdAccounts: { role: string; name: string; parentCode: string; dob: string | null }[] = [];
 
     const result = await prisma.$transaction(async (tx) => {
       for (const { role, person } of sections) {
@@ -173,7 +173,7 @@ export async function POST(req: Request) {
           },
         });
 
-        createdAccounts.push({ role, name: createdUser.name, parentCode });
+        createdAccounts.push({ role, name: createdUser.name, parentCode, dob: person.dob || null });
       }
       return createdAccounts;
     });
