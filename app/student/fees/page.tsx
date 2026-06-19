@@ -4,24 +4,42 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/shared/stat-card";
+import { Pagination } from "@/components/shared/pagination";
 import { DollarSign } from "lucide-react";
 
-export default async function StudentFeesPage() {
+interface Props {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function StudentFeesPage({ searchParams }: Props) {
   const session = await auth();
   if (!session) redirect("/login");
+
+  const sp = await searchParams;
+  const page = parseInt(sp.page ?? "1");
+  const limit = 20;
+  const skip = (page - 1) * limit;
 
   const student = await prisma.student.findFirst({
     where: { user: { email: session.user.email ?? undefined } },
   });
+  const studentId = student?.id ?? "__none__";
 
-  const payments = student ? await prisma.feePayment.findMany({
-    where: { studentId: student.id },
-    include: { feeStructure: { select: { amount: true, feeType: true } } },
-    orderBy: { paymentDate: "desc" },
-  }) : [];
+  const [allPayments, payments, total] = await Promise.all([
+    prisma.feePayment.findMany({ where: { studentId }, select: { amountPaid: true, status: true } }),
+    prisma.feePayment.findMany({
+      where: { studentId },
+      include: { feeStructure: { select: { amount: true, feeType: true } } },
+      orderBy: { paymentDate: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.feePayment.count({ where: { studentId } }),
+  ]);
+  const totalPages = Math.ceil(total / limit);
 
-  const totalPaid = payments.filter((p) => p.status === "PAID").reduce((s, p) => s + Number(p.amountPaid), 0);
-  const totalDue  = payments.filter((p) => p.status === "PENDING").reduce((s, p) => s + Number(p.amountPaid), 0);
+  const totalPaid = allPayments.filter((p) => p.status === "PAID").reduce((s, p) => s + Number(p.amountPaid), 0);
+  const totalDue  = allPayments.filter((p) => p.status === "PENDING").reduce((s, p) => s + Number(p.amountPaid), 0);
 
   const statusStyle: Record<string, string> = {
     PAID:      "bg-green-100 text-green-700",
@@ -47,7 +65,7 @@ export default async function StudentFeesPage() {
           <CardTitle className="text-base">Payment History</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {payments.length === 0 ? (
+          {total === 0 ? (
             <p className="text-sm text-gray-400 text-center py-12">No fee records found.</p>
           ) : (
             <table className="w-full text-sm">
@@ -81,6 +99,8 @@ export default async function StudentFeesPage() {
           )}
         </CardContent>
       </Card>
+
+      <Pagination page={page} totalPages={totalPages} total={total} limit={limit} skip={skip} />
     </div>
   );
 }

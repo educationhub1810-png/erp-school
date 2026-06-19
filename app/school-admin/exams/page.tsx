@@ -4,19 +4,35 @@ import { prisma } from "@/lib/prisma";
 import { getUser } from "@/lib/session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/shared/pagination";
 import { FileText } from "lucide-react";
 
-export default async function ExamsPage() {
+interface Props {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function ExamsPage({ searchParams }: Props) {
   const session = await auth();
   if (!session) redirect("/login");
   const { schoolId } = getUser(session);
   if (!schoolId) redirect("/login");
 
-  const exams = await prisma.exam.findMany({
-    where: { schoolId },
-    include: { _count: { select: { schedules: true } } },
-    orderBy: { startDate: "desc" },
-  });
+  const sp = await searchParams;
+  const page = parseInt(sp.page ?? "1");
+  const limit = 20;
+  const skip = (page - 1) * limit;
+
+  const [exams, total] = await Promise.all([
+    prisma.exam.findMany({
+      where: { schoolId },
+      include: { _count: { select: { schedules: true } } },
+      orderBy: { startDate: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.exam.count({ where: { schoolId } }),
+  ]);
+  const totalPages = Math.ceil(total / limit);
 
   const typeColor: Record<string, string> = {
     UNIT_TEST: "bg-blue-100 text-blue-700",
@@ -30,12 +46,12 @@ export default async function ExamsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Exams</h1>
-        <p className="text-sm text-gray-500 mt-1">{exams.length} exams</p>
+        <p className="text-sm text-gray-500 mt-1">{total} exams</p>
       </div>
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><FileText className="w-4 h-4" />All Exams</CardTitle></CardHeader>
         <CardContent className="p-0">
-          {exams.length === 0 ? (
+          {total === 0 ? (
             <p className="text-sm text-gray-400 text-center py-12">No exams scheduled.</p>
           ) : (
             <table className="w-full text-sm">
@@ -64,6 +80,8 @@ export default async function ExamsPage() {
           )}
         </CardContent>
       </Card>
+
+      <Pagination page={page} totalPages={totalPages} total={total} limit={limit} skip={skip} />
     </div>
   );
 }

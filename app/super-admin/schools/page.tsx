@@ -3,27 +3,43 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateSchoolDialog } from "./create-school-dialog";
 import { SchoolToggle } from "./school-toggle";
+import { Pagination } from "@/components/shared/pagination";
 import { School, Users, GraduationCap, MapPin, Phone, Mail } from "lucide-react";
 
-export default async function SchoolsPage() {
-  const schools = await prisma.school.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      _count: { select: { students: true, teachers: true, users: true } },
-    },
-  });
+interface Props {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function SchoolsPage({ searchParams }: Props) {
+  const sp = await searchParams;
+  const page = parseInt(sp.page ?? "1");
+  const limit = 20;
+  const skip = (page - 1) * limit;
+
+  const [schools, total] = await Promise.all([
+    prisma.school.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        _count: { select: { students: true, teachers: true, users: true } },
+      },
+      skip,
+      take: limit,
+    }),
+    prisma.school.count(),
+  ]);
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Schools</h1>
-          <p className="text-sm text-gray-500 mt-1">{schools.length} school{schools.length !== 1 ? "s" : ""} registered</p>
+          <p className="text-sm text-gray-500 mt-1">{total} school{total !== 1 ? "s" : ""} registered</p>
         </div>
         <CreateSchoolDialog />
       </div>
 
-      {schools.length === 0 ? (
+      {total === 0 ? (
         <Card className="border-0 shadow-sm">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <School className="w-12 h-12 text-gray-300 mb-3" />
@@ -93,6 +109,8 @@ export default async function SchoolsPage() {
           ))}
         </div>
       )}
+
+      <Pagination page={page} totalPages={totalPages} total={total} limit={limit} skip={skip} />
     </div>
   );
 }

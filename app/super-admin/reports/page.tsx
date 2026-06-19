@@ -7,10 +7,20 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart3, School, Users, GraduationCap, UserCheck, Building2 } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/roles";
 import type { AppRole } from "@/lib/roles";
+import { Pagination } from "@/components/shared/pagination";
 
-export default async function SuperAdminReportsPage() {
+interface Props {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function SuperAdminReportsPage({ searchParams }: Props) {
   const session = await auth();
   if (!session) redirect("/login");
+
+  const sp = await searchParams;
+  const page = parseInt(sp.page ?? "1");
+  const limit = 20;
+  const skip = (page - 1) * limit;
 
   const [
     totalSchools,
@@ -29,8 +39,11 @@ export default async function SuperAdminReportsPage() {
         _count: { select: { users: true } },
       },
       orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
     }),
   ]);
+  const totalPages = Math.ceil(totalSchools / limit);
 
   const totalStudents = usersByRole.find((r) => r.role === "STUDENT")?._count.id ?? 0;
   const totalTeachers = usersByRole.find((r) => r.role === "TEACHER")?._count.id ?? 0;
@@ -87,7 +100,7 @@ export default async function SuperAdminReportsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            {schoolsWithCounts.length === 0 ? (
+            {totalSchools === 0 ? (
               <p className="text-sm text-gray-400 py-4 text-center px-6">No schools registered</p>
             ) : (
               <table className="w-full text-sm">
@@ -119,6 +132,11 @@ export default async function SuperAdminReportsPage() {
               </table>
             )}
           </CardContent>
+          {totalPages > 1 && (
+            <div className="px-4 py-3 border-t">
+              <Pagination page={page} totalPages={totalPages} total={totalSchools} limit={limit} skip={skip} />
+            </div>
+          )}
         </Card>
       </div>
     </div>

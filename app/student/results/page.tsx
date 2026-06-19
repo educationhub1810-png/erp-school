@@ -3,18 +3,40 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/shared/pagination";
 import { GraduationCap } from "lucide-react";
 
-export default async function StudentResultsPage() {
+interface Props {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function StudentResultsPage({ searchParams }: Props) {
   const session = await auth();
   if (!session) redirect("/login");
+
+  const sp = await searchParams;
+  const page = parseInt(sp.page ?? "1");
+  const limit = 20;
+  const skip = (page - 1) * limit;
 
   const student = await prisma.student.findFirst({
     where: { user: { email: session.user.email ?? undefined } },
   });
+  const studentId = student?.id ?? "__none__";
 
-  const results = student ? await prisma.examResult.findMany({
-    where: { studentId: student.id },
+  // Paginate by exam (20 exams per page), not by individual subject-result row
+  const distinctExamIds = await prisma.examResult.findMany({
+    where: { studentId },
+    select: { examId: true },
+    distinct: ["examId"],
+    orderBy: { examId: "asc" },
+  });
+  const totalExams = distinctExamIds.length;
+  const totalPages = Math.ceil(totalExams / limit);
+  const pageExamIds = distinctExamIds.slice(skip, skip + limit).map((e) => e.examId);
+
+  const results = pageExamIds.length ? await prisma.examResult.findMany({
+    where: { studentId, examId: { in: pageExamIds } },
     include: {
       examSchedule: {
         include: {
@@ -45,10 +67,10 @@ export default async function StudentResultsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Exam Results</h1>
-        <p className="text-sm text-gray-500 mt-1">{results.length} result{results.length !== 1 ? "s" : ""} available</p>
+        <p className="text-sm text-gray-500 mt-1">{totalExams} exam{totalExams !== 1 ? "s" : ""} with published results</p>
       </div>
 
-      {Object.keys(byExam).length === 0 ? (
+      {totalExams === 0 ? (
         <Card className="border-0 shadow-sm">
           <CardContent className="py-12 text-center text-sm text-gray-400">No results published yet.</CardContent>
         </Card>
@@ -96,6 +118,8 @@ export default async function StudentResultsPage() {
           );
         })
       )}
+
+      <Pagination page={page} totalPages={totalPages} total={totalExams} limit={limit} skip={skip} />
     </div>
   );
 }

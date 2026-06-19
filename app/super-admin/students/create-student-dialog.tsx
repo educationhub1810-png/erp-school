@@ -113,6 +113,7 @@ export function CreateStudentDialog({ schools }: Props) {
   const selectedClass = classes.find((c) => c.id === selectedClassId);
   const photoUrl = watch("photoUrl");
   const gender = watch("gender");
+  const codePreviewLetter = (schools.find((s) => s.id === selectedSchoolId)?.name.trim()[0] || "X").toUpperCase();
 
   const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -243,7 +244,7 @@ export function CreateStudentDialog({ schools }: Props) {
               <>
                 <div className="space-y-1.5">
                   <Label>Student Code</Label>
-                  <Input value="Auto-generated (e.g. STD00001)" disabled className="text-gray-400" />
+                  <Input value={`Auto-generated (e.g. ${codePreviewLetter}-STD00001)`} disabled className="text-gray-400" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -494,7 +495,12 @@ export function CreateStudentDialog({ schools }: Props) {
                 Next <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             ) : (
-              <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={loading}>
+              <Button
+                type="button"
+                onClick={handleSubmit(onSubmit, onInvalid)}
+                className="bg-green-600 hover:bg-green-700"
+                disabled={loading}
+              >
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Save Student
               </Button>

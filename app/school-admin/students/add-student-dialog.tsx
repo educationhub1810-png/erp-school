@@ -246,7 +246,7 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Student Code</Label>
-                    <Input value="Auto-generated (e.g. STD00001)" disabled className="text-gray-400" />
+                    <Input value="Auto-generated (e.g. D-STD00001)" disabled className="text-gray-400" />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Roll Number</Label>
@@ -396,7 +396,12 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
                 Next <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             ) : (
-              <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={loading}>
+              <Button
+                type="button"
+                onClick={handleSubmit(onSubmit)}
+                className="bg-green-600 hover:bg-green-700"
+                disabled={loading}
+              >
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Save Student
               </Button>
