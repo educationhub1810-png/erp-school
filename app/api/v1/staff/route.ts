@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
-import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
+import { ok, created, badRequest, unauthorized, forbidden, serverError, duplicateValue } from "@/lib/api-response";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
@@ -118,9 +118,9 @@ export async function POST(req: Request) {
     if (data.role === "PRINCIPAL") {
       employeeId = await generatePrincipalCode(schoolId);
     } else {
-      if (!data.employeeId) return badRequest("Employee ID is required");
+      if (!data.employeeId) return badRequest("Please enter correct value (Employee ID)");
       const existing = await prisma.staff.findFirst({ where: { schoolId, employeeId: data.employeeId } });
-      if (existing) return badRequest("Employee ID already exists");
+      if (existing) return badRequest("Please enter correct value (Employee ID)");
       employeeId = data.employeeId;
     }
 
@@ -167,6 +167,9 @@ export async function POST(req: Request) {
 
     return created(result);
   } catch (e) {
+    if ((e as { code?: string })?.code === "P2002") {
+      return duplicateValue(e);
+    }
     return serverError(e);
   }
 }
