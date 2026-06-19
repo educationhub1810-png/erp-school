@@ -22,6 +22,7 @@ import {
   Bell,
   Home,
   Bug,
+  FlaskConical,
   ShieldAlert,
 } from "lucide-react";
 
@@ -49,6 +50,7 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: "Reports", href: "/super-admin/reports", icon: BarChart3 },
     { label: "Audit & Security", href: "/super-admin/audit", icon: ShieldAlert },
     { label: "Bug Board", href: "/super-admin/bugs", icon: Bug },
+    { label: "Tests", href: "/super-admin/tests", icon: FlaskConical },
     { label: "Settings", href: "/super-admin/settings", icon: Settings },
   ],
   SCHOOL_ADMIN: [
