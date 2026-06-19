@@ -117,7 +117,7 @@ export function BugBoard({ initialTickets, role, currentUserId }: Props) {
                       <Badge className={`${BUG_PRIORITY_BADGE[t.priority]} hover:${BUG_PRIORITY_BADGE[t.priority]} text-[10px] px-1.5 py-0`}>
                         {BUG_PRIORITY_LABELS[t.priority]}
                       </Badge>
-                      {t.screenshotUrl && <ImageIcon className="h-3.5 w-3.5 text-gray-400" />}
+                      {t.hasScreenshot && <ImageIcon className="h-3.5 w-3.5 text-gray-400" />}
                     </div>
                     <p className="mt-2 text-[11px] text-gray-400">
                       {t.reporter.name} · {ROLE_LABELS[t.reporter.role as AppRole] ?? t.reporter.role}

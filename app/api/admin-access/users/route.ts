@@ -1,11 +1,12 @@
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { ok, forbidden, badRequest, serverError } from "@/lib/api-response";
+import { secureEquals } from "@/lib/secure-compare";
 
 export async function GET(req: Request) {
   const cookieStore = await cookies();
   const adminKey = cookieStore.get("admin_access")?.value;
-  if (!adminKey || adminKey !== process.env.ADMIN_SECRET_CODE) return forbidden();
+  if (!secureEquals(adminKey, process.env.ADMIN_SECRET_CODE)) return forbidden();
 
   const { searchParams } = new URL(req.url);
   const schoolId = searchParams.get("schoolId");

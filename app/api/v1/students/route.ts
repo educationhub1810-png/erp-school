@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
+import { imageDataUrl } from "@/lib/validation";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
@@ -17,7 +18,7 @@ const createSchema = z.object({
   category: z.string().optional(),
   religion: z.string().optional(),
   aadhaar: z.string().optional(),
-  photoUrl: z.string().max(2_000_000, "Photo is too large").optional(),
+  photoUrl: imageDataUrl(2_000_000),
   // Contact
   email: z.string().email().optional().or(z.literal("")),
   mobile: z.string().optional(),
@@ -78,15 +79,43 @@ export async function GET(req: Request) {
       }),
     };
 
+    // Only privileged roles may see sensitive PII. Teachers get a reduced view.
+    // The base64 photoUrl blob is never returned in lists (fetch it per-record).
+    const canSeePii = user.role === "SUPER_ADMIN" || user.role === "SCHOOL_ADMIN" || user.role === "PRINCIPAL";
+    const select = {
+      id: true,
+      schoolId: true,
+      studentCode: true,
+      rollNumber: true,
+      firstName: true,
+      middleName: true,
+      lastName: true,
+      gender: true,
+      classId: true,
+      sectionId: true,
+      house: true,
+      admissionDate: true,
+      isAlumni: true,
+      // Sensitive PII — privileged roles only.
+      ...(canSeePii && {
+        dob: true,
+        bloodGroup: true,
+        category: true,
+        religion: true,
+        aadhaar: true,
+        medicalNotes: true,
+        previousSchool: true,
+      }),
+      school: { select: { name: true, code: true } },
+      class: { select: { name: true } },
+      section: { select: { name: true } },
+      user: { select: { email: true, mobile: true, isActive: true } },
+    };
+
     const [students, total] = await Promise.all([
       prisma.student.findMany({
         where,
-        include: {
-          school: { select: { name: true, code: true } },
-          class: { select: { name: true } },
-          section: { select: { name: true } },
-          user: { select: { email: true, mobile: true, isActive: true } },
-        },
+        select,
         orderBy: { admissionDate: "desc" },
         skip,
         take: limit,
