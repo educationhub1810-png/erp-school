@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, badRequest, unauthorized, forbidden, notFound, serverError } from "@/lib/api-response";
+import { writeAuditLog, clientIp } from "@/lib/audit";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -86,7 +87,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { session, error } = await requireAuth(["SUPER_ADMIN", "SCHOOL_ADMIN", "HR_MANAGER"]);
   if (error === "unauthorized") return unauthorized();
   if (error === "forbidden") return forbidden();
@@ -100,6 +101,16 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     if (user.role !== "SUPER_ADMIN" && user.schoolId !== staff.schoolId) return forbidden();
 
     await prisma.user.delete({ where: { id: staff.userId } });
+
+    await writeAuditLog({
+      action: "STAFF_DELETE",
+      actorId: user.id,
+      actorRole: user.role,
+      schoolId: staff.schoolId,
+      targetType: "staff",
+      targetId: staff.id,
+      ip: clientIp(req),
+    });
 
     return ok({ deleted: true, name: staff.user.name });
   } catch (e) {

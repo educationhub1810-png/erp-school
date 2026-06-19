@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, badRequest, unauthorized, forbidden, notFound, serverError } from "@/lib/api-response";
+import { imageDataUrl } from "@/lib/validation";
+import { writeAuditLog, clientIp } from "@/lib/audit";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -14,7 +16,7 @@ const updateSchema = z.object({
   category: z.string().optional(),
   religion: z.string().optional(),
   aadhaar: z.string().optional(),
-  photoUrl: z.string().max(2_000_000, "Photo is too large").optional(),
+  photoUrl: imageDataUrl(2_000_000),
   classId: z.string().min(1).optional(),
   sectionId: z.string().optional(),
   rollNumber: z.string().optional(),
@@ -97,7 +99,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { session, error } = await requireAuth(["SUPER_ADMIN", "SCHOOL_ADMIN"]);
   if (error === "unauthorized") return unauthorized();
   if (error === "forbidden") return forbidden();
@@ -112,6 +114,16 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
     // Deleting the linked User cascades the Student (and Parent) records.
     await prisma.user.delete({ where: { id: student.userId } });
+
+    await writeAuditLog({
+      action: "STUDENT_DELETE",
+      actorId: user.id,
+      actorRole: user.role,
+      schoolId: student.schoolId,
+      targetType: "student",
+      targetId: student.id,
+      ip: clientIp(req),
+    });
 
     return ok({ deleted: true, name: `${student.firstName} ${student.lastName}` });
   } catch (e) {

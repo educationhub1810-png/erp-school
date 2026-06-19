@@ -1,10 +1,11 @@
 import { cookies } from "next/headers";
 import { ok, badRequest } from "@/lib/api-response";
+import { secureEquals } from "@/lib/secure-compare";
 
 export async function POST(req: Request) {
   const { code } = await req.json();
 
-  if (!code || code !== process.env.ADMIN_SECRET_CODE) {
+  if (!secureEquals(code, process.env.ADMIN_SECRET_CODE)) {
     return badRequest("Invalid code");
   }
 

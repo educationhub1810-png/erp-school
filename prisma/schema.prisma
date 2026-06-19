@@ -1112,3 +1112,25 @@ model BugTicket {
   @@index([status])
   @@map("bug_tickets")
 }
+
+// ─────────────────────────────────────────────
+// SECURITY AUDIT LOG (append-only)
+// ─────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actorRole  String?
+  schoolId   String?
+  action     String
+  targetType String?
+  targetId   String?
+  metadata   String?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
