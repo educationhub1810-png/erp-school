@@ -32,6 +32,19 @@ enum Gender {
   OTHER
 }
 
+enum ParentType {
+  FATHER
+  MOTHER
+  GUARDIAN
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
 enum AttendanceStatus {
   PRESENT
   ABSENT
@@ -184,6 +197,7 @@ model School {
   subjects           Subject[]
   students           Student[]
   teachers           Teacher[]
+  parentProfiles     ParentProfile[]
   staff              Staff[]
   announcements      Announcement[]
   notifications      Notification[]
@@ -245,6 +259,7 @@ model User {
   teacher           Teacher?
   staff             Staff?
   student           Student?
+  parentProfile     ParentProfile?
   accounts          Account[]
   sessions          Session[]
   sentMessages      ChatMessage[] @relation("SentMessages")
@@ -395,6 +410,7 @@ model Student {
   class           Class              @relation(fields: [classId], references: [id])
   section         Section?           @relation(fields: [sectionId], references: [id])
   parent          Parent?
+  parentProfiles  ParentProfile[]
   documents       Document[]
   attendance      Attendance[]
   feePayments     FeePayment[]
@@ -429,6 +445,32 @@ model Parent {
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@map("parents")
+}
+
+model ParentProfile {
+  id          String     @id @default(cuid())
+  userId      String     @unique
+  schoolId    String
+  studentId   String?
+  parentCode  String     @unique
+  parentType  ParentType
+  firstName   String
+  middleName  String?
+  lastName    String
+  gender      Gender
+  dob         DateTime?
+  maritalStatus MaritalStatus?
+  nationality String?
+  aadhaar     String?
+  pan         String?
+  address     String?
+  createdAt   DateTime   @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school  School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("parent_profiles")
 }
 
 model Document {
