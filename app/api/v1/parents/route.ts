@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
-import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
+import { ok, created, badRequest, unauthorized, forbidden, serverError, duplicateValue } from "@/lib/api-response";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
@@ -181,7 +181,7 @@ export async function POST(req: Request) {
     return created({ accounts: result });
   } catch (e) {
     if ((e as { code?: string })?.code === "P2002") {
-      return badRequest("One of the email addresses is already used by another account");
+      return duplicateValue(e);
     }
     return serverError(e);
   }
