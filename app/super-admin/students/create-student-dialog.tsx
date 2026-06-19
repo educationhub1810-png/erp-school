@@ -8,12 +8,12 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { DatePicker } from "@/components/ui/date-picker";
-import { UserPlus, Loader2, ChevronRight, ChevronLeft, Check, Upload, X } from "lucide-react";
+import { UserPlus, Loader2, ChevronRight, ChevronLeft, Check, Upload, X, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getStudentAvatarSrc } from "@/lib/student-avatar";
@@ -27,7 +27,7 @@ const schema = z.object({
   middleName: z.string().optional(),
   lastName: z.string().min(1, "Required"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
-  dob: z.string().optional(),
+  dob: z.string().min(1, "Date of birth is required"),
   bloodGroup: z.string().optional(),
   category: z.string().optional(),
   religion: z.string().optional(),
@@ -47,28 +47,21 @@ const schema = z.object({
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   mobile: z.string().optional(),
   address: z.string().optional(),
-  // Step 4: Parent
-  fatherName: z.string().optional(),
-  fatherMobile: z.string().optional(),
-  fatherEmail: z.string().optional(),
-  fatherOccupation: z.string().optional(),
-  motherName: z.string().optional(),
-  motherMobile: z.string().optional(),
-  motherEmail: z.string().optional(),
-  motherOccupation: z.string().optional(),
-  guardianName: z.string().optional(),
-  guardianMobile: z.string().optional(),
-  guardianRelation: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
 
-const STEPS = ["Personal", "Academic", "Contact", "Parent"];
+const STEPS = ["Personal", "Academic", "Contact"];
 const FIELD_STEP: Partial<Record<keyof FormValues, number>> = {
-  schoolId: 0, firstName: 0, lastName: 0, gender: 0,
+  schoolId: 0, firstName: 0, lastName: 0, gender: 0, dob: 0,
   classId: 1,
   email: 2,
 };
+const STEP_FIELDS: (keyof FormValues)[][] = [
+  ["schoolId", "firstName", "lastName", "gender", "dob"],
+  ["classId"],
+  ["email"],
+];
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const CATEGORIES = ["General", "OBC", "SC", "ST", "EWS", "Other"];
 const RELIGIONS = ["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Other"];
@@ -97,14 +90,18 @@ export function CreateStudentDialog({ schools }: Props) {
   const [loading, setLoading] = useState(false);
   const [classes, setClasses] = useState<Class[]>([]);
   const [classesLoading, setClassesLoading] = useState(false);
+  const [createdCode, setCreatedCode] = useState<string | null>(null);
+  const [createdDob, setCreatedDob] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<"code" | "dob" | null>(null);
 
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, trigger, watch, setValue, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       schoolId: "",
       classId: "",
       sectionId: "",
       gender: "MALE",
+      dob: "",
       transportRequired: false,
       hostelRequired: false,
       admissionDate: new Date().toISOString().split("T")[0],
@@ -160,6 +157,8 @@ export function CreateStudentDialog({ schools }: Props) {
         return;
       }
       toast.success("Student added successfully");
+      setCreatedCode(json.data?.studentCode ?? null);
+      setCreatedDob(json.data?.dob ?? null);
       reset();
       setStep(0);
       setOpen(false);
@@ -169,8 +168,18 @@ export function CreateStudentDialog({ schools }: Props) {
     }
   };
 
-  const nextStep = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  const nextStep = async () => {
+    const valid = await trigger(STEP_FIELDS[step]);
+    if (!valid) return;
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  };
   const prevStep = () => setStep((s) => Math.max(s - 1, 0));
+
+  const handleCopy = async (field: "code" | "dob", value: string) => {
+    await navigator.clipboard.writeText(value);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 1500);
+  };
 
   const onInvalid = (invalidFields: typeof errors) => {
     const steps = Object.keys(invalidFields).map((key) => FIELD_STEP[key as keyof FormValues] ?? 0);
@@ -182,6 +191,7 @@ export function CreateStudentDialog({ schools }: Props) {
   };
 
   return (
+    <>
     <Dialog
       open={open}
       onOpenChange={(v, eventDetails) => {
@@ -232,47 +242,55 @@ export function CreateStudentDialog({ schools }: Props) {
             {step === 0 && (
               <>
                 <div className="space-y-1.5">
-                  <Label>School *</Label>
-                  <Select
-                    onValueChange={(v) => {
-                      setValue("schoolId", v as string, { shouldValidate: true });
-                      setValue("classId", "");
-                      setValue("sectionId", "");
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select school">
-                        {(value: string) => {
-                          const school = schools.find((s) => s.id === value);
-                          return school ? `${school.name} (${school.code})` : "Select school";
-                        }}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {schools.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} ({s.code})</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  {errors.schoolId && <p className="text-xs text-red-500">{errors.schoolId.message}</p>}
+                  <Label>Student Code</Label>
+                  <Input value="Auto-generated (e.g. STD00001)" disabled className="text-gray-400" />
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <Avatar className="size-16">
-                    <AvatarImage src={getStudentAvatarSrc(photoUrl, gender)} alt="Student photo" />
-                  </Avatar>
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label>Student Photo</Label>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" nativeButton={false} render={<label className="cursor-pointer" />}>
-                        <Upload className="w-3.5 h-3.5 mr-1.5" /> Upload Photo
-                        <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
-                      </Button>
-                      {photoUrl && (
-                        <Button type="button" variant="ghost" size="sm" onClick={() => setValue("photoUrl", "")}>
-                          <X className="w-3.5 h-3.5 mr-1" /> Remove
+                    <Label>School *</Label>
+                    <Select
+                      value={selectedSchoolId}
+                      onValueChange={(v) => {
+                        setValue("schoolId", v as string, { shouldValidate: true });
+                        setValue("classId", "");
+                        setValue("sectionId", "");
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select school">
+                          {(value: string) => {
+                            const school = schools.find((s) => s.id === value);
+                            return school ? `${school.name} (${school.code})` : "Select school";
+                          }}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {schools.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} ({s.code})</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    {errors.schoolId && <p className="text-xs text-red-500">{errors.schoolId.message}</p>}
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <Avatar className="size-24">
+                      <AvatarImage src={getStudentAvatarSrc(photoUrl, gender)} alt="Student photo" />
+                    </Avatar>
+                    <div className="space-y-1.5">
+                      <Label>Student Photo</Label>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" nativeButton={false} render={<label className="cursor-pointer" />}>
+                          <Upload className="w-4 h-4 mr-1.5" /> Upload Photo
+                          <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
                         </Button>
-                      )}
+                        {photoUrl && (
+                          <Button type="button" variant="ghost" size="sm" onClick={() => setValue("photoUrl", "")}>
+                            <X className="w-3.5 h-3.5 mr-1" /> Remove
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400">If no photo is uploaded, a default avatar based on gender is used.</p>
                     </div>
-                    <p className="text-xs text-gray-400">If no photo is uploaded, a default avatar based on gender is used.</p>
                   </div>
                 </div>
 
@@ -306,8 +324,13 @@ export function CreateStudentDialog({ schools }: Props) {
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Date of Birth</Label>
-                    <DatePicker value={watch("dob")} onChange={(v) => setValue("dob", v)} placeholder="Select date of birth" />
+                    <Label>Date of Birth *</Label>
+                    <DatePicker
+                      value={watch("dob")}
+                      onChange={(v) => setValue("dob", v, { shouldValidate: true })}
+                      placeholder="Select date of birth"
+                    />
+                    {errors.dob && <p className="text-xs text-red-500">{errors.dob.message}</p>}
                   </div>
                   <div className="space-y-1.5">
                     <Label>Blood Group</Label>
@@ -350,21 +373,15 @@ export function CreateStudentDialog({ schools }: Props) {
             {/* Step 2: Academic */}
             {step === 1 && (
               <>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label>Student Code</Label>
-                    <Input value="Auto-generated (e.g. STD00001)" disabled className="text-gray-400" />
-                  </div>
+                <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>Roll Number</Label>
                     <Input placeholder="01" {...register("rollNumber")} />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Class *</Label>
                     <Select
+                      value={selectedClassId}
                       disabled={!selectedSchoolId || classesLoading}
                       onValueChange={(v) => { setValue("classId", v as string, { shouldValidate: true }); setValue("sectionId", ""); }}
                     >
@@ -381,7 +398,11 @@ export function CreateStudentDialog({ schools }: Props) {
                   </div>
                   <div className="space-y-1.5">
                     <Label>Section</Label>
-                    <Select onValueChange={(v) => setValue("sectionId", v as string)} disabled={!selectedClass?.sections.length}>
+                    <Select
+                      value={watch("sectionId")}
+                      onValueChange={(v) => setValue("sectionId", v as string)}
+                      disabled={!selectedClass?.sections.length}
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select section">
                           {(value: string) => {
@@ -461,50 +482,6 @@ export function CreateStudentDialog({ schools }: Props) {
               </>
             )}
 
-            {/* Step 4: Parent */}
-            {step === 3 && (
-              <>
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Father&apos;s Details</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label>Father&apos;s Name</Label>
-                    <Input {...register("fatherName")} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Mobile</Label>
-                    <Input type="tel" {...register("fatherMobile")} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Email</Label>
-                    <Input type="email" {...register("fatherEmail")} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Occupation</Label>
-                    <Input {...register("fatherOccupation")} />
-                  </div>
-                </div>
-
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide pt-2">Mother&apos;s Details</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label>Mother&apos;s Name</Label>
-                    <Input {...register("motherName")} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Mobile</Label>
-                    <Input type="tel" {...register("motherMobile")} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Email</Label>
-                    <Input type="email" {...register("motherEmail")} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Occupation</Label>
-                    <Input {...register("motherOccupation")} />
-                  </div>
-                </div>
-              </>
-            )}
           </div>
 
           {/* Navigation */}
@@ -526,5 +503,49 @@ export function CreateStudentDialog({ schools }: Props) {
         </form>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={!!createdCode} onOpenChange={(o) => { if (!o) { setCreatedCode(null); setCreatedDob(null); } }}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>Student Added Successfully</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          Share this student code with the student to log in. The password is their date of birth (DDMMYYYY).
+        </p>
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Student Code</Label>
+            <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
+              <span className="font-mono text-base font-semibold tracking-wide">{createdCode}</span>
+              <Button type="button" variant="outline" size="sm" onClick={() => createdCode && handleCopy("code", createdCode)}>
+                {copiedField === "code" ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                {copiedField === "code" ? "Copied" : "Copy"}
+              </Button>
+            </div>
+          </div>
+
+          {createdDob && (
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Date of Birth</Label>
+              <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
+                <span className="font-mono text-base font-semibold tracking-wide">
+                  {new Date(createdDob).toLocaleDateString()}
+                </span>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleCopy("dob", new Date(createdDob).toLocaleDateString())}>
+                  {copiedField === "dob" ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                  {copiedField === "dob" ? "Copied" : "Copy"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button type="button" className="bg-indigo-600 hover:bg-indigo-700" onClick={() => { setCreatedCode(null); setCreatedDob(null); }}>
+            OK
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

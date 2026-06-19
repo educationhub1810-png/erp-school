@@ -6,7 +6,6 @@ import { z } from "zod";
 
 const createSchema = z.object({
   name: z.string().min(2),
-  code: z.string().min(2).max(20),
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
   principalName: z.string().optional(),
@@ -38,6 +37,18 @@ export async function GET() {
   }
 }
 
+async function generateSchoolCode(): Promise<string> {
+  const schools = await prisma.school.findMany({
+    where: { code: { startsWith: "SCH" } },
+    select: { code: true },
+  });
+  const lastNumber = schools.reduce((max, s) => {
+    const match = s.code.match(/^SCH(\d+)$/);
+    return match ? Math.max(max, parseInt(match[1], 10)) : max;
+  }, 0);
+  return `SCH${String(lastNumber + 1).padStart(5, "0")}`;
+}
+
 export async function POST(req: Request) {
   const { session, error } = await requireAuth(["SUPER_ADMIN"]);
   if (error === "unauthorized") return unauthorized();
@@ -50,19 +61,27 @@ export async function POST(req: Request) {
 
     const data = parsed.data;
 
-    const existing = await prisma.school.findUnique({
-      where: { code: data.code.toUpperCase() },
-    });
-    if (existing) return badRequest("School code already exists");
+    let code = await generateSchoolCode();
+    let school;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        school = await prisma.school.create({
+          data: {
+            ...data,
+            code,
+            email: data.email || null,
+            establishedDate: data.establishedDate ? new Date(data.establishedDate) : null,
+          },
+        });
+        break;
+      } catch (e) {
+        const isDuplicateCode = (e as { code?: string })?.code === "P2002" && attempt < 4;
+        if (!isDuplicateCode) throw e;
+        const nextNumber = parseInt(code.replace("SCH", ""), 10) + 1;
+        code = `SCH${String(nextNumber).padStart(5, "0")}`;
+      }
+    }
 
-    const school = await prisma.school.create({
-      data: {
-        ...data,
-        code: data.code.toUpperCase(),
-        email: data.email || null,
-        establishedDate: data.establishedDate ? new Date(data.establishedDate) : null,
-      },
-    });
     revalidatePath("/super-admin/schools");
     return created(school);
   } catch (e) {
