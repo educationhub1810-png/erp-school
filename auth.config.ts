@@ -16,6 +16,21 @@ export const authConfig = {
     authorized({ auth, request }) {
       const { pathname } = request.nextUrl;
 
+      // CSRF defense: for state-changing requests, require the Origin header to
+      // match the host. Browsers always send Origin on POST/PUT/PATCH/DELETE, so
+      // this blocks cross-site forged requests. NextAuth's own /api/auth routes
+      // carry a dedicated CSRF token and are excluded.
+      const method = request.method.toUpperCase();
+      const isMutation = method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE";
+      if (isMutation && !pathname.startsWith("/api/auth")) {
+        const origin = request.headers.get("origin");
+        const host = request.headers.get("host");
+        const originHost = origin ? (() => { try { return new URL(origin).host; } catch { return null; } })() : null;
+        if (!originHost || originHost !== host) {
+          return new Response("Forbidden: invalid origin", { status: 403 });
+        }
+      }
+
       if (OPEN_PATHS.some((p) => pathname.startsWith(p))) return true;
 
       // API routes handle their own auth via requireAuth — don't role-check them here

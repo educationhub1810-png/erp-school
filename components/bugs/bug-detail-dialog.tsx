@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -29,8 +29,29 @@ interface Props {
 
 export function BugDetailDialog({ ticket, canMove, currentUserId, onClose, onUpdated, onDeleted }: Props) {
   const [busy, setBusy] = useState(false);
+  // Keyed by ticket id so a stale fetch never shows under a different ticket.
+  const [screenshot, setScreenshot] = useState<{ id: string; url: string | null } | null>(null);
+
+  const ticketId = ticket?.id;
+  const hasScreenshot = ticket?.hasScreenshot ?? false;
+
+  // Fetch the (heavy) screenshot only when a ticket with one is opened.
+  // setState is only ever called from async callbacks (no synchronous effect setState).
+  useEffect(() => {
+    if (!ticketId || !hasScreenshot) return;
+    let cancelled = false;
+    fetch(`/api/v1/bugs/${ticketId}`)
+      .then((res) => res.json())
+      .then((json) => { if (!cancelled) setScreenshot({ id: ticketId, url: json.data?.screenshotUrl ?? null }); })
+      .catch(() => { if (!cancelled) setScreenshot({ id: ticketId, url: null }); });
+    return () => { cancelled = true; };
+  }, [ticketId, hasScreenshot]);
 
   if (!ticket) return null;
+
+  const screenshotReady = screenshot?.id === ticket.id;
+  const screenshotUrl = screenshotReady ? screenshot?.url ?? null : null;
+  const screenshotLoading = ticket.hasScreenshot && !screenshotReady;
 
   const canDelete = canMove || ticket.reporterId === currentUserId;
 
@@ -111,11 +132,19 @@ export function BugDetailDialog({ ticket, canMove, currentUserId, onClose, onUpd
             <p className="text-gray-800 whitespace-pre-wrap">{ticket.whatExpected}</p>
           </div>
 
-          {ticket.screenshotUrl && (
+          {ticket.hasScreenshot && (
             <div className="space-y-1">
               <Label className="text-gray-500">Screenshot</Label>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={ticket.screenshotUrl} alt="Screenshot" className="max-h-80 w-auto rounded-md border bg-gray-50" />
+              {screenshotLoading ? (
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading screenshot…
+                </div>
+              ) : screenshotUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={screenshotUrl} alt="Screenshot" className="max-h-80 w-auto rounded-md border bg-gray-50" />
+              ) : (
+                <p className="text-xs text-gray-400">Screenshot unavailable.</p>
+              )}
             </div>
           )}
 

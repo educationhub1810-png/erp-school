@@ -3,6 +3,8 @@ import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
 import { BUG_SCREENSHOT_MAX_CHARS } from "@/lib/bug-config";
+import { getBugTicketsForUser } from "@/lib/bug-tickets";
+import { imageDataUrl } from "@/lib/validation";
 import { z } from "zod";
 
 const BOARD_ROLES = ["SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL"] as const;
@@ -13,11 +15,7 @@ const createSchema = z.object({
   whatNotWorking: z.string().min(1, "Please describe what is not working"),
   whatExpected: z.string().min(1, "Please describe what you expected"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH"]).optional(),
-  screenshotUrl: z
-    .string()
-    .max(BUG_SCREENSHOT_MAX_CHARS, "Screenshot is too large (max 2 MB)")
-    .optional()
-    .or(z.literal("")),
+  screenshotUrl: imageDataUrl(BUG_SCREENSHOT_MAX_CHARS),
 });
 
 export async function GET() {
@@ -28,18 +26,7 @@ export async function GET() {
   const user = getUser(session!);
 
   try {
-    // School-scoped: Super Admin sees every school's tickets; others see only their own school.
-    const where = user.role === "SUPER_ADMIN" ? {} : { schoolId: user.schoolId ?? "__none__" };
-
-    const tickets = await prisma.bugTicket.findMany({
-      where,
-      include: {
-        school: { select: { name: true, code: true } },
-        reporter: { select: { name: true, role: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-
+    const tickets = await getBugTicketsForUser(user);
     return ok({ tickets });
   } catch (e) {
     return serverError(e);
@@ -77,7 +64,9 @@ export async function POST(req: Request) {
       },
     });
 
-    return created(ticket);
+    // Return the list-view shape (no blob) so the board can append it directly.
+    const { screenshotUrl, ...rest } = ticket;
+    return created({ ...rest, createdAt: ticket.createdAt.toISOString(), hasScreenshot: !!screenshotUrl });
   } catch (e) {
     return serverError(e);
   }
