@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { UserPlus, Loader2 } from "lucide-react";
+import { UserPlus, Loader2, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 const personSchema = z.object({
@@ -82,6 +82,13 @@ interface Props {
   schools: School[];
 }
 
+interface CreatedAccount {
+  role: string;
+  name: string;
+  parentCode: string;
+  dob: string | null;
+}
+
 export function CreateParentDialog({ schools }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -89,6 +96,8 @@ export function CreateParentDialog({ schools }: Props) {
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
+  const [createdAccounts, setCreatedAccounts] = useState<CreatedAccount[] | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -124,6 +133,12 @@ export function CreateParentDialog({ schools }: Props) {
       .finally(() => setStudentsLoading(false));
   }, [selectedClassId]);
 
+  const handleCopy = async (field: string, value: string) => {
+    await navigator.clipboard.writeText(value);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 1500);
+  };
+
   const onSubmit = async (data: FormValues) => {
     setLoading(true);
     try {
@@ -144,8 +159,8 @@ export function CreateParentDialog({ schools }: Props) {
         toast.error(json.error || "Failed to add parent account(s)");
         return;
       }
-      const codes = (json.data?.accounts ?? []).map((a: { parentCode: string }) => a.parentCode).join(", ");
-      toast.success(`Parent account(s) added successfully (${codes})`);
+      toast.success("Parent account(s) added successfully");
+      setCreatedAccounts(json.data?.accounts ?? []);
       reset();
       setClasses([]);
       setStudents([]);
@@ -195,7 +210,10 @@ export function CreateParentDialog({ schools }: Props) {
               <Label>Gender *</Label>
               <Select
                 value={watch(`${role}.gender`)}
-                onValueChange={(v) => setValue(`${role}.gender`, v as "MALE" | "FEMALE" | "OTHER")}
+                onValueChange={(v) => {
+                  if (v == null) return;
+                  setValue(`${role}.gender`, v as "MALE" | "FEMALE" | "OTHER", { shouldValidate: true });
+                }}
               >
                 <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
@@ -218,7 +236,10 @@ export function CreateParentDialog({ schools }: Props) {
               <Label>Marital Status</Label>
               <Select
                 value={watch(`${role}.maritalStatus`)}
-                onValueChange={(v) => setValue(`${role}.maritalStatus`, v as "SINGLE" | "MARRIED" | "DIVORCED" | "WIDOWED")}
+                onValueChange={(v) => {
+                  if (v == null) return;
+                  setValue(`${role}.maritalStatus`, v as "SINGLE" | "MARRIED" | "DIVORCED" | "WIDOWED");
+                }}
               >
                 <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
@@ -268,6 +289,7 @@ export function CreateParentDialog({ schools }: Props) {
   );
 
   return (
+    <>
     <Dialog
       open={open}
       onOpenChange={(v, eventDetails) => {
@@ -286,15 +308,9 @@ export function CreateParentDialog({ schools }: Props) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2 flex-1 overflow-y-auto pr-1">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Parent ID</Label>
-              <Input value="Auto Generate" disabled className="text-gray-400" />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Parent Code</Label>
-              <Input value={`Auto-generated per parent (e.g. ${codePreviewLetter}-PAR00001)`} disabled className="text-gray-400" />
-            </div>
+          <div className="space-y-1.5">
+            <Label>Parent Code</Label>
+            <Input value={`Auto-generated per parent (e.g. ${codePreviewLetter}-PAR00001)`} disabled className="text-gray-400" />
           </div>
 
           <div className="grid grid-cols-3 gap-3">
@@ -303,6 +319,7 @@ export function CreateParentDialog({ schools }: Props) {
               <Select
                 value={selectedSchoolId}
                 onValueChange={(v) => {
+                  if (v == null) return;
                   setValue("schoolId", v as string, { shouldValidate: true });
                   setValue("classId", "");
                   setValue("studentId", "");
@@ -327,6 +344,7 @@ export function CreateParentDialog({ schools }: Props) {
               <Select
                 value={selectedClassId}
                 onValueChange={(v) => {
+                  if (v == null) return;
                   setValue("classId", v as string, { shouldValidate: true });
                   setValue("studentId", "");
                 }}
@@ -342,7 +360,10 @@ export function CreateParentDialog({ schools }: Props) {
               <Label>Student *</Label>
               <Select
                 value={watch("studentId")}
-                onValueChange={(v) => setValue("studentId", v as string, { shouldValidate: true })}
+                onValueChange={(v) => {
+                  if (v == null) return;
+                  setValue("studentId", v as string, { shouldValidate: true });
+                }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={studentsLoading ? "Loading..." : "Select student"} />
@@ -377,5 +398,53 @@ export function CreateParentDialog({ schools }: Props) {
         </form>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={!!createdAccounts} onOpenChange={(o) => { if (!o) setCreatedAccounts(null); }}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>Parent Account(s) Added Successfully</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          Share each parent code with them to log in. Default password: Parent@123.
+        </p>
+        <div className="space-y-3">
+          {createdAccounts?.map((a) => (
+            <div key={a.role} className="space-y-2">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{ROLE_LABEL[a.role as Role]} · {a.name}</p>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Parent Code</Label>
+                <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
+                  <span className="font-mono text-base font-semibold tracking-wide">{a.parentCode}</span>
+                  <Button type="button" variant="outline" size="sm" onClick={() => handleCopy(`${a.role}-code`, a.parentCode)}>
+                    {copiedField === `${a.role}-code` ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                    {copiedField === `${a.role}-code` ? "Copied" : "Copy"}
+                  </Button>
+                </div>
+              </div>
+              {a.dob && (
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Date of Birth</Label>
+                  <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
+                    <span className="font-mono text-base font-semibold tracking-wide">
+                      {new Date(a.dob).toLocaleDateString()}
+                    </span>
+                    <Button type="button" variant="outline" size="sm" onClick={() => handleCopy(`${a.role}-dob`, new Date(a.dob!).toLocaleDateString())}>
+                      {copiedField === `${a.role}-dob` ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                      {copiedField === `${a.role}-dob` ? "Copied" : "Copy"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        <DialogFooter>
+          <Button type="button" className="bg-indigo-600 hover:bg-indigo-700" onClick={() => setCreatedAccounts(null)}>
+            OK
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

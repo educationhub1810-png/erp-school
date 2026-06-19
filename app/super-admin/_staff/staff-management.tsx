@@ -77,7 +77,7 @@ export async function StaffManagement({ role, roleLabel, roleLabelPlural, search
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
-                  <TableHead>Employee ID</TableHead>
+                  <TableHead>{role === "PRINCIPAL" ? "Principal Code" : "Employee ID"}</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>School</TableHead>
                   <TableHead>Department</TableHead>

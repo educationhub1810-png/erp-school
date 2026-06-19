@@ -134,7 +134,7 @@ export function EditStaffDialog({ role, roleLabel, staff, open, onOpenChange }: 
           <DialogTitle>Edit {roleLabel}</DialogTitle>
         </DialogHeader>
         <p className="text-xs text-gray-500 -mt-2">
-          {staff.school.name} ({staff.school.code}) · Employee ID {staff.employeeId}
+          {staff.school.name} ({staff.school.code}) · {role === "PRINCIPAL" ? "Principal Code" : "Employee ID"} {staff.employeeId}
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
