@@ -22,6 +22,7 @@ import {
   Bell,
   Home,
   Bug,
+  ShieldAlert,
 } from "lucide-react";
 
 export type NavItem = {
@@ -46,6 +47,7 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: "Warden Managers", href: "/super-admin/warden-managers", icon: Building2 },
     { label: "Users", href: "/super-admin/users", icon: Users },
     { label: "Reports", href: "/super-admin/reports", icon: BarChart3 },
+    { label: "Audit & Security", href: "/super-admin/audit", icon: ShieldAlert },
     { label: "Bug Board", href: "/super-admin/bugs", icon: Bug },
     { label: "Settings", href: "/super-admin/settings", icon: Settings },
   ],
