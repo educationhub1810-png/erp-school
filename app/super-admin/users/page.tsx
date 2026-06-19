@@ -7,9 +7,11 @@ import { Pagination } from "@/components/shared/pagination";
 import { Users } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/roles";
 import type { AppRole } from "@/lib/roles";
+import type { Prisma } from "@/lib/generated/prisma/client";
+import { UserFilters } from "./user-filters";
 
 interface Props {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string; role?: string; schoolId?: string }>;
 }
 
 export default async function SuperAdminUsersPage({ searchParams }: Props) {
@@ -21,17 +23,40 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
   const limit = 20;
   const skip = (page - 1) * limit;
 
-  const [users, total] = await Promise.all([
+  const roleFilter = sp.role && sp.role !== "SUPER_ADMIN" && sp.role in ROLE_LABELS
+    ? (sp.role as AppRole)
+    : undefined;
+
+  const where: Prisma.UserWhereInput = {
+    role: roleFilter ?? { not: "SUPER_ADMIN" },
+    ...(sp.schoolId && { schoolId: sp.schoolId }),
+    ...(sp.search && {
+      OR: [
+        { name: { contains: sp.search, mode: "insensitive" as const } },
+        { email: { contains: sp.search, mode: "insensitive" as const } },
+        { mobile: { contains: sp.search, mode: "insensitive" as const } },
+      ],
+    }),
+  };
+
+  const [users, total, schools] = await Promise.all([
     prisma.user.findMany({
-      where: { role: { not: "SUPER_ADMIN" } },
+      where,
       include: { school: { select: { name: true, code: true } } },
       orderBy: { createdAt: "desc" },
       skip,
       take: limit,
     }),
-    prisma.user.count({ where: { role: { not: "SUPER_ADMIN" } } }),
+    prisma.user.count({ where }),
+    prisma.school.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, code: true } }),
   ]);
   const totalPages = Math.ceil(total / limit);
+
+  const queryString = [
+    sp.search && `search=${encodeURIComponent(sp.search)}`,
+    sp.role && `role=${sp.role}`,
+    sp.schoolId && `schoolId=${sp.schoolId}`,
+  ].filter(Boolean).join("&");
 
   const roleColors: Record<string, string> = {
     SCHOOL_ADMIN:     "bg-purple-100 text-purple-700",
@@ -55,6 +80,8 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
           <p className="text-sm text-gray-500 mt-1">{total} users across all schools</p>
         </div>
       </div>
+
+      <UserFilters schools={schools} />
 
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
@@ -111,7 +138,7 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
         </CardContent>
       </Card>
 
-      <Pagination page={page} totalPages={totalPages} total={total} limit={limit} skip={skip} />
+      <Pagination page={page} totalPages={totalPages} total={total} limit={limit} skip={skip} queryString={queryString} />
     </div>
   );
 }
