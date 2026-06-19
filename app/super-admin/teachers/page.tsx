@@ -72,7 +72,7 @@ export default async function SuperAdminTeachersPage({ searchParams }: Props) {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
-                  <TableHead>Employee ID</TableHead>
+                  <TableHead>Teacher Code</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>School</TableHead>
                   <TableHead>Specialization</TableHead>

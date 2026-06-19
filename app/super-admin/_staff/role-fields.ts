@@ -11,7 +11,6 @@ export const ROLE_FIELDS: Record<StaffRole, RoleField[]> = {
   PRINCIPAL: [
     { key: "qualification", label: "Qualification", placeholder: "M.Ed, Ph.D" },
     { key: "experienceYears", label: "Experience (Years)", type: "number" },
-    { key: "designation", label: "Designation", placeholder: "Principal" },
   ],
   ACCOUNTANT: [
     { key: "qualification", label: "Qualification", placeholder: "B.Com, CA" },

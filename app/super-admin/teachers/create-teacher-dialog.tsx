@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { UserPlus, Loader2 } from "lucide-react";
+import { UserPlus, Loader2, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -21,7 +21,6 @@ const schema = z.object({
   mobile: z.string().optional(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   dob: z.string().optional(),
-  employeeId: z.string().min(1, "Employee ID is required"),
   qualification: z.string().optional(),
   experienceYears: z.string().optional(),
   specialization: z.string().optional(),
@@ -50,11 +49,23 @@ export function CreateTeacherDialog({ schools }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [createdCode, setCreatedCode] = useState<string | null>(null);
+  const [createdDob, setCreatedDob] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<"code" | "dob" | null>(null);
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { schoolId: "" },
   });
+
+  const selectedSchoolId = watch("schoolId");
+  const codePreviewLetter = (schools.find((s) => s.id === selectedSchoolId)?.name.trim()[0] || "X").toUpperCase();
+
+  const handleCopy = async (field: "code" | "dob", value: string) => {
+    await navigator.clipboard.writeText(value);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 1500);
+  };
 
   const onSubmit = async (data: FormValues) => {
     setLoading(true);
@@ -74,6 +85,8 @@ export function CreateTeacherDialog({ schools }: Props) {
         return;
       }
       toast.success("Teacher added successfully");
+      setCreatedCode(json.data?.employeeId ?? null);
+      setCreatedDob(json.data?.dob ?? null);
       reset();
       setOpen(false);
       router.refresh();
@@ -83,6 +96,7 @@ export function CreateTeacherDialog({ schools }: Props) {
   };
 
   return (
+    <>
     <Dialog
       open={open}
       onOpenChange={(v, eventDetails) => {
@@ -102,8 +116,16 @@ export function CreateTeacherDialog({ schools }: Props) {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
           <div className="space-y-1.5">
+            <Label>Teacher Code</Label>
+            <Input value={`Auto-generated (e.g. ${codePreviewLetter}-TCH00001)`} disabled className="text-gray-400" />
+          </div>
+
+          <div className="space-y-1.5">
             <Label>School *</Label>
-            <Select onValueChange={(v) => setValue("schoolId", v as string, { shouldValidate: true })}>
+            <Select
+              value={selectedSchoolId}
+              onValueChange={(v) => { if (v != null) setValue("schoolId", v as string, { shouldValidate: true }); }}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select school">
                   {(value: string) => {
@@ -119,17 +141,10 @@ export function CreateTeacherDialog({ schools }: Props) {
             {errors.schoolId && <p className="text-xs text-red-500">{errors.schoolId.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Full Name *</Label>
-              <Input {...register("name")} />
-              {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label>Employee ID *</Label>
-              <Input placeholder="EMP2025001" {...register("employeeId")} />
-              {errors.employeeId && <p className="text-xs text-red-500">{errors.employeeId.message}</p>}
-            </div>
+          <div className="space-y-1.5">
+            <Label>Full Name *</Label>
+            <Input {...register("name")} />
+            {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
           </div>
 
           <div className="grid grid-cols-3 gap-3">
@@ -227,5 +242,49 @@ export function CreateTeacherDialog({ schools }: Props) {
         </form>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={!!createdCode} onOpenChange={(o) => { if (!o) { setCreatedCode(null); setCreatedDob(null); } }}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>Teacher Added Successfully</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          Share this teacher code with the teacher to log in.
+        </p>
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Teacher Code</Label>
+            <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
+              <span className="font-mono text-base font-semibold tracking-wide">{createdCode}</span>
+              <Button type="button" variant="outline" size="sm" onClick={() => createdCode && handleCopy("code", createdCode)}>
+                {copiedField === "code" ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                {copiedField === "code" ? "Copied" : "Copy"}
+              </Button>
+            </div>
+          </div>
+
+          {createdDob && (
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Date of Birth</Label>
+              <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
+                <span className="font-mono text-base font-semibold tracking-wide">
+                  {new Date(createdDob).toLocaleDateString()}
+                </span>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleCopy("dob", new Date(createdDob).toLocaleDateString())}>
+                  {copiedField === "dob" ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                  {copiedField === "dob" ? "Copied" : "Copy"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button type="button" className="bg-indigo-600 hover:bg-indigo-700" onClick={() => { setCreatedCode(null); setCreatedDob(null); }}>
+            OK
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
