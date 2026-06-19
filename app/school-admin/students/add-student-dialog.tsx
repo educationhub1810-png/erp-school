@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { DatePicker } from "@/components/ui/date-picker";
 import { UserPlus, Loader2, ChevronRight, ChevronLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,7 @@ const schema = z.object({
   middleName: z.string().optional(),
   lastName: z.string().min(1, "Required"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
-  dob: z.string().optional(),
+  dob: z.string().min(1, "Date of birth is required"),
   bloodGroup: z.string().optional(),
   category: z.string().optional(),
   religion: z.string().optional(),
@@ -84,6 +85,7 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
     resolver: zodResolver(schema),
     defaultValues: {
       gender: "MALE",
+      dob: "",
       transportRequired: false,
       hostelRequired: false,
       admissionDate: new Date().toISOString().split("T")[0],
@@ -192,8 +194,13 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Date of Birth</Label>
-                    <Input type="date" {...register("dob")} />
+                    <Label>Date of Birth *</Label>
+                    <DatePicker
+                      value={watch("dob")}
+                      onChange={(v) => setValue("dob", v, { shouldValidate: true })}
+                      placeholder="Select date of birth"
+                    />
+                    {errors.dob && <p className="text-xs text-red-500">{errors.dob.message}</p>}
                   </div>
                   <div className="space-y-1.5">
                     <Label>Blood Group</Label>

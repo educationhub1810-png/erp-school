@@ -24,7 +24,7 @@ const schema = z.object({
   middleName: z.string().optional(),
   lastName: z.string().min(1, "Required"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
-  dob: z.string().optional(),
+  dob: z.string().min(1, "Date of birth is required"),
   bloodGroup: z.string().optional(),
   category: z.string().optional(),
   religion: z.string().optional(),
@@ -239,8 +239,13 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Date of Birth</Label>
-              <DatePicker value={watch("dob")} onChange={(v) => setValue("dob", v)} placeholder="Select date of birth" />
+              <Label>Date of Birth *</Label>
+              <DatePicker
+                value={watch("dob")}
+                onChange={(v) => setValue("dob", v, { shouldValidate: true })}
+                placeholder="Select date of birth"
+              />
+              {errors.dob && <p className="text-xs text-red-500">{errors.dob.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Blood Group</Label>

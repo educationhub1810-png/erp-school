@@ -12,7 +12,7 @@ const createSchema = z.object({
   middleName: z.string().optional(),
   lastName: z.string().min(1, "Last name required"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
-  dob: z.string().optional(),
+  dob: z.string().min(1, "Date of birth is required"),
   bloodGroup: z.string().optional(),
   category: z.string().optional(),
   religion: z.string().optional(),
