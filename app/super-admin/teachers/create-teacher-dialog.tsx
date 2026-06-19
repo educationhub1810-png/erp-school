@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { UserPlus, Loader2, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { ErrorDialog } from "@/components/shared/error-dialog";
 
 const schema = z.object({
   schoolId: z.string().min(1, "School is required"),
@@ -52,6 +53,7 @@ export function CreateTeacherDialog({ schools }: Props) {
   const [createdCode, setCreatedCode] = useState<string | null>(null);
   const [createdDob, setCreatedDob] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<"code" | "dob" | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -81,7 +83,7 @@ export function CreateTeacherDialog({ schools }: Props) {
       });
       const json = await res.json();
       if (!res.ok) {
-        toast.error(json.error || "Failed to add teacher");
+        setErrorMessage(json.error || "Failed to add teacher");
         return;
       }
       toast.success("Teacher added successfully");
@@ -285,6 +287,8 @@ export function CreateTeacherDialog({ schools }: Props) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <ErrorDialog message={errorMessage} onClose={() => setErrorMessage(null)} />
     </>
   );
 }

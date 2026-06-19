@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { UserPlus, Loader2, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { ErrorDialog } from "@/components/shared/error-dialog";
 import { ROLE_FIELDS, type StaffRole } from "./role-fields";
 
 const baseSchema = z.object({
@@ -61,6 +62,7 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
   const [createdCode, setCreatedCode] = useState<string | null>(null);
   const [createdDob, setCreatedDob] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<"code" | "dob" | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const hasAutoCode = role in CODE_LABEL;
   const codeLabel = CODE_LABEL[role];
@@ -101,7 +103,7 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
       });
       const json = await res.json();
       if (!res.ok) {
-        toast.error(json.error || `Failed to add ${roleLabel.toLowerCase()}`);
+        setErrorMessage(json.error || `Failed to add ${roleLabel.toLowerCase()}`);
         return;
       }
       toast.success(`${roleLabel} added successfully`);
@@ -296,6 +298,8 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <ErrorDialog message={errorMessage} onClose={() => setErrorMessage(null)} />
     </>
   );
 }

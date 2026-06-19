@@ -14,6 +14,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { UserPlus, Loader2, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { ErrorDialog } from "@/components/shared/error-dialog";
 
 const personSchema = z.object({
   firstName: z.string().optional(),
@@ -98,6 +99,7 @@ export function CreateParentDialog({ schools }: Props) {
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [createdAccounts, setCreatedAccounts] = useState<CreatedAccount[] | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -156,7 +158,7 @@ export function CreateParentDialog({ schools }: Props) {
       });
       const json = await res.json();
       if (!res.ok) {
-        toast.error(json.error || "Failed to add parent account(s)");
+        setErrorMessage(json.error || "Failed to add parent account(s)");
         return;
       }
       toast.success("Parent account(s) added successfully");
@@ -445,6 +447,8 @@ export function CreateParentDialog({ schools }: Props) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <ErrorDialog message={errorMessage} onClose={() => setErrorMessage(null)} />
     </>
   );
 }
