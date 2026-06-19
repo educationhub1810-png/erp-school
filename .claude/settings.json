@@ -39,7 +39,12 @@
       "PowerShell(Get-Process -Name node -ErrorAction SilentlyContinue)",
       "PowerShell(Get-CimInstance Win32_Process -Filter \"Name='node.exe'\")",
       "PowerShell(Stop-Process -Id 27860,1088,18864,32296,5436 -Force -ErrorAction SilentlyContinue)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/login)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/login)",
+      "PowerShell(Stop-Process -Id 19436,29904,24388,27784 -Force -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Id 24388 -Force -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Id 32040,27900,16664 -Force -ErrorAction SilentlyContinue)",
+      "Bash(git checkout *)",
+      "Bash(node check_codes.mjs)"
     ]
   }
 }

@@ -10,12 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Plus, Loader2, AlertCircle, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 
 const schema = z.object({
   name: z.string().min(2, "School name is required"),
-  code: z.string().min(2, "School code is required").max(20),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   phone: z.string().optional(),
   principalName: z.string().optional(),
@@ -48,7 +48,7 @@ export function CreateSchoolDialog() {
   const [createdDate, setCreatedDate] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<"code" | "date" | null>(null);
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { country: "India", timezone: "Asia/Kolkata", currency: "INR" },
   });
@@ -99,7 +99,7 @@ export function CreateSchoolDialog() {
       <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700" />}>
         <Plus className="w-4 h-4 mr-2" /> Add School
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New School</DialogTitle>
         </DialogHeader>
@@ -110,17 +110,16 @@ export function CreateSchoolDialog() {
               {error}
             </div>
           )}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 space-y-1.5">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="col-span-3 space-y-1.5">
               <Label>School Name *</Label>
               <Input placeholder="Delhi Public School" {...register("name")} />
               {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
             </div>
 
             <div className="space-y-1.5">
-              <Label>School Code *</Label>
-              <Input placeholder="SCH001" {...register("code")} className="uppercase" />
-              {errors.code && <p className="text-xs text-red-500">{errors.code.message}</p>}
+              <Label>School Code</Label>
+              <Input value="Auto-generated (e.g. SCH00001)" disabled className="text-gray-400" />
             </div>
 
             <div className="space-y-1.5">
@@ -130,7 +129,11 @@ export function CreateSchoolDialog() {
 
             <div className="space-y-1.5">
               <Label>Date of Establishment</Label>
-              <Input type="date" {...register("establishedDate")} />
+              <DatePicker
+                value={watch("establishedDate")}
+                onChange={(v) => setValue("establishedDate", v)}
+                placeholder="Select date of establishment"
+              />
             </div>
 
             <div className="space-y-1.5">
@@ -144,20 +147,20 @@ export function CreateSchoolDialog() {
               <Input type="tel" placeholder="9876543210" {...register("phone")} />
             </div>
 
-            <div className="col-span-2 space-y-1.5">
-              <Label>Address</Label>
-              <Input placeholder="Building, Street, Area" {...register("address")} />
-            </div>
-
             <div className="space-y-1.5">
               <Label>City</Label>
               <Input placeholder="New Delhi" {...register("city")} />
             </div>
 
+            <div className="col-span-3 space-y-1.5">
+              <Label>Address</Label>
+              <Input placeholder="Building, Street, Area" {...register("address")} />
+            </div>
+
             <div className="space-y-1.5">
               <Label>State</Label>
               <Select onValueChange={(v) => setValue("state", v as string)}>
-                <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Select state" /></SelectTrigger>
                 <SelectContent>
                   {INDIAN_STATES.map((s) => (
                     <SelectItem key={s} value={s}>{s}</SelectItem>
@@ -169,7 +172,7 @@ export function CreateSchoolDialog() {
             <div className="space-y-1.5">
               <Label>Currency</Label>
               <Select defaultValue="INR" onValueChange={(v) => setValue("currency", v as string)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="INR">INR (₹)</SelectItem>
                   <SelectItem value="USD">USD ($)</SelectItem>
@@ -181,7 +184,7 @@ export function CreateSchoolDialog() {
             <div className="space-y-1.5">
               <Label>Timezone</Label>
               <Select defaultValue="Asia/Kolkata" onValueChange={(v) => setValue("timezone", v as string)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Asia/Kolkata">IST (Asia/Kolkata)</SelectItem>
                   <SelectItem value="UTC">UTC</SelectItem>
