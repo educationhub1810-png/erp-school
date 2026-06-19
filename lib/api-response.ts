@@ -27,9 +27,15 @@ function duplicateFieldLabel(field: string): string {
   return DUPLICATE_FIELD_LABELS[field] ?? field.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
 }
 
+interface PrismaP2002Meta {
+  target?: string[];
+  driverAdapterError?: { cause?: { constraint?: { fields?: string[] } } };
+}
+
 export function duplicateValue(error: unknown) {
-  const target = (error as { meta?: { target?: string[] } })?.meta?.target;
-  const field = target?.[0] ?? "value";
+  const meta = (error as { meta?: PrismaP2002Meta })?.meta;
+  const fields = meta?.target ?? meta?.driverAdapterError?.cause?.constraint?.fields;
+  const field = fields?.[0] ?? "value";
   return badRequest(`Please enter correct value (${duplicateFieldLabel(field)})`);
 }
 
