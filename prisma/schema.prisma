@@ -350,7 +350,7 @@ model Student {
   id               String   @id @default(cuid())
   schoolId         String
   userId           String   @unique
-  studentCode      String
+  studentCode      String   @unique
   rollNumber       String?
   firstName        String
   middleName       String?
@@ -390,7 +390,6 @@ model Student {
   hostelAllocation HostelAllocation?
   homeworkSubmissions HomeworkSubmission[]
 
-  @@unique([schoolId, studentCode])
   @@map("students")
 }
 

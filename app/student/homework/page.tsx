@@ -3,24 +3,45 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/shared/pagination";
 import { BookOpen, Calendar } from "lucide-react";
 
-export default async function StudentHomeworkPage() {
+interface Props {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function StudentHomeworkPage({ searchParams }: Props) {
   const session = await auth();
   if (!session) redirect("/login");
+
+  const sp = await searchParams;
+  const page = parseInt(sp.page ?? "1");
+  const limit = 20;
+  const skip = (page - 1) * limit;
 
   const student = await prisma.student.findFirst({
     where: { user: { email: session.user.email ?? undefined } },
   });
+  const classId = student?.classId ?? "__none__";
 
-  const homework = student ? await prisma.homework.findMany({
-    where: { classId: student.classId },
-    include: {
-      subject: { select: { name: true } },
-      submissions: { where: { studentId: student.id }, select: { id: true, submittedAt: true } },
-    },
-    orderBy: { dueDate: "asc" },
-  }) : [];
+  const [allHomework, homework, total] = await Promise.all([
+    prisma.homework.findMany({
+      where: { classId },
+      select: { id: true, dueDate: true, submissions: { where: { studentId: student?.id ?? "__none__" }, select: { id: true } } },
+    }),
+    prisma.homework.findMany({
+      where: { classId },
+      include: {
+        subject: { select: { name: true } },
+        submissions: { where: { studentId: student?.id ?? "__none__" }, select: { id: true, submittedAt: true } },
+      },
+      orderBy: { dueDate: "asc" },
+      skip,
+      take: limit,
+    }),
+    prisma.homework.count({ where: { classId } }),
+  ]);
+  const totalPages = Math.ceil(total / limit);
 
   const now = new Date();
 
@@ -31,7 +52,7 @@ export default async function StudentHomeworkPage() {
     return <Badge className="bg-yellow-100 text-yellow-700">Pending</Badge>;
   };
 
-  const pending = homework.filter((h) => !h.submissions[0]).length;
+  const pending = allHomework.filter((h) => !h.submissions[0]).length;
 
   return (
     <div className="space-y-6">
@@ -42,7 +63,7 @@ export default async function StudentHomeworkPage() {
         </div>
       </div>
 
-      {homework.length === 0 ? (
+      {total === 0 ? (
         <Card className="border-0 shadow-sm">
           <CardContent className="py-12 text-center text-sm text-gray-400">No homework assigned.</CardContent>
         </Card>
@@ -75,6 +96,8 @@ export default async function StudentHomeworkPage() {
           ))}
         </div>
       )}
+
+      <Pagination page={page} totalPages={totalPages} total={total} limit={limit} skip={skip} />
     </div>
   );
 }

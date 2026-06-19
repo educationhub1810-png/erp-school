@@ -5,15 +5,26 @@ import { getUser } from "@/lib/session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/shared/stat-card";
+import { Pagination } from "@/components/shared/pagination";
 import { DollarSign } from "lucide-react";
 
-export default async function FeesPage() {
+interface Props {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function FeesPage({ searchParams }: Props) {
   const session = await auth();
   if (!session) redirect("/login");
   const { schoolId } = getUser(session);
   if (!schoolId) redirect("/login");
 
-  const [payments, structures] = await Promise.all([
+  const sp = await searchParams;
+  const page = parseInt(sp.page ?? "1");
+  const limit = 20;
+  const skip = (page - 1) * limit;
+
+  const [allPayments, payments, total, structures] = await Promise.all([
+    prisma.feePayment.findMany({ where: { schoolId }, select: { amountPaid: true, status: true } }),
     prisma.feePayment.findMany({
       where: { schoolId },
       include: {
@@ -21,13 +32,16 @@ export default async function FeesPage() {
         feeStructure: { select: { feeType: true } },
       },
       orderBy: { paymentDate: "desc" },
-      take: 50,
+      skip,
+      take: limit,
     }),
+    prisma.feePayment.count({ where: { schoolId } }),
     prisma.feeStructure.findMany({ where: { schoolId }, orderBy: { feeType: "asc" } }),
   ]);
+  const totalPages = Math.ceil(total / limit);
 
-  const totalCollected = payments.filter((p) => p.status === "PAID").reduce((s, p) => s + Number(p.amountPaid), 0);
-  const totalPending   = payments.filter((p) => p.status === "PENDING").reduce((s, p) => s + Number(p.amountPaid), 0);
+  const totalCollected = allPayments.filter((p) => p.status === "PAID").reduce((s, p) => s + Number(p.amountPaid), 0);
+  const totalPending   = allPayments.filter((p) => p.status === "PENDING").reduce((s, p) => s + Number(p.amountPaid), 0);
 
   const statusStyle: Record<string, string> = {
     PAID: "bg-green-100 text-green-700", PENDING: "bg-yellow-100 text-yellow-700",
@@ -38,7 +52,7 @@ export default async function FeesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Fee Management</h1>
-        <p className="text-sm text-gray-500 mt-1">{structures.length} fee structures · {payments.length} transactions</p>
+        <p className="text-sm text-gray-500 mt-1">{structures.length} fee structures · {total} transactions</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -47,9 +61,9 @@ export default async function FeesPage() {
       </div>
 
       <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-3"><CardTitle className="text-base">Recent Payments</CardTitle></CardHeader>
+        <CardHeader className="pb-3"><CardTitle className="text-base">Payment History</CardTitle></CardHeader>
         <CardContent className="p-0">
-          {payments.length === 0 ? (
+          {total === 0 ? (
             <p className="text-sm text-gray-400 text-center py-12">No payments found.</p>
           ) : (
             <table className="w-full text-sm">
@@ -77,6 +91,8 @@ export default async function FeesPage() {
           )}
         </CardContent>
       </Card>
+
+      <Pagination page={page} totalPages={totalPages} total={total} limit={limit} skip={skip} />
     </div>
   );
 }

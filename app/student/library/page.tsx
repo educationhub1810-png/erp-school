@@ -3,29 +3,45 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/shared/pagination";
 import { Library } from "lucide-react";
 
-export default async function StudentLibraryPage() {
+interface Props {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function StudentLibraryPage({ searchParams }: Props) {
   const session = await auth();
   if (!session) redirect("/login");
+
+  const sp = await searchParams;
+  const page = parseInt(sp.page ?? "1");
+  const limit = 20;
+  const skip = (page - 1) * limit;
 
   const student = await prisma.student.findFirst({
     where: { user: { email: session.user.email ?? undefined } },
   });
+  const studentId = student?.id ?? "__none__";
 
-  const issues = student ? await prisma.libraryIssue.findMany({
-    where: { studentId: student.id },
-    include: { book: { select: { title: true, author: true, isbn: true } } },
-    orderBy: { issueDate: "desc" },
-  }) : [];
-
-  const activeIssues = issues.filter((i) => i.status === "ISSUED");
+  const [activeIssuesCount, issues, total] = await Promise.all([
+    prisma.libraryIssue.count({ where: { studentId, status: "ISSUED" } }),
+    prisma.libraryIssue.findMany({
+      where: { studentId },
+      include: { book: { select: { title: true, author: true, isbn: true } } },
+      orderBy: { issueDate: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.libraryIssue.count({ where: { studentId } }),
+  ]);
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Library</h1>
-        <p className="text-sm text-gray-500 mt-1">{activeIssues.length} book{activeIssues.length !== 1 ? "s" : ""} currently issued</p>
+        <p className="text-sm text-gray-500 mt-1">{activeIssuesCount} book{activeIssuesCount !== 1 ? "s" : ""} currently issued</p>
       </div>
 
       <Card className="border-0 shadow-sm">
@@ -35,7 +51,7 @@ export default async function StudentLibraryPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {issues.length === 0 ? (
+          {total === 0 ? (
             <p className="text-sm text-gray-400 text-center py-12">No books issued.</p>
           ) : (
             <table className="w-full text-sm">
@@ -78,6 +94,8 @@ export default async function StudentLibraryPage() {
           )}
         </CardContent>
       </Card>
+
+      <Pagination page={page} totalPages={totalPages} total={total} limit={limit} skip={skip} />
     </div>
   );
 }

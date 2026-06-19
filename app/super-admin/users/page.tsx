@@ -3,19 +3,35 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/shared/pagination";
 import { Users } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/roles";
 import type { AppRole } from "@/lib/roles";
 
-export default async function SuperAdminUsersPage() {
+interface Props {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function SuperAdminUsersPage({ searchParams }: Props) {
   const session = await auth();
   if (!session) redirect("/login");
 
-  const users = await prisma.user.findMany({
-    where: { role: { not: "SUPER_ADMIN" } },
-    include: { school: { select: { name: true, code: true } } },
-    orderBy: { createdAt: "desc" },
-  });
+  const sp = await searchParams;
+  const page = parseInt(sp.page ?? "1");
+  const limit = 20;
+  const skip = (page - 1) * limit;
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where: { role: { not: "SUPER_ADMIN" } },
+      include: { school: { select: { name: true, code: true } } },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.user.count({ where: { role: { not: "SUPER_ADMIN" } } }),
+  ]);
+  const totalPages = Math.ceil(total / limit);
 
   const roleColors: Record<string, string> = {
     SCHOOL_ADMIN:     "bg-purple-100 text-purple-700",
@@ -36,7 +52,7 @@ export default async function SuperAdminUsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">All Users</h1>
-          <p className="text-sm text-gray-500 mt-1">{users.length} users across all schools</p>
+          <p className="text-sm text-gray-500 mt-1">{total} users across all schools</p>
         </div>
       </div>
 
@@ -47,7 +63,7 @@ export default async function SuperAdminUsersPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {users.length === 0 ? (
+          {total === 0 ? (
             <p className="text-sm text-gray-500 text-center py-12">No users found</p>
           ) : (
             <div className="overflow-x-auto">
@@ -94,6 +110,8 @@ export default async function SuperAdminUsersPage() {
           )}
         </CardContent>
       </Card>
+
+      <Pagination page={page} totalPages={totalPages} total={total} limit={limit} skip={skip} />
     </div>
   );
 }
