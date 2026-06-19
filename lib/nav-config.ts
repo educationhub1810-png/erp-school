@@ -21,6 +21,7 @@ import {
   FileText,
   Bell,
   Home,
+  Bug,
 } from "lucide-react";
 
 export type NavItem = {
@@ -45,6 +46,7 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: "Warden Managers", href: "/super-admin/warden-managers", icon: Building2 },
     { label: "Users", href: "/super-admin/users", icon: Users },
     { label: "Reports", href: "/super-admin/reports", icon: BarChart3 },
+    { label: "Bug Board", href: "/super-admin/bugs", icon: Bug },
     { label: "Settings", href: "/super-admin/settings", icon: Settings },
   ],
   SCHOOL_ADMIN: [
@@ -64,6 +66,7 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: "LMS", href: "/school-admin/lms", icon: Video },
     { label: "Communication", href: "/school-admin/communication", icon: MessageSquare },
     { label: "Reports", href: "/school-admin/reports", icon: BarChart3 },
+    { label: "Bug Board", href: "/school-admin/bugs", icon: Bug },
     { label: "Settings", href: "/school-admin/settings", icon: Settings },
   ],
   PRINCIPAL: [
@@ -76,6 +79,7 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: "Leave Requests", href: "/principal/leaves", icon: CalendarCheck },
     { label: "Announcements", href: "/principal/announcements", icon: Bell },
     { label: "Reports", href: "/principal/reports", icon: BarChart3 },
+    { label: "Bug Board", href: "/principal/bugs", icon: Bug },
   ],
   TEACHER: [
     { label: "Dashboard", href: "/teacher/dashboard", icon: LayoutDashboard },
