@@ -12,6 +12,12 @@ interface Props {
   searchParams: Promise<{ schoolId?: string; search?: string; page?: string }>;
 }
 
+const PARENT_TYPE_LABEL: Record<string, string> = {
+  FATHER: "Father",
+  MOTHER: "Mother",
+  GUARDIAN: "Guardian",
+};
+
 export default async function SuperAdminParentsPage({ searchParams }: Props) {
   const sp = await searchParams;
 
@@ -26,6 +32,7 @@ export default async function SuperAdminParentsPage({ searchParams }: Props) {
       OR: [
         { name: { contains: sp.search, mode: "insensitive" as const } },
         { email: { contains: sp.search, mode: "insensitive" as const } },
+        { parentProfile: { parentCode: { contains: sp.search, mode: "insensitive" as const } } },
       ],
     }),
   };
@@ -36,6 +43,13 @@ export default async function SuperAdminParentsPage({ searchParams }: Props) {
       select: {
         id: true, name: true, email: true, mobile: true, isActive: true,
         school: { select: { name: true, code: true } },
+        parentProfile: {
+          select: {
+            parentCode: true, parentType: true, firstName: true, middleName: true, lastName: true,
+            gender: true, dob: true, maritalStatus: true, nationality: true, aadhaar: true, pan: true, address: true,
+            student: { select: { firstName: true, lastName: true, studentCode: true } },
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
       skip,
@@ -58,7 +72,7 @@ export default async function SuperAdminParentsPage({ searchParams }: Props) {
       </div>
 
       <p className="text-xs text-gray-400">
-        These are standalone login accounts and aren&apos;t linked to a specific child. Father/mother/guardian details for a student are managed from the Student form.
+        Each parent account (Father/Mother/Guardian) is linked to the student it belongs to.
       </p>
 
       <ParentFilters schools={schools} />
@@ -75,7 +89,10 @@ export default async function SuperAdminParentsPage({ searchParams }: Props) {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
+                  <TableHead>Parent Code</TableHead>
                   <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Child</TableHead>
                   <TableHead>School</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>Status</TableHead>
@@ -85,7 +102,16 @@ export default async function SuperAdminParentsPage({ searchParams }: Props) {
               <TableBody>
                 {parents.map((p) => (
                   <TableRow key={p.id} className="hover:bg-gray-50">
+                    <TableCell className="font-mono text-xs text-gray-700">{p.parentProfile?.parentCode ?? "—"}</TableCell>
                     <TableCell className="font-medium text-gray-900">{p.name}</TableCell>
+                    <TableCell className="text-sm text-gray-600">
+                      {p.parentProfile ? PARENT_TYPE_LABEL[p.parentProfile.parentType] : "—"}
+                    </TableCell>
+                    <TableCell className="text-sm text-gray-600">
+                      {p.parentProfile?.student
+                        ? <>{p.parentProfile.student.firstName} {p.parentProfile.student.lastName} <span className="text-xs text-gray-400">({p.parentProfile.student.studentCode})</span></>
+                        : "—"}
+                    </TableCell>
                     <TableCell className="text-sm text-gray-600">
                       {p.school ? <>{p.school.name} <span className="text-xs text-gray-400">({p.school.code})</span></> : "—"}
                     </TableCell>
@@ -101,7 +127,12 @@ export default async function SuperAdminParentsPage({ searchParams }: Props) {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <ParentRowActions parent={p} />
+                      <ParentRowActions
+                        parent={{
+                          ...p,
+                          parentProfile: p.parentProfile ? { ...p.parentProfile, dob: p.parentProfile.dob?.toISOString() ?? null } : null,
+                        }}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
