@@ -8,9 +8,10 @@ import { CreateUserDialog } from "./create-user-dialog";
 import { ROLE_LABELS } from "@/lib/roles";
 import { Users } from "lucide-react";
 import type { AppRole } from "@/lib/roles";
+import { Pagination } from "@/components/shared/pagination";
 
 interface Props {
-  searchParams: Promise<{ role?: string }>;
+  searchParams: Promise<{ role?: string; page?: string }>;
 }
 
 const ROLE_COLORS: Record<string, string> = {
@@ -31,23 +32,34 @@ export default async function UsersPage({ searchParams }: Props) {
   const session = await auth();
   const schoolId = session?.user.schoolId!;
   const sp = await searchParams;
+  const page = parseInt(sp.page ?? "1");
+  const limit = 20;
+  const skip = (page - 1) * limit;
 
-  const users = await prisma.user.findMany({
-    where: {
-      schoolId,
-      role: { not: "SUPER_ADMIN" },
-      ...(sp.role && { role: sp.role as never }),
-    },
-    select: { id: true, name: true, email: true, mobile: true, role: true, isActive: true, createdAt: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const where = {
+    schoolId,
+    role: { not: "SUPER_ADMIN" as const },
+    ...(sp.role && { role: sp.role as never }),
+  };
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      select: { id: true, name: true, email: true, mobile: true, role: true, isActive: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.user.count({ where }),
+  ]);
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-          <p className="text-sm text-gray-500 mt-1">{users.length} users</p>
+          <p className="text-sm text-gray-500 mt-1">{total} users</p>
         </div>
         <CreateUserDialog />
       </div>
@@ -70,7 +82,7 @@ export default async function UsersPage({ searchParams }: Props) {
 
       <Card className="border-0 shadow-sm">
         <CardContent className="p-0">
-          {users.length === 0 ? (
+          {total === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Users className="w-12 h-12 text-gray-300 mb-3" />
               <p className="text-gray-500 font-medium">No users found</p>
@@ -119,6 +131,15 @@ export default async function UsersPage({ searchParams }: Props) {
           )}
         </CardContent>
       </Card>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        limit={limit}
+        skip={skip}
+        queryString={sp.role ? `role=${sp.role}` : ""}
+      />
     </div>
   );
 }

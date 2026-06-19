@@ -101,13 +101,20 @@ export async function GET(req: Request) {
 }
 
 async function generateStudentCode(schoolId: string): Promise<string> {
-  const last = await prisma.student.findFirst({
-    where: { schoolId },
-    orderBy: { studentCode: "desc" },
+  const school = await prisma.school.findUnique({ where: { id: schoolId }, select: { name: true } });
+  const letter = (school?.name.trim()[0] || "X").toUpperCase();
+  const prefix = `${letter}-STD`;
+
+  const students = await prisma.student.findMany({
+    where: { studentCode: { startsWith: prefix } },
     select: { studentCode: true },
   });
-  const lastNumber = last ? parseInt(last.studentCode.replace("STD", ""), 10) || 0 : 0;
-  return `STD${String(lastNumber + 1).padStart(5, "0")}`;
+  const codePattern = new RegExp(`^${letter}-STD(\\d+)$`);
+  const lastNumber = students.reduce((max, s) => {
+    const match = s.studentCode.match(codePattern);
+    return match ? Math.max(max, parseInt(match[1], 10)) : max;
+  }, 0);
+  return `${prefix}${String(lastNumber + 1).padStart(5, "0")}`;
 }
 
 export async function POST(req: Request) {
@@ -208,8 +215,10 @@ export async function POST(req: Request) {
       } catch (e) {
         const isDuplicateCode = (e as { code?: string })?.code === "P2002" && attempt < 4;
         if (!isDuplicateCode) throw e;
-        const nextNumber = parseInt(studentCode.replace("STD", ""), 10) + 1;
-        studentCode = `STD${String(nextNumber).padStart(5, "0")}`;
+        const match = studentCode.match(/^([A-Z]-STD)(\d+)$/);
+        if (!match) throw e;
+        const nextNumber = parseInt(match[2], 10) + 1;
+        studentCode = `${match[1]}${String(nextNumber).padStart(5, "0")}`;
       }
     }
 

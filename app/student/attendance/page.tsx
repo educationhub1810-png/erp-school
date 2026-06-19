@@ -4,26 +4,42 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/shared/stat-card";
+import { Pagination } from "@/components/shared/pagination";
 import { ClipboardList } from "lucide-react";
 
-export default async function StudentAttendancePage() {
+interface Props {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function StudentAttendancePage({ searchParams }: Props) {
   const session = await auth();
   if (!session) redirect("/login");
+
+  const sp = await searchParams;
+  const page = parseInt(sp.page ?? "1");
+  const limit = 20;
+  const skip = (page - 1) * limit;
 
   const student = await prisma.student.findFirst({
     where: { user: { email: session.user.email ?? undefined } },
   });
+  const studentId = student?.id ?? "__none__";
 
-  const records = student ? await prisma.attendance.findMany({
-    where: { studentId: student.id },
-    orderBy: { date: "desc" },
-    take: 60,
-  }) : [];
+  const [allRecords, records, total] = await Promise.all([
+    prisma.attendance.findMany({ where: { studentId }, select: { status: true } }),
+    prisma.attendance.findMany({
+      where: { studentId },
+      orderBy: { date: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.attendance.count({ where: { studentId } }),
+  ]);
+  const totalPages = Math.ceil(total / limit);
 
-  const total = records.length;
-  const present = records.filter((r) => r.status === "PRESENT").length;
-  const absent = records.filter((r) => r.status === "ABSENT").length;
-  const late = records.filter((r) => r.status === "LATE").length;
+  const present = allRecords.filter((r) => r.status === "PRESENT").length;
+  const absent = allRecords.filter((r) => r.status === "ABSENT").length;
+  const late = allRecords.filter((r) => r.status === "LATE").length;
   const pct = total > 0 ? Math.round((present / total) * 100) : 0;
 
   const statusStyle: Record<string, string> = {
@@ -49,10 +65,10 @@ export default async function StudentAttendancePage() {
 
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Recent Records</CardTitle>
+          <CardTitle className="text-base">Attendance Records</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {records.length === 0 ? (
+          {total === 0 ? (
             <p className="text-sm text-gray-400 text-center py-12">No attendance records yet.</p>
           ) : (
             <table className="w-full text-sm">
@@ -82,6 +98,8 @@ export default async function StudentAttendancePage() {
           )}
         </CardContent>
       </Card>
+
+      <Pagination page={page} totalPages={totalPages} total={total} limit={limit} skip={skip} />
     </div>
   );
 }

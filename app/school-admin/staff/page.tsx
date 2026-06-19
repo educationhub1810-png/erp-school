@@ -4,25 +4,41 @@ import { prisma } from "@/lib/prisma";
 import { getUser } from "@/lib/session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/shared/pagination";
 import { Briefcase } from "lucide-react";
 
-export default async function StaffPage() {
+interface Props {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function StaffPage({ searchParams }: Props) {
   const session = await auth();
   if (!session) redirect("/login");
   const { schoolId } = getUser(session);
   if (!schoolId) redirect("/login");
 
-  const staff = await prisma.staff.findMany({
-    where: { schoolId },
-    include: { user: { select: { name: true, email: true, mobile: true, isActive: true } } },
-    orderBy: { createdAt: "desc" },
-  });
+  const sp = await searchParams;
+  const page = parseInt(sp.page ?? "1");
+  const limit = 20;
+  const skip = (page - 1) * limit;
+
+  const [staff, total] = await Promise.all([
+    prisma.staff.findMany({
+      where: { schoolId },
+      include: { user: { select: { name: true, email: true, mobile: true, isActive: true } } },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.staff.count({ where: { schoolId } }),
+  ]);
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Staff</h1>
-        <p className="text-sm text-gray-500 mt-1">{staff.length} staff members</p>
+        <p className="text-sm text-gray-500 mt-1">{total} staff members</p>
       </div>
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
@@ -31,7 +47,7 @@ export default async function StaffPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {staff.length === 0 ? (
+          {total === 0 ? (
             <p className="text-sm text-gray-400 text-center py-12">No staff records found.</p>
           ) : (
             <table className="w-full text-sm">
@@ -63,6 +79,8 @@ export default async function StaffPage() {
           )}
         </CardContent>
       </Card>
+
+      <Pagination page={page} totalPages={totalPages} total={total} limit={limit} skip={skip} />
     </div>
   );
 }

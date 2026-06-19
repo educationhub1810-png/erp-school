@@ -5,29 +5,47 @@ import { getUser } from "@/lib/session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/shared/stat-card";
 import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/shared/pagination";
 import { ClipboardList } from "lucide-react";
 
-export default async function AttendancePage() {
+interface Props {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function AttendancePage({ searchParams }: Props) {
   const session = await auth();
   if (!session) redirect("/login");
   const { schoolId } = getUser(session);
   if (!schoolId) redirect("/login");
 
+  const sp = await searchParams;
+  const page = parseInt(sp.page ?? "1");
+  const limit = 20;
+  const skip = (page - 1) * limit;
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [todayRecords, totalStudents] = await Promise.all([
+  const [allTodayRecords, todayRecords, total, totalStudents] = await Promise.all([
+    prisma.attendance.findMany({
+      where: { schoolId, date: { gte: today } },
+      select: { status: true },
+    }),
     prisma.attendance.findMany({
       where: { schoolId, date: { gte: today } },
       include: { student: { include: { user: { select: { name: true } }, class: { select: { name: true } } } } },
       orderBy: { date: "desc" },
+      skip,
+      take: limit,
     }),
+    prisma.attendance.count({ where: { schoolId, date: { gte: today } } }),
     prisma.student.count({ where: { schoolId } }),
   ]);
+  const totalPages = Math.ceil(total / limit);
 
-  const present = todayRecords.filter((r) => r.status === "PRESENT").length;
-  const absent  = todayRecords.filter((r) => r.status === "ABSENT").length;
-  const late    = todayRecords.filter((r) => r.status === "LATE").length;
+  const present = allTodayRecords.filter((r) => r.status === "PRESENT").length;
+  const absent  = allTodayRecords.filter((r) => r.status === "ABSENT").length;
+  const late    = allTodayRecords.filter((r) => r.status === "LATE").length;
 
   const statusStyle: Record<string, string> = {
     PRESENT: "bg-green-100 text-green-700",
@@ -52,7 +70,7 @@ export default async function AttendancePage() {
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3"><CardTitle className="text-base">Today's Records</CardTitle></CardHeader>
         <CardContent className="p-0">
-          {todayRecords.length === 0 ? (
+          {total === 0 ? (
             <p className="text-sm text-gray-400 text-center py-12">No attendance marked today.</p>
           ) : (
             <table className="w-full text-sm">
@@ -76,6 +94,8 @@ export default async function AttendancePage() {
           )}
         </CardContent>
       </Card>
+
+      <Pagination page={page} totalPages={totalPages} total={total} limit={limit} skip={skip} />
     </div>
   );
 }
