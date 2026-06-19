@@ -139,6 +139,19 @@ enum RoomType {
   DORMITORY
 }
 
+enum BugStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum BugPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 // ─────────────────────────────────────────────
 // SCHOOLS & ACADEMIC YEAR
 // ─────────────────────────────────────────────
@@ -189,6 +202,7 @@ model School {
   payrolls           Payroll[]
   expenses           Expense[]
   chatMessages       ChatMessage[]
+  bugTickets         BugTicket[]
 
   @@map("schools")
 }
@@ -238,6 +252,7 @@ model User {
   leaveRequests     LeaveRequest[]
   approvedLeaves    LeaveRequest[] @relation("ApprovedLeaves")
   announcements     Announcement[]
+  reportedBugs      BugTicket[]   @relation("ReportedBugs")
 
   @@map("users")
 }
@@ -1028,4 +1043,30 @@ model Recruitment {
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@map("recruitments")
+}
+
+// ─────────────────────────────────────────────
+// BUG TRACKER (JIRA-style board)
+// ─────────────────────────────────────────────
+
+model BugTicket {
+  id             String      @id @default(cuid())
+  schoolId       String?
+  reporterId     String
+  title          String
+  description    String
+  whatNotWorking String
+  whatExpected   String
+  screenshotUrl  String?
+  status         BugStatus   @default(OPEN)
+  priority       BugPriority @default(MEDIUM)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  school   School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  reporter User    @relation("ReportedBugs", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+  @@index([status])
+  @@map("bug_tickets")
 }
