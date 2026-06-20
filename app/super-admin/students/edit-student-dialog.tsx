@@ -289,7 +289,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
               <Select
                 value={watch("classId")}
                 disabled={classesLoading}
-                onValueChange={(v) => { setValue("classId", v as string, { shouldValidate: true }); setValue("sectionId", ""); }}
+                onValueChange={(v) => { if (v == null) return; setValue("classId", v, { shouldValidate: true }); setValue("sectionId", ""); }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={classesLoading ? "Loading..." : "Select class"}>
@@ -304,7 +304,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>Section</Label>
-              <Select value={watch("sectionId")} onValueChange={(v) => setValue("sectionId", v as string)} disabled={!selectedClass?.sections.length}>
+              <Select value={watch("sectionId")} onValueChange={(v) => { if (v == null) return; setValue("sectionId", v); }} disabled={!selectedClass?.sections.length}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select section">
                     {(value: string) => {

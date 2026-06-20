@@ -9,6 +9,7 @@ import { StudentRowActions } from "./student-row-actions";
 import { GraduationCap, Building2 } from "lucide-react";
 import { getStudentAvatarSrc } from "@/lib/student-avatar";
 import { Pagination } from "@/components/shared/pagination";
+import { sortClassesByGrade } from "@/lib/class-order";
 
 const GENDER_BADGE: Record<string, string> = {
   MALE: "bg-blue-100 text-blue-700",
@@ -52,7 +53,7 @@ export default async function SuperAdminStudentsPage({ searchParams }: Props) {
     }),
   };
 
-  const [students, total, schools, classes] = await Promise.all([
+  const [students, total, schools, classesRaw] = await Promise.all([
     prisma.student.findMany({
       where,
       include: {
@@ -68,9 +69,10 @@ export default async function SuperAdminStudentsPage({ searchParams }: Props) {
     prisma.student.count({ where }),
     prisma.school.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, code: true } }),
     sp.schoolId
-      ? prisma.class.findMany({ where: { schoolId: sp.schoolId }, include: { sections: true }, orderBy: { name: "asc" } })
+      ? prisma.class.findMany({ where: { schoolId: sp.schoolId }, include: { sections: true } })
       : Promise.resolve([]),
   ]);
+  const classes = sortClassesByGrade(classesRaw);
 
   const totalPages = Math.ceil(total / limit);
 

@@ -384,7 +384,7 @@ export function CreateStudentDialog({ schools }: Props) {
                     <Select
                       value={selectedClassId}
                       disabled={!selectedSchoolId || classesLoading}
-                      onValueChange={(v) => { setValue("classId", v as string, { shouldValidate: true }); setValue("sectionId", ""); }}
+                      onValueChange={(v) => { if (v == null) return; setValue("classId", v, { shouldValidate: true }); setValue("sectionId", ""); }}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder={!selectedSchoolId ? "Select school first" : classesLoading ? "Loading..." : "Select class"}>
@@ -401,7 +401,7 @@ export function CreateStudentDialog({ schools }: Props) {
                     <Label>Section</Label>
                     <Select
                       value={watch("sectionId")}
-                      onValueChange={(v) => setValue("sectionId", v as string)}
+                      onValueChange={(v) => { if (v == null) return; setValue("sectionId", v); }}
                       disabled={!selectedClass?.sections.length}
                     >
                       <SelectTrigger className="w-full">
