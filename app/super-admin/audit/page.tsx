@@ -16,7 +16,7 @@ interface Props {
   searchParams: Promise<{ page?: string; action?: string }>;
 }
 
-const DELETE_ACTIONS = ["STUDENT_DELETE", "TEACHER_DELETE", "STAFF_DELETE", "PARENT_DELETE", "BUG_DELETE"];
+const DELETE_ACTIONS = ["STUDENT_DELETE", "TEACHER_DELETE", "STAFF_DELETE", "PARENT_DELETE", "BUG_DELETE", "SCHOOL_DELETE"];
 const CHART_DAYS = 14;
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 

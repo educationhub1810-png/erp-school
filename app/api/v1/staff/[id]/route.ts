@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, badRequest, unauthorized, forbidden, notFound, serverError } from "@/lib/api-response";
-import { writeAuditLog, clientIp } from "@/lib/audit";
+import { writeAuditLog, auditAccountStatusChange, clientIp } from "@/lib/audit";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -35,7 +35,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const user = getUser(session!);
 
   try {
-    const staff = await prisma.staff.findUnique({ where: { id } });
+    const staff = await prisma.staff.findUnique({ where: { id }, include: { user: { select: { isActive: true } } } });
     if (!staff) return notFound("Staff record not found");
     if (user.role !== "SUPER_ADMIN" && user.schoolId !== staff.schoolId) return forbidden();
 
@@ -79,6 +79,16 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       }
 
       return result;
+    });
+
+    await auditAccountStatusChange({
+      prev: staff.user.isActive,
+      next: data.isActive,
+      actor: { id: user.id, role: user.role },
+      targetUserId: staff.userId,
+      targetType: "staff",
+      schoolId: staff.schoolId,
+      ip: clientIp(req),
     });
 
     return ok(updated);

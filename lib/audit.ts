@@ -3,7 +3,15 @@ import { prisma } from "@/lib/prisma";
 export type AuditAction =
   | "LOGIN_SUCCESS"
   | "LOGIN_FAILURE"
+  | "LOGOUT"
   | "IMPERSONATE_TOKEN_ISSUED"
+  | "ACCOUNT_ACTIVATE"
+  | "ACCOUNT_DEACTIVATE"
+  | "USER_CREATE"
+  | "SCHOOL_CREATE"
+  | "SCHOOL_ACTIVATE"
+  | "SCHOOL_DEACTIVATE"
+  | "SCHOOL_DELETE"
   | "STUDENT_DELETE"
   | "TEACHER_DELETE"
   | "STAFF_DELETE"
@@ -40,6 +48,29 @@ export async function writeAuditLog(entry: AuditEntry): Promise<void> {
   } catch (e) {
     console.error("[audit] failed to write audit log", e);
   }
+}
+
+// Audit an account being enabled/disabled. No-op unless the active flag
+// actually flipped, so a PUT that merely re-sends the same value is not logged.
+export async function auditAccountStatusChange(opts: {
+  prev: boolean | null | undefined;
+  next: boolean | undefined;
+  actor: { id: string; role: string };
+  targetUserId: string;
+  targetType: string;
+  schoolId?: string | null;
+  ip?: string | null;
+}): Promise<void> {
+  if (opts.next === undefined || opts.prev == null || opts.prev === opts.next) return;
+  await writeAuditLog({
+    action: opts.next ? "ACCOUNT_ACTIVATE" : "ACCOUNT_DEACTIVATE",
+    actorId: opts.actor.id,
+    actorRole: opts.actor.role,
+    schoolId: opts.schoolId ?? null,
+    targetType: opts.targetType,
+    targetId: opts.targetUserId,
+    ip: opts.ip,
+  });
 }
 
 // Extract the client IP from request headers (behind a proxy/edge).

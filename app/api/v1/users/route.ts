@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
+import { writeAuditLog, clientIp } from "@/lib/audit";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
@@ -78,6 +79,17 @@ export async function POST(req: Request) {
         createdBy: session!.user.id,
       },
       select: { id: true, name: true, email: true, role: true, createdAt: true },
+    });
+
+    await writeAuditLog({
+      action: "USER_CREATE",
+      actorId: session!.user.id,
+      actorRole: session!.user.role,
+      schoolId,
+      targetType: "user",
+      targetId: user.id,
+      metadata: { name: user.name, role: user.role },
+      ip: clientIp(req),
     });
 
     return created({ user, defaultPassword: rawPassword });

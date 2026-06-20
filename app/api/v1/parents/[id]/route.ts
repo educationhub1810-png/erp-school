@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, badRequest, unauthorized, forbidden, notFound, serverError } from "@/lib/api-response";
-import { writeAuditLog, clientIp } from "@/lib/audit";
+import { writeAuditLog, auditAccountStatusChange, clientIp } from "@/lib/audit";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -70,6 +70,16 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         isActive: data.isActive,
         ...(hasProfileChanges && { parentProfile: { update: profileData } }),
       },
+    });
+
+    await auditAccountStatusChange({
+      prev: parent.isActive,
+      next: data.isActive,
+      actor: { id: user.id, role: user.role },
+      targetUserId: id,
+      targetType: "parent",
+      schoolId: parent.schoolId,
+      ip: clientIp(req),
     });
 
     return ok(updated);

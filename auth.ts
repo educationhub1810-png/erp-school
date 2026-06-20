@@ -197,6 +197,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
   },
+  events: {
+    // Record sign-outs. With the jwt strategy this fires with the user's token.
+    async signOut(message) {
+      const token = "token" in message ? message.token : null;
+      if (!token?.id) return;
+      await writeAuditLog({
+        action: "LOGOUT",
+        actorId: token.id as string,
+        actorRole: (token.role as string) ?? null,
+        schoolId: (token.schoolId as string | undefined) ?? null,
+      });
+    },
+  },
   providers: [
     Credentials({
       credentials: {
