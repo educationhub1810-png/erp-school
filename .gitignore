@@ -19,7 +19,7 @@
 
 # production
 /build
-.dev.log
+
 # misc
 .DS_Store
 *.pem
@@ -44,8 +44,9 @@ next-env.d.ts
 /lib/generated/prisma
 
 # test artifacts
-/coverage
 /playwright-report
 /test-results
 /.playwright
+
+# dev server log
 .dev.log
