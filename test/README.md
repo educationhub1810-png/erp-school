@@ -25,7 +25,12 @@ npm run test:all    # Vitest then Playwright
 ```
 
 In-app: sign in as **Super Admin → Tests** to run the Vitest suite from the UI
-and see a pass/fail summary. (E2E is not runnable from the browser — use the CLI.)
+and see a pass/fail summary plus **analytics** (pass rate, avg duration) and a
+chart/table of the **last 5 runs**. Run history is stored in the **test**
+database (`neontestdb`, via `TEST_DATABASE_URL`) — never production — in a
+standalone `test_runs` table (raw SQL, see `lib/test-db.ts`; not part of the
+Prisma schema, so the prod DB is untouched). (E2E is not runnable from the
+browser — use the CLI.)
 
 ## How the mocks work
 
