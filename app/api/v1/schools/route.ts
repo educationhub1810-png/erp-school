@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
+import { writeAuditLog, clientIp } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -80,6 +81,19 @@ export async function POST(req: Request) {
         const nextNumber = parseInt(code.replace("SCH", ""), 10) + 1;
         code = `SCH${String(nextNumber).padStart(5, "0")}`;
       }
+    }
+
+    if (school) {
+      await writeAuditLog({
+        action: "SCHOOL_CREATE",
+        actorId: session!.user.id,
+        actorRole: session!.user.role,
+        schoolId: school.id,
+        targetType: "school",
+        targetId: school.id,
+        metadata: { name: school.name, code: school.code },
+        ip: clientIp(req),
+      });
     }
 
     revalidatePath("/super-admin/schools");

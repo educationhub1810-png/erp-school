@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, badRequest, unauthorized, forbidden, notFound, serverError } from "@/lib/api-response";
+import { writeAuditLog, clientIp } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -67,10 +68,29 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       ? { ...parsed.data, isActive: undefined }
       : parsed.data;
 
+    // Capture prior active state to detect an activation/deactivation.
+    const prior = data.isActive !== undefined
+      ? await prisma.school.findUnique({ where: { id }, select: { isActive: true } })
+      : null;
+
     const school = await prisma.school.update({
       where: { id },
       data: { ...data, email: data.email || null },
     });
+
+    if (prior && data.isActive !== undefined && prior.isActive !== data.isActive) {
+      await writeAuditLog({
+        action: data.isActive ? "SCHOOL_ACTIVATE" : "SCHOOL_DEACTIVATE",
+        actorId: user.id,
+        actorRole: user.role,
+        schoolId: id,
+        targetType: "school",
+        targetId: id,
+        metadata: { name: school.name, code: school.code },
+        ip: clientIp(req),
+      });
+    }
+
     revalidatePath("/super-admin/schools");
     return ok(school);
   } catch (e) {
@@ -79,17 +99,30 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { error } = await requireAuth(["SUPER_ADMIN"]);
+  const { session, error } = await requireAuth(["SUPER_ADMIN"]);
   if (error === "unauthorized") return unauthorized();
   if (error === "forbidden") return forbidden();
 
   const { id } = await params;
+  const user = getUser(session!);
 
   try {
-    const school = await prisma.school.findUnique({ where: { id }, select: { id: true, name: true } });
+    const school = await prisma.school.findUnique({ where: { id }, select: { id: true, name: true, code: true } });
     if (!school) return notFound("School not found");
 
     await prisma.school.delete({ where: { id } });
+
+    await writeAuditLog({
+      action: "SCHOOL_DELETE",
+      actorId: user.id,
+      actorRole: user.role,
+      schoolId: id,
+      targetType: "school",
+      targetId: id,
+      metadata: { name: school.name, code: school.code },
+      ip: clientIp(_req),
+    });
+
     revalidatePath("/super-admin/schools");
     return ok({ deleted: true, name: school.name });
   } catch (e) {

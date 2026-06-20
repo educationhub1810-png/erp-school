@@ -3,7 +3,7 @@ import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, badRequest, unauthorized, forbidden, notFound, serverError } from "@/lib/api-response";
 import { imageDataUrl } from "@/lib/validation";
-import { writeAuditLog, clientIp } from "@/lib/audit";
+import { writeAuditLog, auditAccountStatusChange, clientIp } from "@/lib/audit";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -39,7 +39,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const user = getUser(session!);
 
   try {
-    const student = await prisma.student.findUnique({ where: { id } });
+    const student = await prisma.student.findUnique({ where: { id }, include: { user: { select: { isActive: true } } } });
     if (!student) return notFound("Student not found");
     if (user.role === "SCHOOL_ADMIN" && user.schoolId !== student.schoolId) return forbidden();
 
@@ -91,6 +91,16 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       }
 
       return result;
+    });
+
+    await auditAccountStatusChange({
+      prev: student.user.isActive,
+      next: data.isActive,
+      actor: { id: user.id, role: user.role },
+      targetUserId: student.userId,
+      targetType: "student",
+      schoolId: student.schoolId,
+      ip: clientIp(req),
     });
 
     return ok(updated);
