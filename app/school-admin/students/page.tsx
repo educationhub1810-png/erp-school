@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AddStudentDialog } from "./add-student-dialog";
 import { GraduationCap, UserPlus } from "lucide-react";
 import { StudentFilters } from "./student-filters";
+import { sortClassesByGrade } from "@/lib/class-order";
 
 interface Props {
   searchParams: Promise<{ classId?: string; sectionId?: string; search?: string; page?: string }>;
@@ -36,7 +37,7 @@ export default async function StudentsPage({ searchParams }: Props) {
     }),
   };
 
-  const [students, total, classes] = await Promise.all([
+  const [students, total, classesRaw] = await Promise.all([
     prisma.student.findMany({
       where,
       include: {
@@ -52,9 +53,9 @@ export default async function StudentsPage({ searchParams }: Props) {
     prisma.class.findMany({
       where: { schoolId },
       include: { sections: true },
-      orderBy: { name: "asc" },
     }),
   ]);
+  const classes = sortClassesByGrade(classesRaw);
 
   const totalPages = Math.ceil(total / limit);
 

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
+import { sortClassesByGrade } from "@/lib/class-order";
 
 export async function GET(req: Request) {
   const { session, error } = await requireAuth(["SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL", "TEACHER"]);
@@ -17,9 +18,8 @@ export async function GET(req: Request) {
     const classes = await prisma.class.findMany({
       where: { schoolId },
       include: { sections: true },
-      orderBy: { name: "asc" },
     });
-    return ok(classes);
+    return ok(sortClassesByGrade(classes));
   } catch (e) {
     return serverError(e);
   }
