@@ -33,6 +33,12 @@ export function Sidebar({ role }: SidebarProps) {
     });
   };
 
+  // Build/deploy time stamped at build (see next.config.ts).
+  const buildTime = process.env.NEXT_PUBLIC_BUILD_TIME;
+  const lastUpdated = buildTime
+    ? new Date(buildTime).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+    : null;
+
   if (!mounted) return <aside className="w-16 bg-gray-900 min-h-screen" />;
 
   return (
@@ -96,6 +102,22 @@ export function Sidebar({ role }: SidebarProps) {
           );
         })}
       </nav>
+
+      {/* Last updated (build time) */}
+      {lastUpdated && (
+        <div className="border-t border-gray-700/60 px-3 py-2.5">
+          {collapsed ? (
+            <p className="text-center text-[9px] leading-tight text-gray-500" title={`Last updated ${lastUpdated}`}>
+              upd.
+            </p>
+          ) : (
+            <>
+              <p className="text-[10px] uppercase tracking-wide text-gray-500">Last updated</p>
+              <p className="text-[11px] text-gray-400">{lastUpdated}</p>
+            </>
+          )}
+        </div>
+      )}
     </aside>
   );
 }
