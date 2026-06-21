@@ -32,6 +32,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["silk-grazing-twister.ngrok-free.dev"],
+  // Stamp the build/deploy time so the UI can show "last updated". Evaluated
+  // once per build; inlined into the client bundle via the NEXT_PUBLIC_ prefix.
+  env: {
+    NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
