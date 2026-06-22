@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Users } from "lucide-react";
 import { sortClassesByGrade } from "@/lib/class-order";
+import { ensureClassSections } from "@/lib/ensure-class-sections";
 
 export default async function ClassesPage() {
   const session = await auth();
@@ -13,13 +14,18 @@ export default async function ClassesPage() {
   const { schoolId } = getUser(session);
   if (!schoolId) redirect("/login");
 
-  const classesRaw = await prisma.class.findMany({
+  const classQuery = () => prisma.class.findMany({
     where: { schoolId },
     include: {
       sections: { include: { _count: { select: { students: true } } } },
       _count: { select: { students: true } },
     },
   });
+
+  let classesRaw = await classQuery();
+  if (await ensureClassSections(classesRaw)) {
+    classesRaw = await classQuery();
+  }
   const classes = sortClassesByGrade(classesRaw);
 
   return (
