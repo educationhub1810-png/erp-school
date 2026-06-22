@@ -110,8 +110,8 @@ export default async function TeachersPage({ searchParams }: Props) {
         <div className="flex items-center justify-between text-sm text-gray-500">
           <p>Showing {skip + 1}–{Math.min(skip + limit, total)} of {total}</p>
           <div className="flex gap-2">
-            {page > 1 && <Button variant="outline" size="sm" render={<a href={`?page=${page - 1}`} />}>Previous</Button>}
-            {page < totalPages && <Button variant="outline" size="sm" render={<a href={`?page=${page + 1}`} />}>Next</Button>}
+            {page > 1 && <Button variant="outline" size="sm" nativeButton={false} render={<a href={`?page=${page - 1}`} />}>Previous</Button>}
+            {page < totalPages && <Button variant="outline" size="sm" nativeButton={false} render={<a href={`?page=${page + 1}`} />}>Next</Button>}
           </div>
         </div>
       )}

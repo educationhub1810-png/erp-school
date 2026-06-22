@@ -5,6 +5,9 @@ import { getUser } from "@/lib/session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/shared/pagination";
+import { CreateExamDialog } from "@/components/shared/create-exam-dialog";
+import { ExamRowActions } from "@/components/shared/exam-row-actions";
+import { sortClassesByGrade } from "@/lib/class-order";
 import { FileText } from "lucide-react";
 
 interface Props {
@@ -22,31 +25,37 @@ export default async function ExamsPage({ searchParams }: Props) {
   const limit = 20;
   const skip = (page - 1) * limit;
 
-  const [exams, total] = await Promise.all([
+  const [exams, total, classesRaw] = await Promise.all([
     prisma.exam.findMany({
       where: { schoolId },
-      include: { _count: { select: { schedules: true } } },
+      include: { class: { select: { name: true } }, _count: { select: { schedules: true } } },
       orderBy: { startDate: "desc" },
       skip,
       take: limit,
     }),
     prisma.exam.count({ where: { schoolId } }),
+    prisma.class.findMany({ where: { schoolId }, select: { id: true, name: true } }),
   ]);
   const totalPages = Math.ceil(total / limit);
+  const classes = sortClassesByGrade(classesRaw);
 
   const typeColor: Record<string, string> = {
     UNIT_TEST: "bg-blue-100 text-blue-700",
     MID_TERM:  "bg-yellow-100 text-yellow-700",
     FINAL:     "bg-red-100 text-red-700",
-    QUARTERLY: "bg-purple-100 text-purple-700",
-    ANNUAL:    "bg-indigo-100 text-indigo-700",
+    PRACTICAL: "bg-purple-100 text-purple-700",
+    INTERNAL:  "bg-cyan-100 text-cyan-700",
+    EXTERNAL:  "bg-indigo-100 text-indigo-700",
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Exams</h1>
-        <p className="text-sm text-gray-500 mt-1">{total} exams</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Exams</h1>
+          <p className="text-sm text-gray-500 mt-1">{total} exams</p>
+        </div>
+        <CreateExamDialog classes={classes} />
       </div>
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><FileText className="w-4 h-4" />All Exams</CardTitle></CardHeader>
@@ -58,21 +67,27 @@ export default async function ExamsPage({ searchParams }: Props) {
               <thead>
                 <tr className="border-b bg-gray-50">
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Name</th>
+                  <th className="text-left px-6 py-3 font-medium text-gray-500">Class</th>
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Type</th>
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Period</th>
                   <th className="text-right px-6 py-3 font-medium text-gray-500">Subjects</th>
+                  <th className="text-right px-6 py-3 font-medium text-gray-500">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {exams.map((e) => (
                   <tr key={e.id} className="hover:bg-gray-50">
                     <td className="px-6 py-3 font-medium text-gray-900">{e.name}</td>
+                    <td className="px-6 py-3 text-gray-600">{e.class.name}</td>
                     <td className="px-6 py-3"><Badge className={typeColor[e.examType] ?? "bg-gray-100 text-gray-600"}>{e.examType.replace("_", " ")}</Badge></td>
                     <td className="px-6 py-3 text-gray-500 text-xs">
                       {e.startDate ? new Date(e.startDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}
                       {e.endDate ? ` – ${new Date(e.endDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}` : ""}
                     </td>
                     <td className="px-6 py-3 text-right text-gray-700">{e._count.schedules}</td>
+                    <td className="px-6 py-3 text-right">
+                      <ExamRowActions exam={{ id: e.id, name: e.name }} />
+                    </td>
                   </tr>
                 ))}
               </tbody>

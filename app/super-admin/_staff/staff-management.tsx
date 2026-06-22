@@ -125,12 +125,12 @@ export async function StaffManagement({ role, roleLabel, roleLabelPlural, search
           <p>Showing {skip + 1}–{Math.min(skip + limit, total)} of {total}</p>
           <div className="flex gap-2">
             {page > 1 && (
-              <Button variant="outline" size="sm" render={<a href={`?page=${page - 1}`} />}>
+              <Button variant="outline" size="sm" nativeButton={false} render={<a href={`?page=${page - 1}`} />}>
                 Previous
               </Button>
             )}
             {page < totalPages && (
-              <Button variant="outline" size="sm" render={<a href={`?page=${page + 1}`} />}>
+              <Button variant="outline" size="sm" nativeButton={false} render={<a href={`?page=${page + 1}`} />}>
                 Next
               </Button>
             )}

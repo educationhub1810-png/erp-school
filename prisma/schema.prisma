@@ -365,6 +365,7 @@ model Subject {
 
   school       School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   class        Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacher      Teacher?       @relation(fields: [teacherId], references: [id], onDelete: SetNull)
   timetables   Timetable[]
   homeworks    Homework[]
   examSchedules ExamSchedule[]
@@ -517,6 +518,7 @@ model Teacher {
   school     School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   timetables Timetable[]
   payrolls   Payroll[]
+  subjects   Subject[]
 
   @@map("teachers")
 }
