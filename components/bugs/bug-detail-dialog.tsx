@@ -149,7 +149,7 @@ export function BugDetailDialog({ ticket, canMove, currentUserId, onClose, onUpd
           )}
 
           {canMove && (
-            <div className="grid grid-cols-2 gap-3 border-t pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t pt-4">
               <div className="space-y-1.5">
                 <Label className="text-gray-500">Status</Label>
                 <Select value={ticket.status} onValueChange={(v) => patch({ status: v as BugTicketView["status"] })} disabled={busy}>

@@ -88,7 +88,7 @@ export function EditSubjectDialog({ subject, classes, teachers, open, onOpenChan
           <DialogTitle>Edit Subject</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="col-span-2 space-y-1.5">
               <Label>Subject Name *</Label>
               <Input {...register("name")} />

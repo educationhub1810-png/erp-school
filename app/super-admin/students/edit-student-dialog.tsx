@@ -209,7 +209,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>First Name *</Label>
               <Input {...register("firstName")} />
@@ -226,7 +226,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Gender *</Label>
               <Select value={watch("gender")} onValueChange={(v) => setValue("gender", v as "MALE" | "FEMALE" | "OTHER")}>
@@ -258,7 +258,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Category</Label>
               <Select value={watch("category")} onValueChange={(v) => setValue("category", v as string)}>
@@ -283,7 +283,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Class *</Label>
               <Select
@@ -320,7 +320,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>House</Label>
               <Select value={watch("house")} onValueChange={(v) => setValue("house", v as string)}>
@@ -336,7 +336,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Email</Label>
               <Input type="email" {...register("email")} />

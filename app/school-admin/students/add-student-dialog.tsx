@@ -164,7 +164,7 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
             {/* Step 1: Personal */}
             {step === 0 && (
               <>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>First Name *</Label>
                     <Input {...register("firstName")} />
@@ -181,7 +181,7 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>Gender *</Label>
                     <Select defaultValue="MALE" onValueChange={(v) => setValue("gender", v as "MALE" | "FEMALE" | "OTHER")}>
@@ -213,7 +213,7 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>Category</Label>
                     <Select onValueChange={(v) => setValue("category", v as string)}>
@@ -243,7 +243,7 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
             {/* Step 2: Academic */}
             {step === 1 && (
               <>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Student Code</Label>
                     <Input value="Auto-generated (e.g. D-STD00001)" disabled className="text-gray-400" />
@@ -254,7 +254,7 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Class *</Label>
                     <Select onValueChange={(v) => { setValue("classId", v as string); setValue("sectionId", ""); }}>
@@ -276,7 +276,7 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>Admission Date</Label>
                     <Input type="date" {...register("admissionDate")} />
@@ -317,7 +317,7 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
             {/* Step 3: Contact */}
             {step === 2 && (
               <>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Email</Label>
                     <Input type="email" placeholder="student@email.com" {...register("email")} />
@@ -344,7 +344,7 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
             {step === 3 && (
               <>
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Father's Details</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Father's Name</Label>
                     <Input {...register("fatherName")} />
@@ -364,7 +364,7 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
                 </div>
 
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wide pt-2">Mother's Details</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Mother's Name</Label>
                     <Input {...register("motherName")} />

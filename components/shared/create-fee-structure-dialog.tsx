@@ -85,7 +85,7 @@ export function CreateFeeStructureDialog({ classes }: Props) {
             {errors.feeType && <p className="text-xs text-red-500">{errors.feeType.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Amount (₹) *</Label>
               <Input type="number" min={0} {...register("amount", { setValueAs: (v) => v === "" || v == null ? undefined : parseFloat(v) })} />

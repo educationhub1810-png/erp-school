@@ -159,7 +159,7 @@ export function TimetableGrid({ classes, subjects }: Props) {
                     </Select>
                     {errors.subjectId && <p className="text-xs text-red-500">{errors.subjectId.message}</p>}
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label>Start Time *</Label>
                       <Input type="time" {...register("startTime")} />

@@ -130,7 +130,7 @@ export function EditTeacherDialog({ teacher, open, onOpenChange }: Props) {
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Full Name *</Label>
               <Input {...register("name")} />
@@ -143,7 +143,7 @@ export function EditTeacherDialog({ teacher, open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Mobile</Label>
               <Input type="tel" {...register("mobile")} />
@@ -165,7 +165,7 @@ export function EditTeacherDialog({ teacher, open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Qualification</Label>
               <Input {...register("qualification")} />
@@ -180,7 +180,7 @@ export function EditTeacherDialog({ teacher, open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Joining Date</Label>
               <DatePicker value={watch("joiningDate")} onChange={(v) => setValue("joiningDate", v)} placeholder="Select joining date" />
@@ -195,7 +195,7 @@ export function EditTeacherDialog({ teacher, open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Aadhaar No.</Label>
               <Input {...register("aadhaar")} />

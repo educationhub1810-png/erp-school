@@ -132,7 +132,7 @@ export function RecordFeePaymentDialog({ students, feeStructures }: Props) {
             {errors.feeStructureId && <p className="text-xs text-red-500">{errors.feeStructureId.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Amount Paid (₹) *</Label>
               <Input type="number" min={0} {...register("amountPaid", { setValueAs: (v) => v === "" || v == null ? undefined : parseFloat(v) })} />

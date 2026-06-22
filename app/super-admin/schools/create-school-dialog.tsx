@@ -110,7 +110,7 @@ export function CreateSchoolDialog() {
               {error}
             </div>
           )}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="col-span-3 space-y-1.5">
               <Label>School Name *</Label>
               <Input placeholder="Delhi Public School" {...register("name")} />
