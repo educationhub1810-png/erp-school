@@ -54,8 +54,8 @@ const DUMMY_HASH = bcrypt.hashSync("nonexistent-account-placeholder", 12);
 async function authorizeUser(
   credentials: Record<string, unknown> | undefined,
 ): Promise<AuthorizedUser | null> {
-  const { schoolCode, username, password, impersonateToken } = (credentials ?? {}) as {
-    schoolCode: string;
+  const { role, username, password, impersonateToken } = (credentials ?? {}) as {
+    role: string;
     username: string;
     password: string;
     impersonateToken: string;
@@ -77,18 +77,34 @@ async function authorizeUser(
     };
   }
 
-  if (!username || !password) return null;
+  if (!username || !password || !role) return null;
 
-  const isSuperAdmin = !schoolCode || schoolCode.trim() === "";
+  // No school is collected on the login form — student codes and emails are
+  // globally unique, so the account is resolved by username alone. The user
+  // selects their role on the form and we enforce it against the account below.
+  let candidate: AuthorizedUser | null = null;
 
-  // Super admin: email/mobile + bcrypt password
-  if (isSuperAdmin) {
+  // 1. Student path — username = studentCode (global), password = DOB (DDMMYYYY)
+  const student = await prisma.student.findFirst({
+    where: { studentCode: username },
+    include: {
+      user: { select: { id: true, name: true, email: true, role: true, isActive: true } },
+    },
+  });
+  if (student && student.user.isActive && student.dob && password === dobToPassword(student.dob)) {
+    candidate = {
+      id: student.user.id,
+      name: student.user.name,
+      email: student.user.email ?? undefined,
+      role: student.user.role as AppRole,
+      schoolId: student.schoolId ?? undefined,
+    };
+  }
+
+  // 2. Everyone else (and students who log in with an email) — email/mobile + bcrypt
+  if (!candidate) {
     const user = await prisma.user.findFirst({
-      where: {
-        role: "SUPER_ADMIN",
-        OR: [{ email: username }, { mobile: username }],
-        isActive: true,
-      },
+      where: { OR: [{ email: username }, { mobile: username }], isActive: true },
     });
     if (!user) {
       await bcrypt.compare(password, DUMMY_HASH); // equalize timing
@@ -96,68 +112,20 @@ async function authorizeUser(
     }
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) return null;
-    return {
+    candidate = {
       id: user.id,
       name: user.name,
       email: user.email ?? undefined,
       role: user.role as AppRole,
-      schoolId: undefined,
+      schoolId: user.schoolId ?? undefined,
     };
   }
 
-  // School login
-  const school = await prisma.school.findUnique({
-    where: { code: schoolCode.toUpperCase() },
-  });
-  if (!school || !school.isActive) {
-    await bcrypt.compare(password, DUMMY_HASH); // equalize timing
-    return null;
-  }
+  // Enforce the role the user selected on the form against their real account
+  // role — a mismatch is treated as a failed login.
+  if (candidate.role !== role) return null;
 
-  // 1. Try student — username = studentCode, password = DOB (DDMMYYYY)
-  const student = await prisma.student.findFirst({
-    where: { schoolId: school.id, studentCode: username },
-    include: {
-      user: {
-        select: { id: true, name: true, email: true, role: true, isActive: true },
-      },
-    },
-  });
-  if (student && student.user.isActive && student.dob) {
-    if (password === dobToPassword(student.dob)) {
-      return {
-        id: student.user.id,
-        name: student.user.name,
-        email: student.user.email ?? undefined,
-        role: student.user.role as AppRole,
-        schoolId: school.id,
-      };
-    }
-    await bcrypt.compare(password, DUMMY_HASH); // equalize timing with staff path
-    return null; // found student but wrong DOB — don't fall through
-  }
-
-  // 2. Staff / teacher / school-admin — username = email or mobile, bcrypt password
-  const user = await prisma.user.findFirst({
-    where: {
-      schoolId: school.id,
-      OR: [{ email: username }, { mobile: username }],
-      isActive: true,
-    },
-  });
-  if (!user) {
-    await bcrypt.compare(password, DUMMY_HASH); // equalize timing
-    return null;
-  }
-  const isValid = await bcrypt.compare(password, user.passwordHash);
-  if (!isValid) return null;
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email ?? undefined,
-    role: user.role as AppRole,
-    schoolId: school.id,
-  };
+  return candidate;
 }
 
 // Re-validate the user against the DB at most this often (seconds), so that
@@ -213,7 +181,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        schoolCode: { label: "School Code", type: "text" },
+        role: { label: "Role", type: "text" },
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
         impersonateToken: { label: "Impersonate Token", type: "text" },

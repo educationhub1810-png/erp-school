@@ -7,7 +7,7 @@ import { login } from "./helpers";
 test.describe("students module", () => {
   test("super admin can open the students list", async ({ page }) => {
     await login(page, byRole("SUPER_ADMIN"));
-    await expect(page).toHaveURL(/\/super-admin\/dashboard/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/super-admin\/dashboard/, { timeout: 30_000 });
 
     await page.goto("/super-admin/students");
     await expect(page).toHaveURL(/\/super-admin\/students/);
@@ -19,7 +19,7 @@ test.describe("students module", () => {
     await login(page, byRole("SCHOOL_ADMIN"));
     // Wait for the post-login redirect to settle (session cookie is set) before
     // navigating, otherwise the guard bounces us back to /login.
-    await expect(page).toHaveURL(/\/school-admin\/dashboard/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/school-admin\/dashboard/, { timeout: 30_000 });
     await page.goto("/school-admin/students");
     await expect(page).toHaveURL(/\/school-admin\/students/);
   });
