@@ -32,6 +32,15 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["silk-grazing-twister.ngrok-free.dev"],
+  experimental: {
+    // Turbopack's on-disk dev cache (default since 16.1) trades cold-start
+    // speed for periodic "filesystem cache database compaction" pauses that
+    // can run 30-70s+ on a slow/HDD-backed project directory — worse than no
+    // cache at all for a long-running local dev session. Disabled here since
+    // this repo measurably hits that case; re-enable if the project moves to
+    // a fast SSD/network-cache-friendly disk.
+    turbopackFileSystemCacheForDev: false,
+  },
   // Stamp the build/deploy time so the UI can show "last updated". Evaluated
   // once per build; inlined into the client bundle via the NEXT_PUBLIC_ prefix.
   env: {

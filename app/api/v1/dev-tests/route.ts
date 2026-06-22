@@ -37,9 +37,15 @@ interface VitestJson {
 
 function runVitest(outFile: string): Promise<{ code: number; stderr: string }> {
   return new Promise((resolve) => {
+    // Invoke vitest's entry script directly with the current Node binary
+    // instead of going through the "vitest"/"npx" shims — on Windows those
+    // are .cmd files that `spawn` cannot exec without `shell: true`, which
+    // would otherwise be needed just to run a fixed, non-user-controlled
+    // command. This works identically on Windows and Linux/macOS.
+    const vitestBin = path.join(process.cwd(), "node_modules", "vitest", "vitest.mjs");
     const child = spawn(
-      "npx",
-      ["vitest", "run", "--reporter=json", `--outputFile=${outFile}`],
+      process.execPath,
+      [vitestBin, "run", "--reporter=json", `--outputFile=${outFile}`],
       { cwd: process.cwd(), env: { ...process.env, CI: "true" } },
     );
     let stderr = "";
