@@ -68,7 +68,7 @@ describe("authConfig.authorized — CSRF origin check", () => {
 
 describe("authConfig.authorized — routing & RBAC", () => {
   it("lets open paths through without a session", () => {
-    expect(authorized({ auth: null, request: makeRequest("/api/public/schools") })).toBe(true);
+    expect(authorized({ auth: null, request: makeRequest("/api/admin-access/users") })).toBe(true);
     expect(authorized({ auth: null, request: makeRequest("/admin-access") })).toBe(true);
   });
 
