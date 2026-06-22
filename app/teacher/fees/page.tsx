@@ -5,29 +5,18 @@ import { getUser } from "@/lib/session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/shared/stat-card";
-import { Pagination } from "@/components/shared/pagination";
 import { CreateFeeStructureDialog } from "@/components/shared/create-fee-structure-dialog";
 import { RecordFeePaymentDialog } from "@/components/shared/record-fee-payment-dialog";
 import { sortClassesByGrade } from "@/lib/class-order";
 import { DollarSign } from "lucide-react";
 
-interface Props {
-  searchParams: Promise<{ page?: string }>;
-}
-
-export default async function FeesPage({ searchParams }: Props) {
+export default async function TeacherFeesPage() {
   const session = await auth();
   if (!session) redirect("/login");
   const { schoolId } = getUser(session);
   if (!schoolId) redirect("/login");
 
-  const sp = await searchParams;
-  const page = parseInt(sp.page ?? "1");
-  const limit = 20;
-  const skip = (page - 1) * limit;
-
-  const [allPayments, payments, total, structures, classesRaw, students] = await Promise.all([
-    prisma.feePayment.findMany({ where: { schoolId }, select: { amountPaid: true, status: true } }),
+  const [payments, structures, classesRaw, students] = await Promise.all([
     prisma.feePayment.findMany({
       where: { schoolId },
       include: {
@@ -35,10 +24,8 @@ export default async function FeesPage({ searchParams }: Props) {
         feeStructure: { select: { feeType: true } },
       },
       orderBy: { paymentDate: "desc" },
-      skip,
-      take: limit,
+      take: 50,
     }),
-    prisma.feePayment.count({ where: { schoolId } }),
     prisma.feeStructure.findMany({ where: { schoolId }, orderBy: { feeType: "asc" } }),
     prisma.class.findMany({ where: { schoolId }, select: { id: true, name: true } }),
     prisma.student.findMany({
@@ -47,11 +34,10 @@ export default async function FeesPage({ searchParams }: Props) {
       orderBy: { firstName: "asc" },
     }),
   ]);
-  const totalPages = Math.ceil(total / limit);
   const classes = sortClassesByGrade(classesRaw);
 
-  const totalCollected = allPayments.filter((p) => p.status === "PAID").reduce((s, p) => s + Number(p.amountPaid), 0);
-  const totalPending   = allPayments.filter((p) => p.status === "PENDING").reduce((s, p) => s + Number(p.amountPaid), 0);
+  const totalCollected = payments.filter((p) => p.status === "PAID").reduce((s, p) => s + Number(p.amountPaid), 0);
+  const totalPending = payments.filter((p) => p.status === "PENDING").reduce((s, p) => s + Number(p.amountPaid), 0);
 
   const statusStyle: Record<string, string> = {
     PAID: "bg-green-100 text-green-700", PENDING: "bg-yellow-100 text-yellow-700",
@@ -63,7 +49,7 @@ export default async function FeesPage({ searchParams }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Fee Management</h1>
-          <p className="text-sm text-gray-500 mt-1">{structures.length} fee structures · {total} transactions</p>
+          <p className="text-sm text-gray-500 mt-1">{structures.length} fee structures · {payments.length} transactions</p>
         </div>
         <div className="flex gap-2">
           <CreateFeeStructureDialog classes={classes} />
@@ -73,13 +59,13 @@ export default async function FeesPage({ searchParams }: Props) {
 
       <div className="grid grid-cols-2 gap-4">
         <StatCard title="Total Collected" value={`₹${totalCollected.toLocaleString("en-IN")}`} subtitle="Paid" icon={<DollarSign className="w-5 h-5" />} color="green" />
-        <StatCard title="Pending"         value={`₹${totalPending.toLocaleString("en-IN")}`}   subtitle="Outstanding" icon={<DollarSign className="w-5 h-5" />} color="red" />
+        <StatCard title="Pending" value={`₹${totalPending.toLocaleString("en-IN")}`} subtitle="Outstanding" icon={<DollarSign className="w-5 h-5" />} color="red" />
       </div>
 
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3"><CardTitle className="text-base">Payment History</CardTitle></CardHeader>
         <CardContent className="p-0">
-          {total === 0 ? (
+          {payments.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-12">No payments found.</p>
           ) : (
             <table className="w-full text-sm">
@@ -107,8 +93,6 @@ export default async function FeesPage({ searchParams }: Props) {
           )}
         </CardContent>
       </Card>
-
-      <Pagination page={page} totalPages={totalPages} total={total} limit={limit} skip={skip} />
     </div>
   );
 }

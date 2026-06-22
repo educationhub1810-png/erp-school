@@ -138,7 +138,7 @@ export default async function StudentsPage({ searchParams }: Props) {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" render={<a href={`/school-admin/students/${student.id}`} />}>
+                      <Button variant="ghost" size="sm" nativeButton={false} render={<a href={`/school-admin/students/${student.id}`} />}>
                         View
                       </Button>
                     </TableCell>
@@ -156,12 +156,12 @@ export default async function StudentsPage({ searchParams }: Props) {
           <p>Showing {skip + 1}–{Math.min(skip + limit, total)} of {total}</p>
           <div className="flex gap-2">
             {page > 1 && (
-              <Button variant="outline" size="sm" render={<a href={`?page=${page - 1}`} />}>
+              <Button variant="outline" size="sm" nativeButton={false} render={<a href={`?page=${page - 1}`} />}>
                 Previous
               </Button>
             )}
             {page < totalPages && (
-              <Button variant="outline" size="sm" render={<a href={`?page=${page + 1}`} />}>
+              <Button variant="outline" size="sm" nativeButton={false} render={<a href={`?page=${page + 1}`} />}>
                 Next
               </Button>
             )}

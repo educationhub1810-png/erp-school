@@ -92,6 +92,7 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: "Attendance", href: "/teacher/attendance", icon: ClipboardList },
     { label: "Homework", href: "/teacher/homework", icon: FileText },
     { label: "Exams", href: "/teacher/exams", icon: GraduationCap },
+    { label: "Fees", href: "/teacher/fees", icon: DollarSign },
     { label: "LMS", href: "/teacher/lms", icon: Video },
     { label: "Leave", href: "/teacher/leave", icon: CalendarCheck },
     { label: "Communication", href: "/teacher/communication", icon: MessageSquare },

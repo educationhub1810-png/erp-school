@@ -44,7 +44,22 @@
       "PowerShell(Stop-Process -Id 24388 -Force -ErrorAction SilentlyContinue)",
       "PowerShell(Stop-Process -Id 32040,27900,16664 -Force -ErrorAction SilentlyContinue)",
       "Bash(git checkout *)",
-      "Bash(node check_codes.mjs)"
+      "Bash(node check_codes.mjs)",
+      "Bash(curl -s -o /dev/null -w \"dashboard: %{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(npm config *)",
+      "Read(//g/ERP/erp-school/**)",
+      "Read(//g//**)",
+      "Bash(time curl -s -o /dev/null -w \"login: %{http_code} in %{time_total}s\\\\n\" http://localhost:3000/login)",
+      "Bash(env)",
+      "Bash(curl -s -w \"\\\\nHTTP %{http_code} in %{time_total}s\\\\n\" http://localhost:3000/api/public/schools)",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 1; Remove-Item -Recurse -Force \"G:\\\\ERP\\\\erp-school\\\\.next\" -ErrorAction SilentlyContinue; Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Select-Object ProcessId)",
+      "Bash(nohup npm run dev)",
+      "Bash(disown)",
+      "Bash(curl -s -o /dev/null -w \"login page: %{http_code} in %{time_total}s\\\\n\" http://localhost:3000/login)",
+      "Bash(curl -s -o /dev/null -w \"login page: %{http_code} in %{time_total}s\\\\n\" http://localhost:3000/login --max-time 60)",
+      "Bash(node tmp-auth-check.mjs)",
+      "Bash(curl -s http://localhost:3000/api/auth/csrf)",
+      "Bash(curl -s -i http://localhost:3000/api/auth/csrf)"
     ]
   }
 }

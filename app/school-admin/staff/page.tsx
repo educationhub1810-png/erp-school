@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/shared/pagination";
 import { Briefcase } from "lucide-react";
+import { CreateStaffDialog } from "./create-staff-dialog";
+import { StaffRowActions } from "./staff-row-actions";
 
 interface Props {
   searchParams: Promise<{ page?: string }>;
@@ -36,9 +38,12 @@ export default async function StaffPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Staff</h1>
-        <p className="text-sm text-gray-500 mt-1">{total} staff members</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Staff</h1>
+          <p className="text-sm text-gray-500 mt-1">{total} staff members</p>
+        </div>
+        <CreateStaffDialog />
       </div>
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
@@ -58,6 +63,7 @@ export default async function StaffPage({ searchParams }: Props) {
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Designation</th>
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Contact</th>
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Status</th>
+                  <th className="text-right px-6 py-3 font-medium text-gray-500">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -71,6 +77,9 @@ export default async function StaffPage({ searchParams }: Props) {
                       <Badge className={s.user?.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}>
                         {s.user?.isActive ? "Active" : "Inactive"}
                       </Badge>
+                    </td>
+                    <td className="px-6 py-3 text-right">
+                      <StaffRowActions staff={s} />
                     </td>
                   </tr>
                 ))}
