@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
 import { sortClassesByGrade } from "@/lib/class-order";
+import { ensureClassSections } from "@/lib/ensure-class-sections";
 
 export async function GET(req: Request) {
   const { session, error } = await requireAuth(["SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL", "TEACHER"]);
@@ -15,10 +16,16 @@ export async function GET(req: Request) {
   if (!schoolId) return badRequest("schoolId is required");
 
   try {
-    const classes = await prisma.class.findMany({
+    let classes = await prisma.class.findMany({
       where: { schoolId },
       include: { sections: true },
     });
+    if (await ensureClassSections(classes)) {
+      classes = await prisma.class.findMany({
+        where: { schoolId },
+        include: { sections: true },
+      });
+    }
     return ok(sortClassesByGrade(classes));
   } catch (e) {
     return serverError(e);

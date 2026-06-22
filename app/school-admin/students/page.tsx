@@ -8,6 +8,7 @@ import { AddStudentDialog } from "./add-student-dialog";
 import { GraduationCap, UserPlus } from "lucide-react";
 import { StudentFilters } from "./student-filters";
 import { sortClassesByGrade } from "@/lib/class-order";
+import { ensureClassSections } from "@/lib/ensure-class-sections";
 
 interface Props {
   searchParams: Promise<{ classId?: string; sectionId?: string; search?: string; page?: string }>;
@@ -37,7 +38,7 @@ export default async function StudentsPage({ searchParams }: Props) {
     }),
   };
 
-  const [students, total, classesRaw] = await Promise.all([
+  const [students, total, classesQuery] = await Promise.all([
     prisma.student.findMany({
       where,
       include: {
@@ -55,6 +56,10 @@ export default async function StudentsPage({ searchParams }: Props) {
       include: { sections: true },
     }),
   ]);
+  let classesRaw = classesQuery;
+  if (await ensureClassSections(classesRaw)) {
+    classesRaw = await prisma.class.findMany({ where: { schoolId }, include: { sections: true } });
+  }
   const classes = sortClassesByGrade(classesRaw);
 
   const totalPages = Math.ceil(total / limit);
