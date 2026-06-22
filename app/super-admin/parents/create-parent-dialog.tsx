@@ -190,7 +190,7 @@ export function CreateParentDialog({ schools }: Props) {
       </CardHeader>
       {included[role] && (
         <CardContent className="space-y-3 pt-0">
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>First Name *</Label>
               <Input {...register(`${role}.firstName`)} />
@@ -207,7 +207,7 @@ export function CreateParentDialog({ schools }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Gender *</Label>
               <Select
@@ -254,7 +254,7 @@ export function CreateParentDialog({ schools }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Nationality</Label>
               <Input {...register(`${role}.nationality`)} placeholder="Indian" />
@@ -274,7 +274,7 @@ export function CreateParentDialog({ schools }: Props) {
             <Input {...register(`${role}.address`)} />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Email</Label>
               <Input type="email" placeholder={`${ROLE_LABEL[role].toLowerCase()}@email.com`} {...register(`${role}.email`)} />
@@ -315,7 +315,7 @@ export function CreateParentDialog({ schools }: Props) {
             <Input value={`Auto-generated per parent (e.g. ${codePreviewLetter}-PAR00001)`} disabled className="text-gray-400" />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>School *</Label>
               <Select

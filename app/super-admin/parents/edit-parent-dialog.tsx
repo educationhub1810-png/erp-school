@@ -149,7 +149,7 @@ export function EditParentDialog({ parent, open, onOpenChange }: Props) {
             </Select>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>First Name *</Label>
               <Input {...register("firstName")} />
@@ -166,7 +166,7 @@ export function EditParentDialog({ parent, open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Gender *</Label>
               <Select
@@ -206,7 +206,7 @@ export function EditParentDialog({ parent, open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Nationality</Label>
               <Input {...register("nationality")} placeholder="Indian" />
@@ -226,7 +226,7 @@ export function EditParentDialog({ parent, open, onOpenChange }: Props) {
             <Input {...register("address")} />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Email</Label>
               <Input type="email" {...register("email")} />

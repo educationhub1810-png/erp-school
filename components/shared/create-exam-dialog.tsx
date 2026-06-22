@@ -85,7 +85,7 @@ export function CreateExamDialog({ classes }: Props) {
             {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Class *</Label>
               <Select value={watch("classId") ?? ""} onValueChange={(v) => { if (v == null) return; setValue("classId", v, { shouldValidate: true }); }}>

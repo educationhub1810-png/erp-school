@@ -152,7 +152,7 @@ export function CreateStaffDialog() {
             </div>
           )}
 
-          <div className={hasAutoCode ? "" : "grid grid-cols-2 gap-3"}>
+          <div className={hasAutoCode ? "" : "grid grid-cols-1 sm:grid-cols-2 gap-3"}>
             <div className="space-y-1.5">
               <Label>Full Name *</Label>
               <Input {...register("name")} />
@@ -167,7 +167,7 @@ export function CreateStaffDialog() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Email</Label>
               <Input type="email" placeholder="name@school.com" {...register("email")} />
@@ -180,7 +180,7 @@ export function CreateStaffDialog() {
           </div>
 
           <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{roleLabel} Details</p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {ROLE_FIELDS[role].map((field) => (
               <div key={field.key} className="space-y-1.5">
                 <Label>{field.label}</Label>
@@ -194,7 +194,7 @@ export function CreateStaffDialog() {
           </div>
 
           <p className="text-xs text-gray-500 font-medium uppercase tracking-wide pt-2">Payroll &amp; Identity</p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Salary</Label>
               <Input type="number" placeholder="35000" {...register("salary")} />
@@ -210,7 +210,7 @@ export function CreateStaffDialog() {
           </div>
 
           {!hasAutoCode && (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label>Bank Name</Label>
                 <Input {...register("bankName")} />

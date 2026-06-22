@@ -149,7 +149,7 @@ export function CreateTeacherDialog({ schools }: Props) {
             {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Email</Label>
               <Input type="email" placeholder="teacher@school.com" {...register("email")} />
@@ -172,7 +172,7 @@ export function CreateTeacherDialog({ schools }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Date of Birth</Label>
               <DatePicker value={watch("dob")} onChange={(v) => setValue("dob", v)} placeholder="Select date of birth" />
@@ -187,7 +187,7 @@ export function CreateTeacherDialog({ schools }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Specialization</Label>
               <Input placeholder="Mathematics" {...register("specialization")} />
@@ -202,7 +202,7 @@ export function CreateTeacherDialog({ schools }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>PAN</Label>
               <Input {...register("pan")} />
@@ -217,7 +217,7 @@ export function CreateTeacherDialog({ schools }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Account Number</Label>
               <Input {...register("accountNumber")} />

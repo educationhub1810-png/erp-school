@@ -138,7 +138,7 @@ export function EditStaffDialog({ role, roleLabel, staff, open, onOpenChange }: 
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Full Name *</Label>
               <Input {...register("name")} />
@@ -157,7 +157,7 @@ export function EditStaffDialog({ role, roleLabel, staff, open, onOpenChange }: 
           </div>
 
           <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{roleLabel} Details</p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {ROLE_FIELDS[role].map((field) => (
               <div key={field.key} className="space-y-1.5">
                 <Label>{field.label}</Label>
@@ -175,7 +175,7 @@ export function EditStaffDialog({ role, roleLabel, staff, open, onOpenChange }: 
           </div>
 
           <p className="text-xs text-gray-500 font-medium uppercase tracking-wide pt-2">Payroll &amp; Identity</p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>PAN</Label>
               <Input {...register("pan")} />
@@ -190,7 +190,7 @@ export function EditStaffDialog({ role, roleLabel, staff, open, onOpenChange }: 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Account Number</Label>
               <Input {...register("accountNumber")} />

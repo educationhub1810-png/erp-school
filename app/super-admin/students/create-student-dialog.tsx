@@ -247,7 +247,7 @@ export function CreateStudentDialog({ schools }: Props) {
                   <Input value={`Auto-generated (e.g. ${codePreviewLetter}-STD00001)`} disabled className="text-gray-400" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label>School *</Label>
                     <Select
@@ -295,7 +295,7 @@ export function CreateStudentDialog({ schools }: Props) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>First Name *</Label>
                     <Input {...register("firstName")} />
@@ -312,7 +312,7 @@ export function CreateStudentDialog({ schools }: Props) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>Gender *</Label>
                     <Select defaultValue="MALE" onValueChange={(v) => setValue("gender", v as "MALE" | "FEMALE" | "OTHER")}>
@@ -344,7 +344,7 @@ export function CreateStudentDialog({ schools }: Props) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>Category</Label>
                     <Select onValueChange={(v) => setValue("category", v as string)}>
@@ -374,7 +374,7 @@ export function CreateStudentDialog({ schools }: Props) {
             {/* Step 2: Academic */}
             {step === 1 && (
               <>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>Roll Number</Label>
                     <Input placeholder="01" {...register("rollNumber")} />
@@ -419,7 +419,7 @@ export function CreateStudentDialog({ schools }: Props) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>Admission Date</Label>
                     <DatePicker value={watch("admissionDate")} onChange={(v) => setValue("admissionDate", v)} placeholder="Select admission date" />
@@ -460,7 +460,7 @@ export function CreateStudentDialog({ schools }: Props) {
             {/* Step 3: Contact */}
             {step === 2 && (
               <>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Email</Label>
                     <Input type="email" placeholder="student@email.com" {...register("email")} />
