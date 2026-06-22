@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -12,15 +12,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, GraduationCap, Loader2, ChevronDown } from "lucide-react";
+import { ROLE_LABELS } from "@/lib/roles";
 
-interface School {
-  id: string;
-  name: string;
-  code: string;
-}
+// Order roles are presented in the dropdown.
+const ROLE_OPTIONS = Object.entries(ROLE_LABELS) as [keyof typeof ROLE_LABELS, string][];
 
 const schema = z.object({
-  schoolCode: z.string().optional(),
+  role: z.string().min(1, "Please select your role"),
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
 });
@@ -34,19 +32,9 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [schools, setSchools] = useState<School[]>([]);
-  const [schoolsLoading, setSchoolsLoading] = useState(true);
   const [adminCode, setAdminCode] = useState("");
   const [adminError, setAdminError] = useState<string | null>(null);
   const [adminLoading, setAdminLoading] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/public/schools", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => setSchools(d.data ?? []))
-      .catch(() => setSchools([]))
-      .finally(() => setSchoolsLoading(false));
-  }, []);
 
   const {
     register,
@@ -55,8 +43,8 @@ export function LoginForm() {
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
-  const selectedSchoolCode = watch("schoolCode");
-  const isStudentSchool = !!selectedSchoolCode && selectedSchoolCode !== "";
+  const selectedRole = watch("role");
+  const isStudent = selectedRole === "STUDENT";
 
   const handleAdminAccess = async () => {
     setAdminError(null);
@@ -82,7 +70,7 @@ export function LoginForm() {
     setLoading(true);
     try {
       const result = await signIn("credentials", {
-        schoolCode: data.schoolCode ?? "",
+        role: data.role,
         username: data.username,
         password: data.password,
         redirect: false,
@@ -125,43 +113,44 @@ export function LoginForm() {
                 </Alert>
               )}
 
-              {/* School dropdown */}
+              {/* Role dropdown */}
               <div className="space-y-1.5">
-                <Label htmlFor="schoolCode">School</Label>
+                <Label htmlFor="role">Role</Label>
                 <div className="relative">
                   <select
-                    id="schoolCode"
-                    {...register("schoolCode")}
-                    disabled={schoolsLoading}
+                    id="role"
+                    {...register("role")}
+                    defaultValue=""
                     className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm appearance-none pr-8 focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
                   >
-                    <option value="">
-                      {schoolsLoading ? "Loading schools…" : "Super Admin (no school)"}
+                    <option value="" disabled>
+                      Select your role
                     </option>
-                    {schools.map((s) => (
-                      <option key={s.id} value={s.code}>
-                        {s.name} — {s.code}
+                    {ROLE_OPTIONS.map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
                       </option>
                     ))}
                   </select>
                   <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 </div>
+                {errors.role && <p className="text-xs text-red-500">{errors.role.message}</p>}
               </div>
 
               {/* Username */}
               <div className="space-y-1.5">
                 <Label htmlFor="username">
                   Username
-                  {isStudentSchool && (
+                  {isStudent && (
                     <span className="text-gray-400 font-normal text-xs ml-1">
-                      (student code for students)
+                      (student code)
                     </span>
                   )}
                 </Label>
                 <Input
                   id="username"
                   type="text"
-                  placeholder={isStudentSchool ? "Student code or email" : "Email or mobile"}
+                  placeholder={isStudent ? "Student code or email" : "Email or mobile"}
                   {...register("username")}
                   autoComplete="username"
                 />
@@ -174,7 +163,7 @@ export function LoginForm() {
               <div className="space-y-1.5">
                 <Label htmlFor="password">
                   Password
-                  {isStudentSchool && (
+                  {isStudent && (
                     <span className="text-gray-400 font-normal text-xs ml-1">
                       (DOB as DDMMYYYY for students)
                     </span>
@@ -184,7 +173,7 @@ export function LoginForm() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder={isStudentSchool ? "e.g. 15082005" : "Enter your password"}
+                    placeholder={isStudent ? "e.g. 15082005" : "Enter your password"}
                     {...register("password")}
                     autoComplete="current-password"
                     className="pr-10"
@@ -210,7 +199,7 @@ export function LoginForm() {
               <Button
                 type="submit"
                 className="w-full bg-indigo-600 hover:bg-indigo-700"
-                disabled={loading || schoolsLoading}
+                disabled={loading}
               >
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Sign In

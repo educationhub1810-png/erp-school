@@ -1,15 +1,12 @@
 import { expect, type Page } from "@playwright/test";
 import type { Credential } from "./credentials";
 
-// Drive the real login form. Leaves the school dropdown empty for super admin.
+// Drive the real login form: pick the role, then enter username + password.
 export async function login(page: Page, cred: Credential) {
   await page.goto("/login");
-  // Wait for the schools dropdown to finish loading (button is disabled until then).
-  await expect(page.getByRole("button", { name: /sign in/i })).toBeEnabled();
+  await expect(page.getByRole("button", { name: /sign in/i })).toBeVisible();
 
-  if (cred.schoolCode) {
-    await page.selectOption("#schoolCode", cred.schoolCode);
-  }
+  await page.selectOption("#role", cred.role);
   await page.fill("#username", cred.username);
   await page.fill("#password", cred.password);
   await page.getByRole("button", { name: /sign in/i }).click();
