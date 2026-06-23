@@ -5,7 +5,7 @@ import { ok, created, badRequest, unauthorized, forbidden, serverError, duplicat
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
-const STAFF_ROLES = ["PRINCIPAL", "ACCOUNTANT", "LIBRARIAN", "TRANSPORT_MANAGER", "HR_MANAGER", "WARDEN_MANAGER"] as const;
+const STAFF_ROLES = ["PRINCIPAL", "ACCOUNTANT", "LIBRARIAN", "TRANSPORT_MANAGER", "HR_MANAGER", "WARDEN_MANAGER", "MESS_MANAGER"] as const;
 
 const createSchema = z.object({
   schoolId: z.string().optional(),

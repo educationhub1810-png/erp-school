@@ -10,13 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Plus, Trash2, CalendarCheck } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, CalendarCheck } from "lucide-react";
 import { toast } from "sonner";
 
 interface ClassOption { id: string; name: string; sections: { id: string; name: string }[] }
 interface SubjectOption { id: string; name: string; classId: string }
 interface Slot {
   id: string;
+  subjectId: string;
   dayOfWeek: number;
   startTime: string;
   endTime: string;
@@ -46,6 +47,7 @@ export function TimetableGrid({ classes, subjects }: Props) {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [editingSlot, setEditingSlot] = useState<Slot | null>(null);
 
   const selectedClass = classes.find((c) => c.id === classId);
   const classSubjects = subjects.filter((s) => s.classId === classId);
@@ -67,20 +69,31 @@ export function TimetableGrid({ classes, subjects }: Props) {
 
   useEffect(loadSlots, [classId, sectionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const onAddSlot = async (data: SlotFormValues) => {
-    const res = await fetch("/api/v1/timetable", {
-      method: "POST",
+  const closeDialog = () => {
+    setAddOpen(false);
+    setEditingSlot(null);
+    reset({ dayOfWeek: 1 });
+  };
+
+  const openEditDialog = (slot: Slot) => {
+    setEditingSlot(slot);
+    reset({ dayOfWeek: slot.dayOfWeek, subjectId: slot.subjectId, startTime: slot.startTime, endTime: slot.endTime });
+  };
+
+  const onSubmitSlot = async (data: SlotFormValues) => {
+    const isEdit = !!editingSlot;
+    const res = await fetch(isEdit ? `/api/v1/timetable/${editingSlot!.id}` : "/api/v1/timetable", {
+      method: isEdit ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...data, classId, sectionId: sectionId || undefined }),
+      body: JSON.stringify(isEdit ? data : { ...data, classId, sectionId: sectionId || undefined }),
     });
     const json = await res.json();
     if (!res.ok) {
-      toast.error(json.error || "Failed to add period");
+      toast.error(json.error || `Failed to ${isEdit ? "update" : "add"} period`);
       return;
     }
-    toast.success("Period added to timetable");
-    reset({ dayOfWeek: 1 });
-    setAddOpen(false);
+    toast.success(isEdit ? "Period updated" : "Period added to timetable");
+    closeDialog();
     loadSlots();
   };
 
@@ -127,13 +140,13 @@ export function TimetableGrid({ classes, subjects }: Props) {
           </div>
 
           <div className="flex items-end">
-            <Dialog open={addOpen} onOpenChange={(v) => { setAddOpen(v); if (!v) reset({ dayOfWeek: 1 }); }}>
-              <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700 w-full" disabled={!classId} />}>
+            <Dialog open={addOpen || !!editingSlot} onOpenChange={(v) => { if (!v) closeDialog(); else setAddOpen(true); }}>
+              <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700 w-full" disabled={!classId} onClick={() => setAddOpen(true)} />}>
                 <Plus className="w-4 h-4 mr-2" /> Add Period
               </DialogTrigger>
               <DialogContent className="max-w-md">
-                <DialogHeader><DialogTitle>Add Period</DialogTitle></DialogHeader>
-                <form onSubmit={handleSubmit(onAddSlot)} className="space-y-3 mt-2">
+                <DialogHeader><DialogTitle>{editingSlot ? "Edit Period" : "Add Period"}</DialogTitle></DialogHeader>
+                <form onSubmit={handleSubmit(onSubmitSlot)} className="space-y-3 mt-2">
                   <div className="space-y-1.5">
                     <Label>Day *</Label>
                     <Select value={String(watch("dayOfWeek"))} onValueChange={(v) => { if (v == null) return; setValue("dayOfWeek", parseInt(v, 10)); }}>
@@ -172,10 +185,10 @@ export function TimetableGrid({ classes, subjects }: Props) {
                     </div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2">
-                    <Button type="button" variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
+                    <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
                     <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={isSubmitting}>
                       {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                      Add Period
+                      {editingSlot ? "Save Changes" : "Add Period"}
                     </Button>
                   </div>
                 </form>
@@ -211,9 +224,14 @@ export function TimetableGrid({ classes, subjects }: Props) {
                             <span className="font-medium text-gray-900">{s.subject.name}</span>
                             {s.teacher && <span className="text-xs text-gray-400">{s.teacher.user.name}</span>}
                           </div>
-                          <button onClick={() => deleteSlot(s.id)} className="text-gray-400 hover:text-red-500" title="Remove period">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => openEditDialog(s)} className="text-gray-400 hover:text-indigo-600" title="Edit period">
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => deleteSlot(s.id)} className="text-gray-400 hover:text-red-500" title="Remove period">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
