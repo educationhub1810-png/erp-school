@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { authConfig } from "./auth.config";
 import type { AppRole } from "@/lib/roles";
 import { writeAuditLog, clientIp } from "@/lib/audit";
-import { isTotpEnforced, verifyTotp, decryptSecret, matchRecoveryCode } from "@/lib/totp";
+import { isTotpEnforced } from "@/lib/totp";
+import { verifySuperAdminTotp } from "@/lib/super-admin-2fa";
 
 function dobToPassword(dob: Date): string {
   const d = String(dob.getUTCDate()).padStart(2, "0");
@@ -141,37 +142,6 @@ async function authorizeUser(
   }
 
   return candidate;
-}
-
-// Verify a super admin's TOTP code, or a one-time recovery code. A used
-// recovery code is consumed (removed) so it can't be replayed.
-async function verifySuperAdminTotp(
-  account: { id: string; totpSecret: string | null; totpRecoveryCodes: string | null },
-  code: string | undefined,
-): Promise<boolean> {
-  if (!code || !account.totpSecret) return false;
-
-  try {
-    const secret = decryptSecret(account.totpSecret);
-    if (verifyTotp(code, secret)) return true;
-  } catch {
-    return false;
-  }
-
-  // Fall back to a recovery code.
-  if (account.totpRecoveryCodes) {
-    const hashes = JSON.parse(account.totpRecoveryCodes) as string[];
-    const idx = await matchRecoveryCode(code, hashes);
-    if (idx >= 0) {
-      hashes.splice(idx, 1);
-      await prisma.user.update({
-        where: { id: account.id },
-        data: { totpRecoveryCodes: JSON.stringify(hashes) },
-      });
-      return true;
-    }
-  }
-  return false;
 }
 
 // Re-validate the user against the DB at most this often (seconds), so that
