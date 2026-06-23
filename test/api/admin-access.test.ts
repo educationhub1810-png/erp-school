@@ -1,6 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { authenticator } from "otplib";
 import { prismaMock } from "../mocks/prisma";
 import { buildRequest, callRoute } from "../helpers/request";
+import { encryptSecret } from "@/lib/totp";
 
 // All admin-access routes gate on a signed `admin_access` cookie (next/headers)
 // compared against ADMIN_SECRET_CODE with a constant-time check.
@@ -23,18 +25,21 @@ const SECRET = "test-admin-secret";
 
 beforeEach(() => {
   process.env.ADMIN_SECRET_CODE = SECRET;
+  process.env.TOTP_ENC_KEY = "acdc3b3417097e685ec95c7ec6251660e1eac6d0d0f07ccdab0909b8a4f53342";
   adminCookie = SECRET; // valid by default; individual tests clear it
   cookieSet.mockClear();
 });
 
 describe("POST /api/admin-access/verify", () => {
+  afterEach(() => delete process.env.TOTP_ENFORCE);
+
   it("rejects a wrong code with 400 and sets no cookie", async () => {
     const res = await callRoute(verifyPOST, buildRequest("/api/admin-access/verify", { method: "POST", body: { code: "wrong" } }));
     expect(res.status).toBe(400);
     expect(cookieSet).not.toHaveBeenCalled();
   });
 
-  it("accepts the correct code, sets an httpOnly cookie, returns verified", async () => {
+  it("accepts the correct code (code-only when TOTP is not enforced, e.g. localhost)", async () => {
     const res = await callRoute(verifyPOST, buildRequest("/api/admin-access/verify", { method: "POST", body: { code: SECRET } }));
     expect(res.status).toBe(200);
     expect((res.body.data as { verified: boolean }).verified).toBe(true);
@@ -42,6 +47,28 @@ describe("POST /api/admin-access/verify", () => {
     expect(name).toBe("admin_access");
     expect(value).toBe(SECRET);
     expect((opts as { httpOnly: boolean }).httpOnly).toBe(true);
+  });
+
+  it("requires a valid authenticator code when TOTP is enforced", async () => {
+    process.env.TOTP_ENFORCE = "true";
+    prismaMock.user.findMany.mockResolvedValue([
+      { id: "sa1", totpSecret: encryptSecret("JBSWY3DPEHPK3PXP"), totpRecoveryCodes: null },
+    ] as never);
+    const res = await callRoute(verifyPOST, buildRequest("/api/admin-access/verify", { method: "POST", body: { code: SECRET, totp: "000000" } }));
+    expect(res.status).toBe(400);
+    expect(cookieSet).not.toHaveBeenCalled();
+  });
+
+  it("grants access with the correct code + a valid authenticator code when enforced", async () => {
+    process.env.TOTP_ENFORCE = "true";
+    const secret = "JBSWY3DPEHPK3PXP";
+    prismaMock.user.findMany.mockResolvedValue([
+      { id: "sa1", totpSecret: encryptSecret(secret), totpRecoveryCodes: null },
+    ] as never);
+    const code = authenticator.generate(secret);
+    const res = await callRoute(verifyPOST, buildRequest("/api/admin-access/verify", { method: "POST", body: { code: SECRET, totp: code } }));
+    expect(res.status).toBe(200);
+    expect(cookieSet).toHaveBeenCalled();
   });
 });
 

@@ -34,6 +34,7 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [adminCode, setAdminCode] = useState("");
+  const [adminTotp, setAdminTotp] = useState("");
   const [adminError, setAdminError] = useState<string | null>(null);
   const [adminLoading, setAdminLoading] = useState(false);
 
@@ -55,10 +56,10 @@ export function LoginForm() {
       const res = await fetch("/api/admin-access/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: adminCode }),
+        body: JSON.stringify({ code: adminCode.trim(), totp: adminTotp.trim() }),
       });
       if (!res.ok) {
-        setAdminError("Invalid code. Try again.");
+        setAdminError("Invalid code or authenticator. Try again.");
         return;
       }
       window.location.href = "/admin-access";
@@ -242,7 +243,7 @@ export function LoginForm() {
               Support
             </button>
           ) : (
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex flex-col items-center gap-1.5">
               <input
                 type="password"
                 value={adminCode.trim()}
@@ -250,16 +251,28 @@ export function LoginForm() {
                 onKeyDown={(e) => e.key === "Enter" && handleAdminAccess()}
                 placeholder="Access code"
                 autoFocus
-                className="w-36 h-7 rounded border border-gray-200 bg-white px-2.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-44 h-7 rounded border border-gray-200 bg-white px-2.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-gray-300"
               />
-              <button
-                onClick={handleAdminAccess}
-                disabled={adminLoading || !adminCode.trim()}
-                className="h-7 px-2.5 rounded border border-gray-200 text-gray-400 text-xs hover:text-gray-600 disabled:opacity-40"
-              >
-                {adminLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Go"}
-              </button>
-              {adminError && <span className="text-xs text-red-400">{adminError}</span>}
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={adminTotp}
+                onChange={(e) => setAdminTotp(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAdminAccess()}
+                placeholder="Authenticator code"
+                className="w-44 h-7 rounded border border-gray-200 bg-white px-2.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-gray-300"
+              />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleAdminAccess}
+                  disabled={adminLoading || !adminCode.trim()}
+                  className="h-7 px-3 rounded border border-gray-200 text-gray-400 text-xs hover:text-gray-600 disabled:opacity-40"
+                >
+                  {adminLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Go"}
+                </button>
+                {adminError && <span className="text-xs text-red-400">{adminError}</span>}
+              </div>
             </div>
           )}
         </div>

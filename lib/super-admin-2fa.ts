@@ -1,0 +1,51 @@
+import { prisma } from "@/lib/prisma";
+import { verifyTotp, decryptSecret, matchRecoveryCode } from "@/lib/totp";
+
+export interface TotpAccount {
+  id: string;
+  totpSecret: string | null;
+  totpRecoveryCodes: string | null;
+}
+
+/**
+ * Verify a TOTP code (or a one-time recovery code) against a specific account.
+ * A used recovery code is consumed so it can't be replayed.
+ */
+export async function verifySuperAdminTotp(account: TotpAccount, code: string | undefined): Promise<boolean> {
+  if (!code || !account.totpSecret) return false;
+
+  try {
+    const secret = decryptSecret(account.totpSecret);
+    if (verifyTotp(code, secret)) return true;
+  } catch {
+    return false;
+  }
+
+  if (account.totpRecoveryCodes) {
+    const hashes = JSON.parse(account.totpRecoveryCodes) as string[];
+    const idx = await matchRecoveryCode(code, hashes);
+    if (idx >= 0) {
+      hashes.splice(idx, 1);
+      await prisma.user.update({ where: { id: account.id }, data: { totpRecoveryCodes: JSON.stringify(hashes) } });
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Verify a code against ANY enrolled super admin — used by the support/admin
+ * access gate, where the operator proves they hold an enrolled authenticator
+ * (in addition to the access code).
+ */
+export async function verifyAnySuperAdminTotp(code: string | undefined): Promise<boolean> {
+  if (!code) return false;
+  const admins = await prisma.user.findMany({
+    where: { role: "SUPER_ADMIN", totpEnabled: true },
+    select: { id: true, totpSecret: true, totpRecoveryCodes: true },
+  });
+  for (const a of admins) {
+    if (await verifySuperAdminTotp(a, code)) return true;
+  }
+  return false;
+}
