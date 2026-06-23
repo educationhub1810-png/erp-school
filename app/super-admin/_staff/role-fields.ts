@@ -1,4 +1,4 @@
-export type StaffRole = "PRINCIPAL" | "ACCOUNTANT" | "LIBRARIAN" | "TRANSPORT_MANAGER" | "HR_MANAGER" | "WARDEN_MANAGER";
+export type StaffRole = "PRINCIPAL" | "ACCOUNTANT" | "LIBRARIAN" | "TRANSPORT_MANAGER" | "HR_MANAGER" | "WARDEN_MANAGER" | "MESS_MANAGER";
 
 export interface RoleField {
   key: "qualification" | "experienceYears" | "licenseNumber" | "vehicleNumber" | "assignedBlock" | "department" | "designation";
@@ -36,5 +36,10 @@ export const ROLE_FIELDS: Record<StaffRole, RoleField[]> = {
     { key: "assignedBlock", label: "Assigned Hostel/Block", placeholder: "Block A" },
     { key: "experienceYears", label: "Experience (Years)", type: "number" },
     { key: "department", label: "Department", placeholder: "Hostel" },
+  ],
+  MESS_MANAGER: [
+    { key: "qualification", label: "Qualification", placeholder: "Diploma in Catering" },
+    { key: "experienceYears", label: "Experience (Years)", type: "number" },
+    { key: "department", label: "Department", placeholder: "Kitchen & Mess" },
   ],
 };

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { AddTeacherDialog } from "./add-teacher-dialog";
+import { TeacherRowActions } from "./teacher-row-actions";
 import { UserCheck } from "lucide-react";
 
 interface Props {
@@ -74,6 +75,7 @@ export default async function TeachersPage({ searchParams }: Props) {
                   <TableHead>Qualification</TableHead>
                   <TableHead>Experience</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -97,6 +99,9 @@ export default async function TeachersPage({ searchParams }: Props) {
                       }>
                         {t.user.isActive ? "Active" : "Inactive"}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <TeacherRowActions teacher={t} />
                     </TableCell>
                   </TableRow>
                 ))}

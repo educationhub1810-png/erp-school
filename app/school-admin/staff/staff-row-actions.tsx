@@ -3,17 +3,26 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ROLE_LABELS } from "@/lib/roles";
+import type { AppRole } from "@/lib/roles";
+import type { StaffRole } from "@/app/super-admin/_staff/role-fields";
+import { EditStaffDialog, type EditableStaff } from "./edit-staff-dialog";
 
 interface Props {
-  staff: { id: string; user: { name: string; isActive: boolean } | null };
+  staff: EditableStaff & { user: { name: string; isActive: boolean; role: AppRole } | null };
 }
 
 export function StaffRowActions({ staff }: Props) {
   const router = useRouter();
+  const [editOpen, setEditOpen] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const role = (staff.user?.role ?? "ACCOUNTANT") as StaffRole;
+  const roleLabel = ROLE_LABELS[role] ?? "Staff";
 
   const toggleActive = async () => {
     if (!staff.user) return;
@@ -64,6 +73,12 @@ export function StaffRowActions({ staff }: Props) {
         {staff.user?.isActive ? "Disable" : "Enable"}
       </button>
 
+      {staff.user && (
+        <Button variant="ghost" size="icon-sm" onClick={() => setEditOpen(true)} title={`Edit ${roleLabel.toLowerCase()}`}>
+          <Pencil className="w-3.5 h-3.5" />
+        </Button>
+      )}
+
       {!confirmDelete ? (
         <button
           onClick={() => setConfirmDelete(true)}
@@ -88,6 +103,10 @@ export function StaffRowActions({ staff }: Props) {
             Cancel
           </button>
         </div>
+      )}
+
+      {staff.user && (
+        <EditStaffDialog role={role} roleLabel={roleLabel} staff={{ ...staff, user: staff.user }} open={editOpen} onOpenChange={setEditOpen} />
       )}
     </div>
   );
