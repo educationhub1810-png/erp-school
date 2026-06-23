@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getUser } from "@/lib/session";
 import { sortClassesByGrade } from "@/lib/class-order";
-import { AttendanceMarker } from "./attendance-marker";
+import { AttendanceMarker } from "@/components/shared/attendance-marker";
 
 export default async function TeacherAttendancePage() {
   const session = await auth();

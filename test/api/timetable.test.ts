@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { GET, POST } from "@/app/api/v1/timetable/route";
-import { DELETE } from "@/app/api/v1/timetable/[id]/route";
+import { PUT, DELETE } from "@/app/api/v1/timetable/[id]/route";
 import { prismaMock } from "../mocks/prisma";
 import { setSession, sessionFor } from "../mocks/auth";
 import { buildRequest, callRoute, paramsCtx } from "../helpers/request";
@@ -104,6 +104,58 @@ describe("POST /api/v1/timetable", () => {
     expect(res.status).toBe(201);
     const data = prismaMock.timetable.create.mock.calls[0][0]!.data as Record<string, unknown>;
     expect(data.teacherId).toBe("teacher-explicit");
+  });
+});
+
+describe("PUT /api/v1/timetable/[id]", () => {
+  const validBody = { subjectId: "subject-2", dayOfWeek: 2, startTime: "10:00", endTime: "10:45" };
+
+  beforeEach(() => {
+    prismaMock.timetable.findUnique.mockResolvedValue(makeSlot({ schoolId: "school-1" }) as never);
+    prismaMock.subject.findFirst.mockResolvedValue({ id: "subject-2" } as never);
+    prismaMock.timetable.update.mockResolvedValue(makeSlot({ ...validBody }) as never);
+  });
+
+  it("enforces RBAC (write roles only)", async () => {
+    await expectRbac(
+      PUT,
+      [...WRITE_ROLES],
+      () => buildRequest("/api/v1/timetable/slot-1", { method: "PUT", body: validBody }),
+      paramsCtx({ id: "slot-1" }),
+    );
+  });
+
+  it("404s when the slot does not exist", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    prismaMock.timetable.findUnique.mockResolvedValue(null as never);
+    const res = await callRoute(PUT, buildRequest("/api/v1/timetable/x", { method: "PUT", body: validBody }), paramsCtx({ id: "x" }));
+    expect(res.status).toBe(404);
+  });
+
+  it("forbids updating another school's slot", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    prismaMock.timetable.findUnique.mockResolvedValue(makeSlot({ schoolId: "school-2" }) as never);
+    const res = await callRoute(PUT, buildRequest("/api/v1/timetable/x", { method: "PUT", body: validBody }), paramsCtx({ id: "x" }));
+    expect(res.status).toBe(403);
+  });
+
+  it("rejects a subject that does not belong to the caller's school", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    prismaMock.subject.findFirst.mockResolvedValue(null as never);
+    const res = await callRoute(PUT, buildRequest("/api/v1/timetable/slot-1", { method: "PUT", body: validBody }), paramsCtx({ id: "slot-1" }));
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/subject/i);
+  });
+
+  it("updates the slot's subject, day, and time", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    const res = await callRoute(PUT, buildRequest("/api/v1/timetable/slot-1", { method: "PUT", body: validBody }), paramsCtx({ id: "slot-1" }));
+    expect(res.status).toBe(200);
+    const data = prismaMock.timetable.update.mock.calls[0][0]!.data as Record<string, unknown>;
+    expect(data.subjectId).toBe("subject-2");
+    expect(data.dayOfWeek).toBe(2);
+    expect(data.startTime).toBe("10:00");
+    expect(data.endTime).toBe("10:45");
   });
 });
 

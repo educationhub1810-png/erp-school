@@ -23,13 +23,14 @@ const ROLE_OPTIONS: { value: StaffRole; label: string }[] = [
   { value: "TRANSPORT_MANAGER", label: "Transport Manager" },
   { value: "HR_MANAGER", label: "HR Manager" },
   { value: "WARDEN_MANAGER", label: "Warden Manager" },
+  { value: "MESS_MANAGER", label: "Mess Manager" },
 ];
 
 const CODE_LABEL: Partial<Record<StaffRole, string>> = { PRINCIPAL: "Principal Code" };
 const CODE_PREFIX: Partial<Record<StaffRole, string>> = { PRINCIPAL: "PRN" };
 
 const baseSchema = z.object({
-  role: z.enum(["PRINCIPAL", "ACCOUNTANT", "LIBRARIAN", "TRANSPORT_MANAGER", "HR_MANAGER", "WARDEN_MANAGER"]),
+  role: z.enum(["PRINCIPAL", "ACCOUNTANT", "LIBRARIAN", "TRANSPORT_MANAGER", "HR_MANAGER", "WARDEN_MANAGER", "MESS_MANAGER"]),
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   mobile: z.string().optional(),

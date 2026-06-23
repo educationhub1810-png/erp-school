@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { AddStudentDialog } from "./add-student-dialog";
+import { StudentRowActions } from "./student-row-actions";
 import { GraduationCap, UserPlus } from "lucide-react";
 import { StudentFilters } from "./student-filters";
 import { sortClassesByGrade } from "@/lib/class-order";
@@ -44,7 +45,7 @@ export default async function StudentsPage({ searchParams }: Props) {
       include: {
         class: { select: { name: true } },
         section: { select: { name: true } },
-        user: { select: { isActive: true } },
+        user: { select: { isActive: true, email: true, mobile: true } },
       },
       orderBy: { admissionDate: "desc" },
       skip,
@@ -138,9 +139,12 @@ export default async function StudentsPage({ searchParams }: Props) {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" nativeButton={false} render={<a href={`/school-admin/students/${student.id}`} />}>
-                        View
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="sm" nativeButton={false} render={<a href={`/school-admin/students/${student.id}`} />}>
+                          View
+                        </Button>
+                        <StudentRowActions student={student} classes={classes} />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

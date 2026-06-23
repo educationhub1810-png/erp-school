@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/shared/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/shared/pagination";
+import { AttendanceMarker } from "@/components/shared/attendance-marker";
+import { sortClassesByGrade } from "@/lib/class-order";
 import { ClipboardList } from "lucide-react";
 
 interface Props {
@@ -26,7 +28,7 @@ export default async function AttendancePage({ searchParams }: Props) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [allTodayRecords, todayRecords, total, totalStudents] = await Promise.all([
+  const [allTodayRecords, todayRecords, total, totalStudents, classesRaw] = await Promise.all([
     prisma.attendance.findMany({
       where: { schoolId, date: { gte: today } },
       select: { status: true },
@@ -40,8 +42,13 @@ export default async function AttendancePage({ searchParams }: Props) {
     }),
     prisma.attendance.count({ where: { schoolId, date: { gte: today } } }),
     prisma.student.count({ where: { schoolId } }),
+    prisma.class.findMany({
+      where: { schoolId },
+      include: { sections: { select: { id: true, name: true } } },
+    }),
   ]);
   const totalPages = Math.ceil(total / limit);
+  const classes = sortClassesByGrade(classesRaw);
 
   const present = allTodayRecords.filter((r) => r.status === "PRESENT").length;
   const absent  = allTodayRecords.filter((r) => r.status === "ABSENT").length;
@@ -65,6 +72,11 @@ export default async function AttendancePage({ searchParams }: Props) {
         <StatCard title="Present" value={present} subtitle="Today" icon={<ClipboardList className="w-5 h-5" />} color="green" />
         <StatCard title="Absent"  value={absent}  subtitle="Today" icon={<ClipboardList className="w-5 h-5" />} color="red"   />
         <StatCard title="Late"    value={late}    subtitle="Today" icon={<ClipboardList className="w-5 h-5" />} color="orange"/>
+      </div>
+
+      <div>
+        <h2 className="text-base font-semibold text-gray-900 mb-3">Mark / Edit Attendance</h2>
+        <AttendanceMarker classes={classes} />
       </div>
 
       <Card className="border-0 shadow-sm">
