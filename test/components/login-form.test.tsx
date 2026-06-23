@@ -19,7 +19,7 @@ describe("LoginForm", () => {
   it("renders the role dropdown, username and password fields", () => {
     render(<LoginForm />);
     expect(screen.getByLabelText(/role/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email or mobile/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     // the role dropdown lists the known roles
     expect(screen.getByRole("option", { name: "Teacher" })).toBeInTheDocument();
@@ -29,7 +29,7 @@ describe("LoginForm", () => {
   it("shows validation errors and does not call signIn when fields are empty", async () => {
     const user = userEvent.setup();
     render(<LoginForm />);
-    await user.click(screen.getByRole("button", { name: /sign in/i }));
+    await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
     expect(await screen.findByText(/please select your role/i)).toBeInTheDocument();
     expect(screen.getByText(/username is required/i)).toBeInTheDocument();
     expect(signInMock).not.toHaveBeenCalled();
@@ -41,9 +41,9 @@ describe("LoginForm", () => {
     render(<LoginForm />);
 
     await user.selectOptions(screen.getByLabelText(/role/i), "TEACHER");
-    await user.type(screen.getByLabelText(/username/i), "teacher@sch001.com");
+    await user.type(screen.getByLabelText(/email or mobile/i), "teacher@sch001.com");
     await user.type(screen.getByLabelText(/password/i), "Admin@123");
-    await user.click(screen.getByRole("button", { name: /sign in/i }));
+    await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
 
     await waitFor(() => expect(signInMock).toHaveBeenCalledOnce());
     expect(signInMock).toHaveBeenCalledWith(
@@ -79,9 +79,9 @@ describe("LoginForm", () => {
     render(<LoginForm />);
 
     await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
-    await user.type(screen.getByLabelText(/username/i), "x");
+    await user.type(screen.getByLabelText(/email or mobile/i), "x");
     await user.type(screen.getByLabelText(/password/i), "y");
-    await user.click(screen.getByRole("button", { name: /sign in/i }));
+    await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
 
     expect(await screen.findByText(/invalid credentials/i)).toBeInTheDocument();
   });
