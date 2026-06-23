@@ -8,6 +8,22 @@ export interface TotpAccount {
 }
 
 /**
+ * The full super-admin login 2FA gate.
+ *   - Not enforced (localhost): always passes (password-only).
+ *   - Enforced (production): the account MUST be TOTP-enrolled (no bypass for
+ *     legacy/un-enrolled super admins) AND present a valid code.
+ */
+export async function passesSuperAdminGate(
+  account: (TotpAccount & { totpEnabled: boolean }) | null,
+  code: string | undefined,
+  enforced: boolean,
+): Promise<boolean> {
+  if (!enforced) return true;
+  if (!account?.totpEnabled) return false;
+  return verifySuperAdminTotp(account, code);
+}
+
+/**
  * Verify a TOTP code (or a one-time recovery code) against a specific account.
  * A used recovery code is consumed so it can't be replayed.
  */
