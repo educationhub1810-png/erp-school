@@ -7,7 +7,7 @@ import { authConfig } from "./auth.config";
 import type { AppRole } from "@/lib/roles";
 import { writeAuditLog, clientIp } from "@/lib/audit";
 import { isTotpEnforced } from "@/lib/totp";
-import { verifySuperAdminTotp } from "@/lib/super-admin-2fa";
+import { passesSuperAdminGate } from "@/lib/super-admin-2fa";
 
 function dobToPassword(dob: Date): string {
   const d = String(dob.getUTCDate()).padStart(2, "0");
@@ -133,11 +133,11 @@ async function authorizeUser(
   // role — a mismatch is treated as a failed login.
   if (candidate.role !== role) return null;
 
-  // Super-admin two-factor: in enforced environments (production), an enrolled
-  // super admin must also present a valid TOTP code or recovery code. Local dev
-  // is password-only (isTotpEnforced() === false).
-  if (candidate.role === "SUPER_ADMIN" && account?.totpEnabled && isTotpEnforced()) {
-    const ok = await verifySuperAdminTotp(account, totp);
+  // Super-admin two-factor. In production a super admin MUST be TOTP-enrolled
+  // and present a valid code (no bypass for legacy/un-enrolled accounts);
+  // localhost is password-only (isTotpEnforced() === false).
+  if (candidate.role === "SUPER_ADMIN") {
+    const ok = await passesSuperAdminGate(account, totp, isTotpEnforced());
     if (!ok) return null;
   }
 
