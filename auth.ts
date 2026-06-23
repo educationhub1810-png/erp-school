@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { authConfig } from "./auth.config";
 import type { AppRole } from "@/lib/roles";
 import { writeAuditLog, clientIp } from "@/lib/audit";
+import { isTotpEnforced, verifyTotp, decryptSecret, matchRecoveryCode } from "@/lib/totp";
 
 function dobToPassword(dob: Date): string {
   const d = String(dob.getUTCDate()).padStart(2, "0");
@@ -54,10 +55,11 @@ const DUMMY_HASH = bcrypt.hashSync("nonexistent-account-placeholder", 12);
 async function authorizeUser(
   credentials: Record<string, unknown> | undefined,
 ): Promise<AuthorizedUser | null> {
-  const { role, username, password, impersonateToken } = (credentials ?? {}) as {
+  const { role, username, password, totp, impersonateToken } = (credentials ?? {}) as {
     role: string;
     username: string;
     password: string;
+    totp: string;
     impersonateToken: string;
   };
 
@@ -83,6 +85,10 @@ async function authorizeUser(
   // globally unique, so the account is resolved by username alone. The user
   // selects their role on the form and we enforce it against the account below.
   let candidate: AuthorizedUser | null = null;
+  // The resolved DB row for non-student logins — needed for the super-admin
+  // 2FA fields (totpSecret / totpEnabled / totpRecoveryCodes).
+  let account: { id: string; totpSecret: string | null; totpEnabled: boolean; totpRecoveryCodes: string | null } | null =
+    null;
 
   // 1. Student path — username = studentCode (global), password = DOB (DDMMYYYY)
   const student = await prisma.student.findFirst({
@@ -119,13 +125,53 @@ async function authorizeUser(
       role: user.role as AppRole,
       schoolId: user.schoolId ?? undefined,
     };
+    account = user;
   }
 
   // Enforce the role the user selected on the form against their real account
   // role — a mismatch is treated as a failed login.
   if (candidate.role !== role) return null;
 
+  // Super-admin two-factor: in enforced environments (production), an enrolled
+  // super admin must also present a valid TOTP code or recovery code. Local dev
+  // is password-only (isTotpEnforced() === false).
+  if (candidate.role === "SUPER_ADMIN" && account?.totpEnabled && isTotpEnforced()) {
+    const ok = await verifySuperAdminTotp(account, totp);
+    if (!ok) return null;
+  }
+
   return candidate;
+}
+
+// Verify a super admin's TOTP code, or a one-time recovery code. A used
+// recovery code is consumed (removed) so it can't be replayed.
+async function verifySuperAdminTotp(
+  account: { id: string; totpSecret: string | null; totpRecoveryCodes: string | null },
+  code: string | undefined,
+): Promise<boolean> {
+  if (!code || !account.totpSecret) return false;
+
+  try {
+    const secret = decryptSecret(account.totpSecret);
+    if (verifyTotp(code, secret)) return true;
+  } catch {
+    return false;
+  }
+
+  // Fall back to a recovery code.
+  if (account.totpRecoveryCodes) {
+    const hashes = JSON.parse(account.totpRecoveryCodes) as string[];
+    const idx = await matchRecoveryCode(code, hashes);
+    if (idx >= 0) {
+      hashes.splice(idx, 1);
+      await prisma.user.update({
+        where: { id: account.id },
+        data: { totpRecoveryCodes: JSON.stringify(hashes) },
+      });
+      return true;
+    }
+  }
+  return false;
 }
 
 // Re-validate the user against the DB at most this often (seconds), so that
@@ -184,6 +230,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         role: { label: "Role", type: "text" },
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
+        totp: { label: "Authenticator code", type: "text" },
         impersonateToken: { label: "Impersonate Token", type: "text" },
       },
       async authorize(credentials, request) {

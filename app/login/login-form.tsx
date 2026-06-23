@@ -21,6 +21,7 @@ const schema = z.object({
   role: z.string().min(1, "Please select your role"),
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
+  totp: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -45,6 +46,7 @@ export function LoginForm() {
 
   const selectedRole = watch("role");
   const isStudent = selectedRole === "STUDENT";
+  const isSuperAdmin = selectedRole === "SUPER_ADMIN";
 
   const handleAdminAccess = async () => {
     setAdminError(null);
@@ -73,6 +75,7 @@ export function LoginForm() {
         role: data.role,
         username: data.username,
         password: data.password,
+        totp: data.totp ?? "",
         redirect: false,
       });
 
@@ -195,6 +198,27 @@ export function LoginForm() {
                   <p className="text-xs text-red-500">{errors.password.message}</p>
                 )}
               </div>
+
+              {/* Authenticator (TOTP) code — Super Admin only. Required in
+                  production; ignored on localhost (password-only there). */}
+              {isSuperAdmin && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="totp">
+                    Authenticator code
+                    <span className="text-gray-400 font-normal text-xs ml-1">
+                      (6 digits, or a recovery code)
+                    </span>
+                  </Label>
+                  <Input
+                    id="totp"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="123456"
+                    {...register("totp")}
+                  />
+                </div>
+              )}
 
               <Button
                 type="submit"
