@@ -39,6 +39,19 @@ export function makeTeacher(over: Partial<Record<string, unknown>> = {}) {
   };
 }
 
+export function makeStaff(over: Partial<Record<string, unknown>> = {}) {
+  return {
+    id: id("staff"),
+    schoolId: "school-1",
+    userId: "user-1",
+    employeeId: "ACC001",
+    department: "Finance & Accounts",
+    designation: "Accountant",
+    user: { name: "Rekha Gupta", email: "accountant@sch001.com", mobile: null, isActive: true },
+    ...over,
+  };
+}
+
 export function makeClass(over: Partial<Record<string, unknown>> = {}) {
   return { id: "class-1", schoolId: "school-1", name: "Class 10", ...over };
 }

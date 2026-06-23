@@ -27,7 +27,7 @@ export default async function StaffPage({ searchParams }: Props) {
   const [staff, total] = await Promise.all([
     prisma.staff.findMany({
       where: { schoolId },
-      include: { user: { select: { name: true, email: true, mobile: true, isActive: true } } },
+      include: { user: { select: { name: true, email: true, mobile: true, isActive: true, role: true } } },
       orderBy: { createdAt: "desc" },
       skip,
       take: limit,
