@@ -112,10 +112,10 @@ export function LoginForm() {
   };
 
   return (
-    <div className="h-screen overflow-hidden flex items-center justify-center bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-100 p-3 lg:p-6">
-      <div className="w-full max-w-6xl h-full max-h-[calc(100vh-1.5rem)] flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-10 overflow-hidden">
-        {/* Left: branding + illustration — hidden below lg to keep mobile focused on the form */}
-        <div className="hidden lg:flex flex-col w-full max-w-xl h-full max-h-full shrink-0 justify-center min-h-0">
+    <div className="h-screen overflow-hidden flex items-center justify-center bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-100 p-3 xl:p-4">
+      <div className="w-full max-w-5xl h-full max-h-[calc(100vh-1.5rem)] flex flex-col xl:flex-row items-center justify-center gap-4 xl:gap-6 overflow-hidden">
+        {/* Left: branding + illustration — hidden below xl; sized with margin to spare so the two-column layout never needs more width than the viewport actually has */}
+        <div className="hidden xl:flex flex-col w-full max-w-lg h-full max-h-full shrink-0 justify-center min-h-0">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
               <GraduationCap className="w-6 h-6 text-white" />
@@ -149,9 +149,9 @@ export function LoginForm() {
         </div>
 
         {/* Right: sign-in form */}
-        <div className="w-full max-w-md mx-auto max-h-full overflow-y-auto">
-          {/* Compact logo shown only when the illustration panel is hidden (mobile/tablet) */}
-          <div className="lg:hidden flex flex-col items-center mb-4">
+        <div className="w-full max-w-sm mx-auto max-h-full overflow-y-auto">
+          {/* Compact logo shown only when the illustration panel is hidden (mobile/tablet/laptop) */}
+          <div className="xl:hidden flex flex-col items-center mb-4">
             <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mb-2 shadow-lg">
               <GraduationCap className="w-7 h-7 text-white" />
             </div>
@@ -164,7 +164,7 @@ export function LoginForm() {
               <ShieldCheck className="w-4 h-4 text-indigo-600" />
             </div>
 
-            <div className="mb-4 hidden lg:block">
+            <div className="mb-4 hidden xl:block">
               <h2 className="text-lg font-bold text-gray-900">Welcome Back! 👋</h2>
               <p className="text-sm text-gray-500 mt-1">Sign in to continue to your account</p>
             </div>
