@@ -128,7 +128,7 @@ export function AddTeacherDialog() {
 
             <div className="space-y-1.5">
               <Label>Joining Date</Label>
-              <Input type="date" {...register("joiningDate")} />
+              <Input type="date" max={new Date().toISOString().split("T")[0]} {...register("joiningDate")} />
             </div>
           </div>
 

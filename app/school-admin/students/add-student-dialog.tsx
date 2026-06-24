@@ -280,7 +280,7 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>Admission Date</Label>
-                    <Input type="date" {...register("admissionDate")} />
+                    <Input type="date" max={new Date().toISOString().split("T")[0]} {...register("admissionDate")} />
                   </div>
                   <div className="space-y-1.5">
                     <Label>House</Label>

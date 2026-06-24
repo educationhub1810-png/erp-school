@@ -133,6 +133,7 @@ export function CreateSchoolDialog() {
                 value={watch("establishedDate")}
                 onChange={(v) => setValue("establishedDate", v)}
                 placeholder="Select date of establishment"
+                disableFuture
               />
             </div>
 
