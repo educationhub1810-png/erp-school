@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { UserPlus, Loader2, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorDialog } from "@/components/shared/error-dialog";
+import { formatDobAsPassword } from "@/lib/utils";
 
 const personSchema = z.object({
   firstName: z.string().optional(),
@@ -428,9 +429,9 @@ export function CreateParentDialog({ schools }: Props) {
                   <Label className="text-xs text-muted-foreground">Date of Birth</Label>
                   <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
                     <span className="font-mono text-base font-semibold tracking-wide">
-                      {new Date(a.dob).toLocaleDateString()}
+                      {formatDobAsPassword(a.dob!)}
                     </span>
-                    <Button type="button" variant="outline" size="sm" onClick={() => handleCopy(`${a.role}-dob`, new Date(a.dob!).toLocaleDateString())}>
+                    <Button type="button" variant="outline" size="sm" onClick={() => handleCopy(`${a.role}-dob`, formatDobAsPassword(a.dob!))}>
                       {copiedField === `${a.role}-dob` ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
                       {copiedField === `${a.role}-dob` ? "Copied" : "Copy"}
                     </Button>
