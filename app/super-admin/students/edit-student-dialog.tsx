@@ -229,7 +229,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Gender *</Label>
-              <Select value={watch("gender")} onValueChange={(v) => setValue("gender", v as "MALE" | "FEMALE" | "OTHER")}>
+              <Select value={watch("gender") ?? ""} onValueChange={(v) => setValue("gender", v as "MALE" | "FEMALE" | "OTHER")}>
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="MALE">Male</SelectItem>
@@ -250,7 +250,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>Blood Group</Label>
-              <Select value={watch("bloodGroup")} onValueChange={(v) => setValue("bloodGroup", v as string)}>
+              <Select value={watch("bloodGroup") ?? ""} onValueChange={(v) => setValue("bloodGroup", v as string)}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
                   {BLOOD_GROUPS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
@@ -262,7 +262,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Category</Label>
-              <Select value={watch("category")} onValueChange={(v) => setValue("category", v as string)}>
+              <Select value={watch("category") ?? ""} onValueChange={(v) => setValue("category", v as string)}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
                   {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -271,7 +271,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>Religion</Label>
-              <Select value={watch("religion")} onValueChange={(v) => setValue("religion", v as string)}>
+              <Select value={watch("religion") ?? ""} onValueChange={(v) => setValue("religion", v as string)}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
                   {RELIGIONS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
@@ -288,7 +288,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             <div className="space-y-1.5">
               <Label>Class *</Label>
               <Select
-                value={watch("classId")}
+                value={watch("classId") ?? ""}
                 disabled={classesLoading}
                 onValueChange={(v) => { if (v == null) return; setValue("classId", v, { shouldValidate: true }); setValue("sectionId", ""); }}
               >
@@ -305,7 +305,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>Section</Label>
-              <Select value={watch("sectionId")} onValueChange={(v) => { if (v == null) return; setValue("sectionId", v); }} disabled={!selectedClass?.sections.length}>
+              <Select value={watch("sectionId") ?? ""} onValueChange={(v) => { if (v == null) return; setValue("sectionId", v); }} disabled={!selectedClass?.sections.length}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select section">
                     {(value: string) => {
@@ -324,7 +324,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>House</Label>
-              <Select value={watch("house")} onValueChange={(v) => setValue("house", v as string)}>
+              <Select value={watch("house") ?? ""} onValueChange={(v) => setValue("house", v as string)}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
                   {HOUSES.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}

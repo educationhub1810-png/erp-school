@@ -150,7 +150,7 @@ export function EditTeacherDialog({ teacher, open, onOpenChange }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>Gender</Label>
-              <Select value={watch("gender")} onValueChange={(v) => setValue("gender", v as "MALE" | "FEMALE" | "OTHER")}>
+              <Select value={watch("gender") ?? ""} onValueChange={(v) => setValue("gender", v as "MALE" | "FEMALE" | "OTHER")}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="MALE">Male</SelectItem>
