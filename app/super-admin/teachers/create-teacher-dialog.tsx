@@ -14,6 +14,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { UserPlus, Loader2, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorDialog } from "@/components/shared/error-dialog";
+import { formatDobAsPassword } from "@/lib/utils";
 
 const schema = z.object({
   schoolId: z.string().min(1, "School is required"),
@@ -270,9 +271,9 @@ export function CreateTeacherDialog({ schools }: Props) {
               <Label className="text-xs text-muted-foreground">Date of Birth</Label>
               <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
                 <span className="font-mono text-base font-semibold tracking-wide">
-                  {new Date(createdDob).toLocaleDateString()}
+                  {formatDobAsPassword(createdDob)}
                 </span>
-                <Button type="button" variant="outline" size="sm" onClick={() => handleCopy("dob", new Date(createdDob).toLocaleDateString())}>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleCopy("dob", formatDobAsPassword(createdDob))}>
                   {copiedField === "dob" ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
                   {copiedField === "dob" ? "Copied" : "Copy"}
                 </Button>
