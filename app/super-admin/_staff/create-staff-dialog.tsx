@@ -25,6 +25,7 @@ const baseSchema = z.object({
   employeeId: z.string().optional(),
   department: z.string().optional(),
   designation: z.string().optional(),
+  dob: z.string().optional(),
   joiningDate: z.string().optional(),
   salary: z.string().optional(),
   pan: z.string().optional(),
@@ -55,6 +56,9 @@ interface Props {
 
 const CODE_LABEL: Partial<Record<StaffRole, string>> = { PRINCIPAL: "Principal Code" };
 const CODE_PREFIX: Partial<Record<StaffRole, string>> = { PRINCIPAL: "PRN" };
+// Principals log in with their date of birth as the password (like
+// students); everyone else gets the fixed default password.
+const DOB_PASSWORD_ROLES: StaffRole[] = ["PRINCIPAL"];
 
 export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
   const router = useRouter();
@@ -68,12 +72,16 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
   const hasAutoCode = role in CODE_LABEL;
   const codeLabel = CODE_LABEL[role];
   const codePrefix = CODE_PREFIX[role];
+  const requiresDob = DOB_PASSWORD_ROLES.includes(role);
 
-  const schema = hasAutoCode
-    ? baseSchema
-    : baseSchema.superRefine((data, ctx) => {
-        if (!data.employeeId) ctx.addIssue({ code: "custom", message: "Employee ID is required", path: ["employeeId"] });
-      });
+  const schema = baseSchema.superRefine((data, ctx) => {
+    if (!hasAutoCode && !data.employeeId) {
+      ctx.addIssue({ code: "custom", message: "Employee ID is required", path: ["employeeId"] });
+    }
+    if (requiresDob && !data.dob) {
+      ctx.addIssue({ code: "custom", message: "Date of birth is required", path: ["dob"] });
+    }
+  });
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -181,7 +189,7 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className={`grid grid-cols-1 gap-3 ${requiresDob ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
             <div className="space-y-1.5">
               <Label>Email</Label>
               <Input type="email" placeholder="name@school.com" {...register("email")} />
@@ -191,6 +199,13 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
               <Label>Mobile</Label>
               <Input type="tel" placeholder="9876543210" {...register("mobile")} />
             </div>
+            {requiresDob && (
+              <div className="space-y-1.5">
+                <Label>Date of Birth *</Label>
+                <DatePicker value={watch("dob")} onChange={(v) => setValue("dob", v, { shouldValidate: true })} placeholder="Select date of birth" />
+                {errors.dob && <p className="text-xs text-red-500">{errors.dob.message}</p>}
+              </div>
+            )}
           </div>
 
           <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{roleLabel} Details</p>
@@ -242,7 +257,11 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
 
           <div className="p-3 bg-blue-50 rounded-lg">
             <p className="text-xs text-blue-700">
-              A login account will be created with the email above. Default password: <strong>Staff@123</strong>
+              {requiresDob ? (
+                <>A login account will be created with the email above. Password: their <strong>date of birth (DDMMYYYY)</strong>.</>
+              ) : (
+                <>A login account will be created with the email above. Default password: <strong>Staff@123</strong></>
+              )}
             </p>
           </div>
 
@@ -264,6 +283,7 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
         </DialogHeader>
         <p className="text-sm text-muted-foreground">
           Share this {codeLabel?.toLowerCase() ?? "employee id"} with the {roleLabel.toLowerCase()} to log in.
+          {requiresDob && " The password is their date of birth (DDMMYYYY)."}
         </p>
         <div className="space-y-2">
           <div className="space-y-1">

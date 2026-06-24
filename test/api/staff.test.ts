@@ -1,12 +1,74 @@
 import { describe, it, expect } from "vitest";
+import bcrypt from "bcryptjs";
 import { PUT, DELETE } from "@/app/api/v1/staff/[id]/route";
+import { POST } from "@/app/api/v1/staff/route";
 import { prismaMock } from "../mocks/prisma";
 import { setSession, sessionFor } from "../mocks/auth";
 import { buildRequest, callRoute, paramsCtx } from "../helpers/request";
 import { expectRbac } from "../helpers/rbac";
 import { makeStaff, makeUser } from "../helpers/factories";
+import { formatDobAsPassword } from "@/lib/utils";
 
 const WRITE_ROLES = ["SUPER_ADMIN", "SCHOOL_ADMIN", "HR_MANAGER"] as const;
+
+describe("POST /api/v1/staff", () => {
+  it("400s when creating a Principal without a date of birth", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    prismaMock.school.findUnique.mockResolvedValue({ name: "Delhi Public School" } as never);
+    prismaMock.staff.findMany.mockResolvedValue([] as never);
+
+    const res = await callRoute(
+      POST,
+      buildRequest("/api/v1/staff", { method: "POST", body: { role: "PRINCIPAL", name: "New Principal" } }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("hashes the Principal's date of birth (DDMMYYYY) as their login password", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    prismaMock.school.findUnique.mockResolvedValue({ name: "Delhi Public School" } as never);
+    prismaMock.staff.findMany.mockResolvedValue([] as never);
+    prismaMock.user.create.mockResolvedValue(makeUser({ id: "user-new" }) as never);
+    prismaMock.staff.create.mockResolvedValue(makeStaff({ id: "staff-new" }) as never);
+
+    const res = await callRoute(
+      POST,
+      buildRequest("/api/v1/staff", {
+        method: "POST",
+        body: { role: "PRINCIPAL", name: "New Principal", dob: "2026-06-16" },
+      }),
+    );
+    expect(res.status).toBe(201);
+
+    const userArgs = prismaMock.user.create.mock.calls[0][0]!.data as Record<string, unknown>;
+    expect(await bcrypt.compare(formatDobAsPassword("2026-06-16"), userArgs.passwordHash as string)).toBe(true);
+
+    const staffArgs = prismaMock.staff.create.mock.calls[0][0]!.data as Record<string, unknown>;
+    expect((staffArgs.dob as Date).toISOString().slice(0, 10)).toBe("2026-06-16");
+  });
+
+  it("still uses the fixed default password for non-Principal roles (no DOB required)", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    prismaMock.staff.findFirst.mockResolvedValue(null as never);
+    prismaMock.user.create.mockResolvedValue(makeUser({ id: "user-new" }) as never);
+    prismaMock.staff.create.mockResolvedValue(makeStaff({ id: "staff-new" }) as never);
+
+    const res = await callRoute(
+      POST,
+      buildRequest("/api/v1/staff", {
+        method: "POST",
+        body: { role: "ACCOUNTANT", name: "New Accountant", employeeId: "ACC099" },
+      }),
+    );
+    expect(res.status).toBe(201);
+
+    const userArgs = prismaMock.user.create.mock.calls[0][0]!.data as Record<string, unknown>;
+    expect(await bcrypt.compare("Staff@123", userArgs.passwordHash as string)).toBe(true);
+
+    const staffArgs = prismaMock.staff.create.mock.calls[0][0]!.data as Record<string, unknown>;
+    expect(staffArgs.dob).toBeNull();
+  });
+});
 
 describe("PUT /api/v1/staff/[id]", () => {
   const validBody = { name: "Rekha Updated", department: "Finance", experienceYears: 9 };

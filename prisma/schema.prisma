@@ -535,6 +535,7 @@ model Staff {
   employeeId  String
   department  String?
   designation String?
+  dob         DateTime?
   joiningDate DateTime?
   salary      Float?
   bankName    String?

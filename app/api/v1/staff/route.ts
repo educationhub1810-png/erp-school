@@ -2,10 +2,15 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError, duplicateValue } from "@/lib/api-response";
+import { formatDobAsPassword } from "@/lib/utils";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
 const STAFF_ROLES = ["PRINCIPAL", "ACCOUNTANT", "LIBRARIAN", "TRANSPORT_MANAGER", "HR_MANAGER", "WARDEN_MANAGER", "MESS_MANAGER"] as const;
+
+// Principals log in with their date of birth as the password (like
+// students); everyone else gets the fixed default password below.
+const DOB_PASSWORD_ROLES = ["PRINCIPAL"] as const;
 
 const createSchema = z.object({
   schoolId: z.string().optional(),
@@ -16,6 +21,7 @@ const createSchema = z.object({
   employeeId: z.string().optional(),
   department: z.string().optional(),
   designation: z.string().optional(),
+  dob: z.string().optional(),
   joiningDate: z.string().optional(),
   salary: z.coerce.number().optional(),
   pan: z.string().optional(),
@@ -124,7 +130,13 @@ export async function POST(req: Request) {
       employeeId = data.employeeId;
     }
 
-    const password = await bcrypt.hash("Staff@123", 12);
+    const usesDobPassword = (DOB_PASSWORD_ROLES as readonly string[]).includes(data.role);
+    if (usesDobPassword && !data.dob) return badRequest("Date of birth is required");
+
+    const password = await bcrypt.hash(
+      usesDobPassword && data.dob ? formatDobAsPassword(data.dob) : "Staff@123",
+      12,
+    );
 
     const result = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
@@ -147,6 +159,7 @@ export async function POST(req: Request) {
           employeeId,
           department: data.department || null,
           designation: data.designation || null,
+          dob: data.dob ? new Date(data.dob) : null,
           joiningDate: data.joiningDate ? new Date(data.joiningDate) : null,
           salary: data.salary ?? null,
           pan: data.pan || null,
