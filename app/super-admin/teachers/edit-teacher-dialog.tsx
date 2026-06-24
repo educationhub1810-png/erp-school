@@ -161,7 +161,7 @@ export function EditTeacherDialog({ teacher, open, onOpenChange }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>Date of Birth</Label>
-              <DatePicker value={watch("dob")} onChange={(v) => setValue("dob", v)} placeholder="Select date of birth" />
+              <DatePicker value={watch("dob")} onChange={(v) => setValue("dob", v)} placeholder="Select date of birth" disableFuture />
             </div>
           </div>
 

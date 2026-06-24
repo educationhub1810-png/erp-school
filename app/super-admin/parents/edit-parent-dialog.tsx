@@ -187,6 +187,7 @@ export function EditParentDialog({ parent, open, onOpenChange }: Props) {
                 value={watch("dob")}
                 onChange={(v) => setValue("dob", v)}
                 placeholder="Select date of birth"
+                disableFuture
               />
             </div>
             <div className="space-y-1.5">

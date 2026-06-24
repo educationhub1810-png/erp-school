@@ -176,7 +176,7 @@ export function CreateTeacherDialog({ schools }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Date of Birth</Label>
-              <DatePicker value={watch("dob")} onChange={(v) => setValue("dob", v)} placeholder="Select date of birth" />
+              <DatePicker value={watch("dob")} onChange={(v) => setValue("dob", v)} placeholder="Select date of birth" disableFuture />
             </div>
             <div className="space-y-1.5">
               <Label>Qualification</Label>

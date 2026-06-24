@@ -244,6 +244,7 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
                 value={watch("dob")}
                 onChange={(v) => setValue("dob", v, { shouldValidate: true })}
                 placeholder="Select date of birth"
+                disableFuture
               />
               {errors.dob && <p className="text-xs text-red-500">{errors.dob.message}</p>}
             </div>

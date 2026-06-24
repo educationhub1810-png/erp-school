@@ -202,7 +202,7 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
             {requiresDob && (
               <div className="space-y-1.5">
                 <Label>Date of Birth *</Label>
-                <DatePicker value={watch("dob")} onChange={(v) => setValue("dob", v, { shouldValidate: true })} placeholder="Select date of birth" />
+                <DatePicker value={watch("dob")} onChange={(v) => setValue("dob", v, { shouldValidate: true })} placeholder="Select date of birth" disableFuture />
                 {errors.dob && <p className="text-xs text-red-500">{errors.dob.message}</p>}
               </div>
             )}

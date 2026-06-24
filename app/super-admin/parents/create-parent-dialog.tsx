@@ -233,6 +233,7 @@ export function CreateParentDialog({ schools }: Props) {
                 value={watch(`${role}.dob`)}
                 onChange={(v) => setValue(`${role}.dob`, v)}
                 placeholder="Select date of birth"
+                disableFuture
               />
             </div>
             <div className="space-y-1.5">

@@ -17,12 +17,15 @@ interface DatePickerProps {
   className?: string
   startMonth?: Date
   endMonth?: Date
+  /** Disallow picking (or navigating to) any date after today — e.g. for date-of-birth fields. */
+  disableFuture?: boolean
 }
 
-function DatePicker({ value, onChange, placeholder = "Pick a date", disabled, className, startMonth, endMonth }: DatePickerProps) {
+function DatePicker({ value, onChange, placeholder = "Pick a date", disabled, className, startMonth, endMonth, disableFuture }: DatePickerProps) {
   const [open, setOpen] = React.useState(false)
   const selected = value ? parseISO(value) : undefined
   const displayValue = selected && isValid(selected) ? format(selected, "dd/MM/yyyy") : null
+  const today = new Date()
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -48,8 +51,9 @@ function DatePicker({ value, onChange, placeholder = "Pick a date", disabled, cl
             setOpen(false)
           }}
           startMonth={startMonth}
-          endMonth={endMonth}
-          defaultMonth={selected && isValid(selected) ? selected : undefined}
+          endMonth={disableFuture ? today : endMonth}
+          disabled={disableFuture ? { after: today } : undefined}
+          defaultMonth={selected && isValid(selected) ? selected : today}
         />
       </PopoverContent>
     </Popover>
