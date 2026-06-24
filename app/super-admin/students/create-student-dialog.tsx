@@ -423,7 +423,7 @@ export function CreateStudentDialog({ schools }: Props) {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>Admission Date</Label>
-                    <DatePicker value={watch("admissionDate")} onChange={(v) => setValue("admissionDate", v)} placeholder="Select admission date" />
+                    <DatePicker value={watch("admissionDate")} onChange={(v) => setValue("admissionDate", v)} placeholder="Select admission date" disableFuture />
                   </div>
                   <div className="space-y-1.5">
                     <Label>House</Label>

@@ -195,7 +195,7 @@ export function CreateTeacherDialog({ schools }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>Joining Date</Label>
-              <DatePicker value={watch("joiningDate")} onChange={(v) => setValue("joiningDate", v)} placeholder="Select joining date" />
+              <DatePicker value={watch("joiningDate")} onChange={(v) => setValue("joiningDate", v)} placeholder="Select joining date" disableFuture />
             </div>
             <div className="space-y-1.5">
               <Label>Salary</Label>

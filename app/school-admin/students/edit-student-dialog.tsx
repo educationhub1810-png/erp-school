@@ -175,7 +175,7 @@ export function EditStudentDialog({ student, classes, open, onOpenChange }: Prop
             </div>
             <div className="space-y-1.5">
               <Label>Date of Birth *</Label>
-              <Input type="date" {...register("dob")} />
+              <Input type="date" max={new Date().toISOString().split("T")[0]} {...register("dob")} />
               {errors.dob && <p className="text-xs text-red-500">{errors.dob.message}</p>}
             </div>
             <div className="space-y-1.5">
