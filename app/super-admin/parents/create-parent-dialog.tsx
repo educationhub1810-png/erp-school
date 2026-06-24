@@ -212,7 +212,7 @@ export function CreateParentDialog({ schools }: Props) {
             <div className="space-y-1.5">
               <Label>Gender *</Label>
               <Select
-                value={watch(`${role}.gender`)}
+                value={watch(`${role}.gender`) ?? ""}
                 onValueChange={(v) => {
                   if (v == null) return;
                   setValue(`${role}.gender`, v as "MALE" | "FEMALE" | "OTHER", { shouldValidate: true });
@@ -239,7 +239,7 @@ export function CreateParentDialog({ schools }: Props) {
             <div className="space-y-1.5">
               <Label>Marital Status</Label>
               <Select
-                value={watch(`${role}.maritalStatus`)}
+                value={watch(`${role}.maritalStatus`) ?? ""}
                 onValueChange={(v) => {
                   if (v == null) return;
                   setValue(`${role}.maritalStatus`, v as "SINGLE" | "MARRIED" | "DIVORCED" | "WIDOWED");

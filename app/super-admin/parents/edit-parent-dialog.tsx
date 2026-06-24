@@ -137,7 +137,7 @@ export function EditParentDialog({ parent, open, onOpenChange }: Props) {
           <div className="space-y-1.5">
             <Label>Parent Type *</Label>
             <Select
-              value={watch("parentType")}
+              value={watch("parentType") ?? ""}
               onValueChange={(v) => { if (v != null) setValue("parentType", v as FormValues["parentType"]); }}
             >
               <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
@@ -170,7 +170,7 @@ export function EditParentDialog({ parent, open, onOpenChange }: Props) {
             <div className="space-y-1.5">
               <Label>Gender *</Label>
               <Select
-                value={watch("gender")}
+                value={watch("gender") ?? ""}
                 onValueChange={(v) => { if (v != null) setValue("gender", v as FormValues["gender"]); }}
               >
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
@@ -193,7 +193,7 @@ export function EditParentDialog({ parent, open, onOpenChange }: Props) {
             <div className="space-y-1.5">
               <Label>Marital Status</Label>
               <Select
-                value={watch("maritalStatus")}
+                value={watch("maritalStatus") ?? ""}
                 onValueChange={(v) => { if (v != null) setValue("maritalStatus", v as FormValues["maritalStatus"]); }}
               >
                 <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
