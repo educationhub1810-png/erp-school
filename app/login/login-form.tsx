@@ -24,6 +24,11 @@ import {
   BarChart3,
   Cloud,
   KeyRound,
+  BookOpen,
+  PenLine,
+  Star,
+  Lightbulb,
+  Sparkles,
 } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/roles";
 import { SchoolIllustration } from "./school-illustration";
@@ -36,6 +41,16 @@ const FEATURES = [
   { icon: Users, label: "Multi Role Access", color: "bg-violet-500" },
   { icon: BarChart3, label: "Real-time Analytics", color: "bg-orange-500" },
   { icon: Cloud, label: "Cloud Based", color: "bg-green-500" },
+];
+
+// Small decorative icons that gently float in the page background.
+const BG_ELEMENTS = [
+  { icon: GraduationCap, className: "top-[8%] left-[6%] w-9 h-9 text-indigo-300/50 animate-float-1" },
+  { icon: BookOpen, className: "top-[18%] right-[10%] w-8 h-8 text-blue-300/50 animate-float-2" },
+  { icon: Star, className: "top-[60%] left-[4%] w-6 h-6 text-violet-300/50 animate-float-3" },
+  { icon: PenLine, className: "bottom-[12%] right-[8%] w-7 h-7 text-indigo-300/50 animate-float-2" },
+  { icon: Lightbulb, className: "bottom-[20%] left-[12%] w-7 h-7 text-blue-300/50 animate-float-1" },
+  { icon: Sparkles, className: "top-[40%] right-[4%] w-6 h-6 text-violet-300/50 animate-float-3" },
 ];
 
 const schema = z.object({
@@ -112,8 +127,20 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-3 sm:p-6">
-      <div className="w-full max-w-5xl flex flex-col lg:flex-row rounded-3xl shadow-2xl overflow-hidden bg-white ring-1 ring-black/5">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-3 sm:p-6">
+      {/* Ambient drifting background blobs — a "living" backdrop with no video/gif asset to load */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="animate-blob-1 absolute -top-24 -left-16 w-[28rem] h-[28rem] rounded-full bg-indigo-300/40 blur-3xl" />
+        <div className="animate-blob-2 absolute top-1/3 -right-24 w-[32rem] h-[32rem] rounded-full bg-blue-300/35 blur-3xl" />
+        <div className="animate-blob-3 absolute -bottom-28 left-1/3 w-[26rem] h-[26rem] rounded-full bg-violet-300/30 blur-3xl" />
+
+        {/* floating education-themed icons */}
+        {BG_ELEMENTS.map(({ icon: Icon, className }, i) => (
+          <Icon key={i} className={`absolute ${className}`} />
+        ))}
+      </div>
+
+      <div className="relative w-full max-w-5xl flex flex-col lg:flex-row rounded-3xl shadow-2xl overflow-hidden bg-white ring-1 ring-black/5">
         {/* Left: branded hero panel — hidden below lg, form-only on smaller screens */}
         <div className="hidden lg:flex flex-col w-[44%] shrink-0 relative bg-gradient-to-br from-indigo-600 via-indigo-700 to-blue-800 p-8 text-white overflow-hidden">
           {/* decorative glow blobs */}

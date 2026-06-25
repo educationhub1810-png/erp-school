@@ -155,3 +155,45 @@ h3 { letter-spacing: -0.02em; }
     @apply font-sans;
   }
 }
+
+/* Slow ambient drift for the login page's background blobs — a "living"
+   backdrop without shipping an actual video/gif asset. */
+@keyframes blob-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(4%, 6%) scale(1.08); }
+}
+@keyframes blob-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-5%, -4%) scale(1.1); }
+}
+@keyframes blob-drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3%, -5%) scale(1.06); }
+}
+.animate-blob-1 { animation: blob-drift-1 18s ease-in-out infinite; }
+.animate-blob-2 { animation: blob-drift-2 22s ease-in-out infinite; }
+.animate-blob-3 { animation: blob-drift-3 16s ease-in-out infinite; }
+
+/* Gentle bob + rotate for the small floating icons scattered behind the login card. */
+@keyframes float-1 {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(6deg); }
+}
+@keyframes float-2 {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(12px) rotate(-8deg); }
+}
+@keyframes float-3 {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(-5deg); }
+}
+.animate-float-1 { animation: float-1 7s ease-in-out infinite; }
+.animate-float-2 { animation: float-2 8.5s ease-in-out infinite; }
+.animate-float-3 { animation: float-3 6.5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-blob-1, .animate-blob-2, .animate-blob-3,
+  .animate-float-1, .animate-float-2, .animate-float-3 {
+    animation: none;
+  }
+}

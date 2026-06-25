@@ -85,4 +85,21 @@ describe("LoginForm", () => {
 
     expect(await screen.findByText(/invalid credentials/i)).toBeInTheDocument();
   });
+
+  it("renders the branded hero panel with all four feature badges", () => {
+    render(<LoginForm />);
+    expect(screen.getAllByText("EduERP").length).toBeGreaterThan(0);
+    expect(screen.getByText("Secure Platform")).toBeInTheDocument();
+    expect(screen.getByText("Multi Role Access")).toBeInTheDocument();
+    expect(screen.getByText("Real-time Analytics")).toBeInTheDocument();
+    expect(screen.getByText("Cloud Based")).toBeInTheDocument();
+  });
+
+  it("renders the decorative background blobs and floating icons without breaking the form", () => {
+    const { container } = render(<LoginForm />);
+    expect(container.querySelectorAll(".animate-blob-1, .animate-blob-2, .animate-blob-3").length).toBe(3);
+    expect(container.querySelectorAll(".animate-float-1, .animate-float-2, .animate-float-3").length).toBeGreaterThan(0);
+    // decorative only — the actual form must still be present and usable
+    expect(screen.getByRole("button", { name: /login to dashboard/i })).toBeInTheDocument();
+  });
 });
