@@ -8,7 +8,9 @@ import { StatCard } from "@/components/shared/stat-card";
 import { CreateFeeStructureDialog } from "@/components/shared/create-fee-structure-dialog";
 import { RecordFeePaymentDialog } from "@/components/shared/record-fee-payment-dialog";
 import { sortClassesByGrade } from "@/lib/class-order";
-import { DollarSign } from "lucide-react";
+import { computeExpectedTotal, buildPaidMap, remainingFor } from "@/lib/fees";
+import { DownloadReceiptButton } from "@/components/shared/download-receipt-button";
+import { IndianRupee } from "lucide-react";
 
 export default async function TeacherFeesPage() {
   const session = await auth();
@@ -16,7 +18,8 @@ export default async function TeacherFeesPage() {
   const { schoolId } = getUser(session);
   if (!schoolId) redirect("/login");
 
-  const [payments, structures, classesRaw, students] = await Promise.all([
+  const [allPayments, payments, structures, classesRaw, students, school] = await Promise.all([
+    prisma.feePayment.findMany({ where: { schoolId }, select: { studentId: true, feeStructureId: true, amountPaid: true, status: true } }),
     prisma.feePayment.findMany({
       where: { schoolId },
       include: {
@@ -30,14 +33,21 @@ export default async function TeacherFeesPage() {
     prisma.class.findMany({ where: { schoolId }, select: { id: true, name: true } }),
     prisma.student.findMany({
       where: { schoolId, isAlumni: false },
-      select: { id: true, firstName: true, lastName: true, class: { select: { name: true } }, section: { select: { name: true } } },
+      select: { id: true, classId: true, firstName: true, lastName: true, class: { select: { name: true } }, section: { select: { name: true } } },
       orderBy: { firstName: "asc" },
     }),
+    prisma.school.findUnique({ where: { id: schoolId }, select: { name: true, code: true } }),
   ]);
   const classes = sortClassesByGrade(classesRaw);
+  const structureById = new Map(structures.map((s) => [s.id, s]));
+  const paidMap = buildPaidMap(allPayments);
 
-  const totalCollected = payments.filter((p) => p.status === "PAID").reduce((s, p) => s + Number(p.amountPaid), 0);
-  const totalPending = payments.filter((p) => p.status === "PENDING").reduce((s, p) => s + Number(p.amountPaid), 0);
+  const totalCollected = allPayments.filter((p) => p.status === "PAID").reduce((s, p) => s + Number(p.amountPaid), 0);
+  const expectedTotal = computeExpectedTotal(
+    structures.map((s) => ({ amount: Number(s.amount), classId: s.classId })),
+    students,
+  );
+  const totalPending = Math.max(0, expectedTotal - totalCollected);
 
   const statusStyle: Record<string, string> = {
     PAID: "bg-green-100 text-green-700", PENDING: "bg-yellow-100 text-yellow-700",
@@ -58,8 +68,8 @@ export default async function TeacherFeesPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <StatCard title="Total Collected" value={`₹${totalCollected.toLocaleString("en-IN")}`} subtitle="Paid" icon={<DollarSign className="w-5 h-5" />} color="green" />
-        <StatCard title="Pending" value={`₹${totalPending.toLocaleString("en-IN")}`} subtitle="Outstanding" icon={<DollarSign className="w-5 h-5" />} color="red" />
+        <StatCard title="Total Collected" value={`₹${totalCollected.toLocaleString("en-IN")}`} subtitle="Paid" icon={<IndianRupee className="w-5 h-5" />} color="green" />
+        <StatCard title="Pending" value={`₹${totalPending.toLocaleString("en-IN")}`} subtitle="Outstanding" icon={<IndianRupee className="w-5 h-5" />} color="red" />
       </div>
 
       <Card className="border-0 shadow-sm">
@@ -74,20 +84,43 @@ export default async function TeacherFeesPage() {
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Student</th>
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Fee Type</th>
                   <th className="text-right px-6 py-3 font-medium text-gray-500">Amount</th>
+                  <th className="text-right px-6 py-3 font-medium text-gray-500">Remaining</th>
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Date</th>
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Status</th>
+                  <th className="text-left px-6 py-3 font-medium text-gray-500">Receipt</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {payments.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 font-medium text-gray-900">{p.student?.user?.name ?? "—"}</td>
-                    <td className="px-6 py-3 text-gray-500">{p.feeStructure?.feeType ?? "—"}</td>
-                    <td className="px-6 py-3 text-right text-gray-700">₹{Number(p.amountPaid).toLocaleString("en-IN")}</td>
-                    <td className="px-6 py-3 text-gray-500 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString("en-IN") : "—"}</td>
-                    <td className="px-6 py-3"><Badge className={statusStyle[p.status] ?? ""}>{p.status}</Badge></td>
-                  </tr>
-                ))}
+                {payments.map((p) => {
+                  const structureAmount = Number(structureById.get(p.feeStructureId)?.amount ?? 0);
+                  const remaining = remainingFor(paidMap, p.studentId, p.feeStructureId, structureAmount);
+                  return (
+                    <tr key={p.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-3 font-medium text-gray-900">{p.student?.user?.name ?? "—"}</td>
+                      <td className="px-6 py-3 text-gray-500">{p.feeStructure?.feeType ?? "—"}</td>
+                      <td className="px-6 py-3 text-right text-gray-700">₹{Number(p.amountPaid).toLocaleString("en-IN")}</td>
+                      <td className={`px-6 py-3 text-right ${remaining > 0 ? "text-red-600 font-medium" : "text-gray-400"}`}>₹{remaining.toLocaleString("en-IN")}</td>
+                      <td className="px-6 py-3 text-gray-500 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString("en-IN") : "—"}</td>
+                      <td className="px-6 py-3"><Badge className={statusStyle[p.status] ?? ""}>{p.status}</Badge></td>
+                      <td className="px-6 py-3">
+                        <DownloadReceiptButton
+                          receipt={{
+                            receiptNumber: p.receiptNumber,
+                            studentName: p.student?.user?.name ?? "—",
+                            feeType: p.feeStructure?.feeType ?? "—",
+                            amountPaid: Number(p.amountPaid),
+                            remaining,
+                            paymentDate: p.paymentDate ? p.paymentDate.toISOString() : null,
+                            paymentMode: p.paymentMode,
+                            status: p.status,
+                            schoolName: school?.name ?? "School",
+                            schoolCode: school?.code ?? "",
+                          }}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
