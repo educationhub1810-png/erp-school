@@ -29,6 +29,10 @@ import {
   Star,
   Lightbulb,
   Sparkles,
+  Award,
+  Calendar,
+  Bookmark,
+  Compass,
 } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/roles";
 import { SchoolIllustration } from "./school-illustration";
@@ -49,8 +53,22 @@ const BG_ELEMENTS = [
   { icon: BookOpen, className: "top-[18%] right-[10%] w-8 h-8 text-blue-300/50 animate-float-2" },
   { icon: Star, className: "top-[60%] left-[4%] w-6 h-6 text-violet-300/50 animate-float-3" },
   { icon: PenLine, className: "bottom-[12%] right-[8%] w-7 h-7 text-indigo-300/50 animate-float-2" },
-  { icon: Lightbulb, className: "bottom-[20%] left-[12%] w-7 h-7 text-blue-300/50 animate-float-1" },
+  { icon: Lightbulb, className: "bottom-[20%] left-[12%] w-7 h-7 text-amber-300/60 animate-float-1" },
   { icon: Sparkles, className: "top-[40%] right-[4%] w-6 h-6 text-violet-300/50 animate-float-3" },
+  { icon: Award, className: "top-[6%] right-[26%] w-7 h-7 text-rose-300/55 animate-float-2" },
+  { icon: Calendar, className: "bottom-[8%] left-[28%] w-6 h-6 text-blue-300/50 animate-float-3" },
+  { icon: Bookmark, className: "top-[72%] right-[16%] w-6 h-6 text-indigo-300/50 animate-float-1" },
+  { icon: Compass, className: "top-[32%] left-[20%] w-6 h-6 text-teal-300/50 animate-float-2" },
+];
+
+// Tiny twinkling sparkle dots scattered across the page for extra depth.
+const BG_SPARKLES = [
+  { className: "top-[14%] left-[18%] w-2 h-2 bg-amber-300 animate-twinkle-a" },
+  { className: "top-[24%] right-[20%] w-1.5 h-1.5 bg-rose-300 animate-twinkle-b" },
+  { className: "top-[50%] left-[9%] w-2 h-2 bg-indigo-300 animate-twinkle-c" },
+  { className: "bottom-[30%] right-[10%] w-1.5 h-1.5 bg-blue-300 animate-twinkle-a" },
+  { className: "bottom-[16%] left-[40%] w-2 h-2 bg-violet-300 animate-twinkle-b" },
+  { className: "top-[8%] right-[40%] w-1.5 h-1.5 bg-teal-300 animate-twinkle-c" },
 ];
 
 const schema = z.object({
@@ -133,10 +151,20 @@ export function LoginForm() {
         <div className="animate-blob-1 absolute -top-24 -left-16 w-[28rem] h-[28rem] rounded-full bg-indigo-300/40 blur-3xl" />
         <div className="animate-blob-2 absolute top-1/3 -right-24 w-[32rem] h-[32rem] rounded-full bg-blue-300/35 blur-3xl" />
         <div className="animate-blob-3 absolute -bottom-28 left-1/3 w-[26rem] h-[26rem] rounded-full bg-violet-300/30 blur-3xl" />
+        <div className="animate-blob-2 absolute top-10 left-1/4 w-72 h-72 rounded-full bg-rose-200/30 blur-3xl" />
+        <div className="animate-blob-1 absolute bottom-10 right-1/4 w-80 h-80 rounded-full bg-amber-200/25 blur-3xl" />
+
+        {/* soft spotlight behind the card for extra depth */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_50%_50%,rgba(255,255,255,0.55),transparent)]" />
 
         {/* floating education-themed icons */}
         {BG_ELEMENTS.map(({ icon: Icon, className }, i) => (
           <Icon key={i} className={`absolute ${className}`} />
+        ))}
+
+        {/* twinkling sparkle dots */}
+        {BG_SPARKLES.map(({ className }, i) => (
+          <span key={i} className={`absolute rounded-full ${className}`} />
         ))}
       </div>
 
