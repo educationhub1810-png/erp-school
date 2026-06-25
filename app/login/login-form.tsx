@@ -102,6 +102,9 @@ export function LoginForm() {
   const selectedRole = watch("role");
   const isStudent = selectedRole === "STUDENT";
   const isSuperAdmin = selectedRole === "SUPER_ADMIN";
+  const isSchoolAdmin = selectedRole === "SCHOOL_ADMIN";
+  // Roles that may carry TOTP 2FA — show the authenticator field for them.
+  const showTotp = isSuperAdmin || isSchoolAdmin;
 
   const handleAdminAccess = async () => {
     setAdminError(null);
@@ -329,9 +332,10 @@ export function LoginForm() {
                 )}
               </div>
 
-              {/* Authenticator (TOTP) code — Super Admin only. Required in
-                  production; ignored on localhost (password-only there). */}
-              {isSuperAdmin && (
+              {/* Authenticator (TOTP) code — Super Admin (prod) and any
+                  2FA-enrolled School Admin (always). Accounts without 2FA can
+                  leave it blank; un-enrolled logins ignore the field. */}
+              {showTotp && (
                 <div className="space-y-1.5">
                   <Label htmlFor="totp">
                     Authenticator code

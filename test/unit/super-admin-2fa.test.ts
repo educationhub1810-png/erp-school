@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { authenticator } from "otplib";
-import { passesSuperAdminGate, verifyAnySuperAdminTotp } from "@/lib/super-admin-2fa";
+import { passesSuperAdminGate, passesEnrolledTotpGate, verifyAnySuperAdminTotp } from "@/lib/super-admin-2fa";
 import { encryptSecret } from "@/lib/totp";
 import { prismaMock } from "../mocks/prisma";
 
@@ -30,6 +30,21 @@ describe("passesSuperAdminGate", () => {
     const account = enrolled();
     expect(await passesSuperAdminGate(account, "000000", true)).toBe(false);
     expect(await passesSuperAdminGate(account, authenticator.generate(SECRET), true)).toBe(true);
+  });
+});
+
+describe("passesEnrolledTotpGate (opt-in 2FA, e.g. school admins)", () => {
+  it("passes when the account is not enrolled (password-only, no lockout)", async () => {
+    const notEnrolled = { id: "u1", totpEnabled: false, totpSecret: null, totpRecoveryCodes: null };
+    expect(await passesEnrolledTotpGate(notEnrolled, undefined)).toBe(true);
+    expect(await passesEnrolledTotpGate(null, undefined)).toBe(true);
+  });
+
+  it("requires a valid code once enrolled — in every environment", async () => {
+    const account = enrolled();
+    expect(await passesEnrolledTotpGate(account, undefined)).toBe(false);
+    expect(await passesEnrolledTotpGate(account, "000000")).toBe(false);
+    expect(await passesEnrolledTotpGate(account, authenticator.generate(SECRET))).toBe(true);
   });
 });
 
