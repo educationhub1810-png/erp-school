@@ -1,6 +1,7 @@
 "use client";
 
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Bell, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ROLE_LABELS } from "@/lib/constants";
+import { ROLE_LABELS, ROLE_PROFILE_PATHS } from "@/lib/constants";
 import type { AppRole as Role } from "@/lib/roles";
 
 interface HeaderProps {
@@ -23,6 +24,7 @@ interface HeaderProps {
 }
 
 export function Header({ user }: HeaderProps) {
+  const router = useRouter();
   const initials = user.name
     .split(" ")
     .map((n) => n[0])
@@ -65,7 +67,7 @@ export function Header({ user }: HeaderProps) {
               )}
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push(ROLE_PROFILE_PATHS[user.role])}>
               <User className="w-4 h-4 mr-2" />
               Profile
             </DropdownMenuItem>
