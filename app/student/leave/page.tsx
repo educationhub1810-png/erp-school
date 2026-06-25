@@ -1,54 +1,29 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { getUser } from "@/lib/session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { CalendarCheck, Plus, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { ApplyLeaveDialog } from "@/components/shared/apply-leave-dialog";
+import { LEAVE_TYPE_LABELS, daysBetweenInclusive } from "@/lib/leave";
+import { CalendarCheck } from "lucide-react";
 
-const schema = z.object({
-  fromDate: z.string().min(1, "Required"),
-  toDate:   z.string().min(1, "Required"),
-  reason:   z.string().min(5, "Please provide a reason"),
-});
+const statusStyle: Record<string, string> = {
+  PENDING:   "bg-yellow-100 text-yellow-700",
+  APPROVED:  "bg-green-100 text-green-700",
+  REJECTED:  "bg-red-100 text-red-700",
+  CANCELLED: "bg-gray-100 text-gray-500",
+};
 
-type FormValues = z.infer<typeof schema>;
+export default async function StudentLeavePage() {
+  const session = await auth();
+  if (!session) redirect("/login");
+  const user = getUser(session);
 
-export default function StudentLeavePage() {
-  const router = useRouter();
-  const [showForm, setShowForm] = useState(false);
-  const [loading, setLoading]   = useState(false);
-
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const requests = await prisma.leaveRequest.findMany({
+    where: { userId: user.id, schoolId: user.schoolId },
+    orderBy: { createdAt: "desc" },
   });
-
-  const onSubmit = async (data: FormValues) => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/v1/leave", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, leaveType: "PERSONAL" }),
-      });
-      const json = await res.json();
-      if (!res.ok) { toast.error(json.error || "Failed to submit"); return; }
-      toast.success("Leave application submitted");
-      reset();
-      setShowForm(false);
-      router.refresh();
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -57,45 +32,8 @@ export default function StudentLeavePage() {
           <h1 className="text-2xl font-bold text-gray-900">Leave Applications</h1>
           <p className="text-sm text-gray-500 mt-1">Apply for leave and track status</p>
         </div>
-        <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={() => setShowForm((v) => !v)}>
-          <Plus className="w-4 h-4 mr-2" /> Apply for Leave
-        </Button>
+        <ApplyLeaveDialog />
       </div>
-
-      {showForm && (
-        <Card className="border-0 shadow-sm border-l-4 border-l-indigo-500">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">New Leave Application</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label>From Date *</Label>
-                  <Input type="date" {...register("fromDate")} />
-                  {errors.fromDate && <p className="text-xs text-red-500">{errors.fromDate.message}</p>}
-                </div>
-                <div className="space-y-1.5">
-                  <Label>To Date *</Label>
-                  <Input type="date" {...register("toDate")} />
-                  {errors.toDate && <p className="text-xs text-red-500">{errors.toDate.message}</p>}
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Reason *</Label>
-                <Textarea rows={3} placeholder="Describe the reason for leave..." {...register("reason")} />
-                {errors.reason && <p className="text-xs text-red-500">{errors.reason.message}</p>}
-              </div>
-              <div className="flex gap-2">
-                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
-                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Submit Application
-                </Button>
-                <Button type="button" variant="ghost" onClick={() => { setShowForm(false); reset(); }}>Cancel</Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
 
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
@@ -103,11 +41,38 @@ export default function StudentLeavePage() {
             <CalendarCheck className="w-4 h-4" /> My Applications
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <CalendarCheck className="w-10 h-10 text-gray-200 mb-3" />
-            <p className="text-sm text-gray-400">No leave applications yet.</p>
-          </div>
+        <CardContent className="p-0">
+          {requests.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <CalendarCheck className="w-10 h-10 text-gray-200 mb-3" />
+              <p className="text-sm text-gray-400">No leave applications yet.</p>
+            </div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-gray-50">
+                  <th className="text-left px-6 py-3 font-medium text-gray-500">Type</th>
+                  <th className="text-left px-6 py-3 font-medium text-gray-500">From</th>
+                  <th className="text-left px-6 py-3 font-medium text-gray-500">To</th>
+                  <th className="text-right px-6 py-3 font-medium text-gray-500">Days</th>
+                  <th className="text-left px-6 py-3 font-medium text-gray-500">Reason</th>
+                  <th className="text-left px-6 py-3 font-medium text-gray-500">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {requests.map((r) => (
+                  <tr key={r.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-3 font-medium text-gray-900">{LEAVE_TYPE_LABELS[r.leaveType]}</td>
+                    <td className="px-6 py-3 text-gray-500">{new Date(r.fromDate).toLocaleDateString("en-IN")}</td>
+                    <td className="px-6 py-3 text-gray-500">{new Date(r.toDate).toLocaleDateString("en-IN")}</td>
+                    <td className="px-6 py-3 text-right text-gray-700">{daysBetweenInclusive(r.fromDate, r.toDate)}</td>
+                    <td className="px-6 py-3 text-gray-500 max-w-xs truncate">{r.reason ?? "—"}</td>
+                    <td className="px-6 py-3"><Badge className={statusStyle[r.status] ?? ""}>{r.status}</Badge></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </CardContent>
       </Card>
     </div>
