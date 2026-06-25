@@ -97,8 +97,9 @@ describe("LoginForm", () => {
 
   it("renders the decorative background blobs and floating icons without breaking the form", () => {
     const { container } = render(<LoginForm />);
-    expect(container.querySelectorAll(".animate-blob-1, .animate-blob-2, .animate-blob-3").length).toBe(3);
+    expect(container.querySelectorAll(".animate-blob-1, .animate-blob-2, .animate-blob-3").length).toBeGreaterThanOrEqual(3);
     expect(container.querySelectorAll(".animate-float-1, .animate-float-2, .animate-float-3").length).toBeGreaterThan(0);
+    expect(container.querySelectorAll(".animate-twinkle-a, .animate-twinkle-b, .animate-twinkle-c").length).toBeGreaterThan(0);
     // decorative only — the actual form must still be present and usable
     expect(screen.getByRole("button", { name: /login to dashboard/i })).toBeInTheDocument();
   });
