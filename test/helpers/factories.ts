@@ -79,3 +79,21 @@ export function makeUser(over: Partial<Record<string, unknown>> = {}) {
     ...over,
   };
 }
+
+export function makeLeaveRequest(over: Partial<Record<string, unknown>> = {}) {
+  return {
+    id: id("leave"),
+    schoolId: "school-1",
+    userId: "user-student",
+    fromDate: new Date("2026-07-01"),
+    toDate: new Date("2026-07-02"),
+    leaveType: "CASUAL",
+    reason: "Family function",
+    status: "PENDING",
+    approvedById: null,
+    approvedAt: null,
+    createdAt: new Date("2026-06-20"),
+    user: { name: "Rahul Verma", role: "STUDENT" },
+    ...over,
+  };
+}
