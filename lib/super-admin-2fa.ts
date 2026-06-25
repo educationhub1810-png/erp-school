@@ -24,6 +24,22 @@ export async function passesSuperAdminGate(
 }
 
 /**
+ * Opt-in 2FA gate for non-super-admin accounts (e.g. SCHOOL_ADMIN).
+ *   - Account NOT enrolled (totpEnabled false / no account): passes — these
+ *     users stay password-only so enabling 2FA for one admin can't lock the
+ *     rest out.
+ *   - Account enrolled: a valid TOTP (or recovery) code is REQUIRED, in every
+ *     environment (no localhost bypass — an enrolled account always proves 2FA).
+ */
+export async function passesEnrolledTotpGate(
+  account: (TotpAccount & { totpEnabled: boolean }) | null,
+  code: string | undefined,
+): Promise<boolean> {
+  if (!account?.totpEnabled) return true;
+  return verifySuperAdminTotp(account, code);
+}
+
+/**
  * Verify a TOTP code (or a one-time recovery code) against a specific account.
  * A used recovery code is consumed so it can't be replayed.
  */

@@ -12,6 +12,7 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "totp:setup": "tsx scripts/setup-totp.ts",
+    "totp:school-admin": "tsx scripts/setup-school-admin-totp.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",

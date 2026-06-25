@@ -7,7 +7,7 @@ import { authConfig } from "./auth.config";
 import type { AppRole } from "@/lib/roles";
 import { writeAuditLog, clientIp } from "@/lib/audit";
 import { isTotpEnforced } from "@/lib/totp";
-import { passesSuperAdminGate } from "@/lib/super-admin-2fa";
+import { passesSuperAdminGate, passesEnrolledTotpGate } from "@/lib/super-admin-2fa";
 
 function dobToPassword(dob: Date): string {
   const d = String(dob.getUTCDate()).padStart(2, "0");
@@ -138,6 +138,13 @@ async function authorizeUser(
   // localhost is password-only (isTotpEnforced() === false).
   if (candidate.role === "SUPER_ADMIN") {
     const ok = await passesSuperAdminGate(account, totp, isTotpEnforced());
+    if (!ok) return null;
+  } else {
+    // Opt-in 2FA for any other role (e.g. a school admin enrolled via
+    // `npm run totp:school-admin`): an enrolled account must present a valid
+    // code; un-enrolled accounts remain password-only. `account` is null on
+    // the student-DOB path, which this correctly passes through.
+    const ok = await passesEnrolledTotpGate(account, totp);
     if (!ok) return null;
   }
 

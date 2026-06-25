@@ -65,12 +65,20 @@ describe("LoginForm", () => {
     expect(screen.getByText(/DOB as DDMMYYYY/i)).toBeInTheDocument();
   });
 
-  it("shows the Authenticator code field only when Super Admin is selected", async () => {
+  it("shows the Authenticator code field for Super Admin and School Admin, not for other roles", async () => {
     const user = userEvent.setup();
     render(<LoginForm />);
     expect(screen.queryByLabelText(/authenticator code/i)).not.toBeInTheDocument();
+
     await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
     expect(screen.getByLabelText(/authenticator code/i)).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/role/i), "SCHOOL_ADMIN");
+    expect(screen.getByLabelText(/authenticator code/i)).toBeInTheDocument();
+
+    // a role without 2FA hides the field again
+    await user.selectOptions(screen.getByLabelText(/role/i), "TEACHER");
+    expect(screen.queryByLabelText(/authenticator code/i)).not.toBeInTheDocument();
   });
 
   it("shows an error message when credentials are rejected", async () => {
