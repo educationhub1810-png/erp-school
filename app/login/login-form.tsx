@@ -112,46 +112,54 @@ export function LoginForm() {
   };
 
   return (
-    <div className="h-screen overflow-hidden flex items-center justify-center bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-100 p-3 xl:p-4">
-      <div className="w-full max-w-5xl h-full max-h-[calc(100vh-1.5rem)] flex flex-col xl:flex-row items-center justify-center gap-4 xl:gap-6 overflow-hidden">
-        {/* Left: branding + illustration — hidden below xl; sized with margin to spare so the two-column layout never needs more width than the viewport actually has */}
-        <div className="hidden xl:flex flex-col w-full max-w-lg h-full max-h-full shrink-0 justify-center min-h-0">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-3 sm:p-6">
+      <div className="w-full max-w-5xl flex flex-col lg:flex-row rounded-3xl shadow-2xl overflow-hidden bg-white ring-1 ring-black/5">
+        {/* Left: branded hero panel — hidden below lg, form-only on smaller screens */}
+        <div className="hidden lg:flex flex-col w-[44%] shrink-0 relative bg-gradient-to-br from-indigo-600 via-indigo-700 to-blue-800 p-8 text-white overflow-hidden">
+          {/* decorative glow blobs */}
+          <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -bottom-20 -left-10 w-64 h-64 rounded-full bg-blue-400/20 blur-3xl" />
+
+          <div className="relative flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-white/15 ring-1 ring-white/30 rounded-xl flex items-center justify-center shrink-0">
               <GraduationCap className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-indigo-700 leading-tight">EduERP</h1>
-              <p className="text-xs text-gray-500">Smart School Management System</p>
+              <h1 className="text-xl font-bold leading-tight">EduERP</h1>
+              <p className="text-xs text-indigo-200">Smart School Management System</p>
             </div>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome Back! 👋</h2>
-          <p className="text-sm text-gray-500 mb-3">Sign in to continue to your account</p>
-
-          <div className="min-h-0 flex-1 flex items-center justify-center max-h-[42vh] overflow-hidden">
-            <SchoolIllustration />
+          <div className="relative">
+            <h2 className="text-2xl font-bold mb-1">Welcome Back! 👋</h2>
+            <p className="text-sm text-indigo-200">Sign in to continue to your account</p>
           </div>
 
-          <div className="grid grid-cols-4 gap-2 mt-3 shrink-0">
+          <div className="relative flex-1 flex items-center justify-center min-h-0 py-6">
+            <div className="bg-white rounded-2xl shadow-xl p-4 w-full max-h-[260px] flex items-center justify-center">
+              <SchoolIllustration />
+            </div>
+          </div>
+
+          <div className="relative grid grid-cols-2 gap-2.5">
             {FEATURES.map((f) => (
               <div
                 key={f.label}
-                className="flex flex-col items-center gap-1 rounded-xl bg-white/70 backdrop-blur-sm shadow-sm px-2 py-2 text-center"
+                className="flex items-center gap-2 rounded-xl bg-white/10 ring-1 ring-white/15 px-3 py-2.5"
               >
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center ${f.color}`}>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${f.color}`}>
                   <f.icon className="w-3.5 h-3.5 text-white" />
                 </div>
-                <span className="text-[10px] font-medium text-gray-700 leading-tight">{f.label}</span>
+                <span className="text-xs font-medium leading-tight">{f.label}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Right: sign-in form */}
-        <div className="w-full max-w-sm mx-auto max-h-full overflow-y-auto">
-          {/* Compact logo shown only when the illustration panel is hidden (mobile/tablet/laptop) */}
-          <div className="xl:hidden flex flex-col items-center mb-4">
+        <div className="flex-1 flex flex-col justify-center p-6 sm:p-10">
+          {/* Compact logo shown only when the hero panel is hidden (mobile/tablet) */}
+          <div className="lg:hidden flex flex-col items-center mb-5">
             <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mb-2 shadow-lg">
               <GraduationCap className="w-7 h-7 text-white" />
             </div>
@@ -159,14 +167,15 @@ export function LoginForm() {
             <p className="text-xs text-gray-500 mt-1">Smart School Management System</p>
           </div>
 
-          <div className="relative bg-white rounded-3xl shadow-xl p-5 sm:p-6">
-            <div className="absolute -top-3 -right-3 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4 text-indigo-600" />
-            </div>
-
-            <div className="mb-4 hidden xl:block">
-              <h2 className="text-lg font-bold text-gray-900">Welcome Back! 👋</h2>
-              <p className="text-sm text-gray-500 mt-1">Sign in to continue to your account</p>
+          <div className="w-full max-w-sm mx-auto">
+            <div className="flex items-center gap-2 mb-5">
+              <div className="hidden lg:flex w-8 h-8 rounded-full bg-indigo-50 items-center justify-center shrink-0">
+                <ShieldCheck className="w-4 h-4 text-indigo-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Welcome Back! 👋</h2>
+                <p className="text-sm text-gray-500">Sign in to continue to your account</p>
+              </div>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} method="POST" className="space-y-3">
@@ -303,55 +312,55 @@ export function LoginForm() {
                 Login to Dashboard
               </Button>
             </form>
-          </div>
 
-          {/* Support access — intentionally low-profile */}
-          <div className="mt-2 text-center">
-            {!adminCode && !adminError ? (
-              <button
-                onClick={() => setAdminCode(" ")}
-                className="text-xs text-gray-300 hover:text-gray-400 transition-colors"
-              >
-                Support
-              </button>
-            ) : (
-              <div className="flex flex-col items-center gap-1.5">
-                <input
-                  type="password"
-                  value={adminCode.trim()}
-                  onChange={(e) => setAdminCode(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAdminAccess()}
-                  placeholder="Access code"
-                  autoFocus
-                  className="w-44 h-7 rounded border border-gray-200 bg-white px-2.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-gray-300"
-                />
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  value={adminTotp}
-                  onChange={(e) => setAdminTotp(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAdminAccess()}
-                  placeholder="Authenticator code"
-                  className="w-44 h-7 rounded border border-gray-200 bg-white px-2.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-gray-300"
-                />
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleAdminAccess}
-                    disabled={adminLoading || !adminCode.trim()}
-                    className="h-7 px-3 rounded border border-gray-200 text-gray-400 text-xs hover:text-gray-600 disabled:opacity-40"
-                  >
-                    {adminLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Go"}
-                  </button>
-                  {adminError && <span className="text-xs text-red-400">{adminError}</span>}
+            {/* Support access — intentionally low-profile */}
+            <div className="mt-3 text-center">
+              {!adminCode && !adminError ? (
+                <button
+                  onClick={() => setAdminCode(" ")}
+                  className="text-xs text-gray-300 hover:text-gray-400 transition-colors"
+                >
+                  Support
+                </button>
+              ) : (
+                <div className="flex flex-col items-center gap-1.5">
+                  <input
+                    type="password"
+                    value={adminCode.trim()}
+                    onChange={(e) => setAdminCode(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAdminAccess()}
+                    placeholder="Access code"
+                    autoFocus
+                    className="w-44 h-7 rounded border border-gray-200 bg-white px-2.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={adminTotp}
+                    onChange={(e) => setAdminTotp(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAdminAccess()}
+                    placeholder="Authenticator code"
+                    className="w-44 h-7 rounded border border-gray-200 bg-white px-2.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleAdminAccess}
+                      disabled={adminLoading || !adminCode.trim()}
+                      className="h-7 px-3 rounded border border-gray-200 text-gray-400 text-xs hover:text-gray-600 disabled:opacity-40"
+                    >
+                      {adminLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Go"}
+                    </button>
+                    {adminError && <span className="text-xs text-red-400">{adminError}</span>}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          <p className="text-center text-xs text-gray-400 mt-2">
-            © {new Date().getFullYear()} EduERP. All rights reserved.
-          </p>
+            <p className="text-center text-xs text-gray-400 mt-3">
+              © {new Date().getFullYear()} EduERP. All rights reserved.
+            </p>
+          </div>
         </div>
       </div>
     </div>
