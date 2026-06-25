@@ -32,6 +32,21 @@ export const ROLE_DASHBOARDS: Record<AppRole, string> = {
   MESS_MANAGER: "/mess/dashboard",
 };
 
+export const ROLE_PROFILE_PATHS: Record<AppRole, string> = {
+  SUPER_ADMIN: "/super-admin/profile",
+  SCHOOL_ADMIN: "/school-admin/profile",
+  PRINCIPAL: "/principal/profile",
+  TEACHER: "/teacher/profile",
+  STUDENT: "/student/profile",
+  PARENT: "/parent/profile",
+  ACCOUNTANT: "/accountant/profile",
+  LIBRARIAN: "/librarian/profile",
+  TRANSPORT_MANAGER: "/transport/profile",
+  HR_MANAGER: "/hr/profile",
+  WARDEN_MANAGER: "/warden/profile",
+  MESS_MANAGER: "/mess/profile",
+};
+
 export const ROLE_LABELS: Record<AppRole, string> = {
   SUPER_ADMIN: "Super Admin",
   SCHOOL_ADMIN: "School Admin",

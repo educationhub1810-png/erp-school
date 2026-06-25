@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ROLES, ROLE_DASHBOARDS, ROLE_LABELS, ROLE_ALLOWED_PREFIXES, type AppRole } from "@/lib/roles";
+import { ROLES, ROLE_DASHBOARDS, ROLE_LABELS, ROLE_ALLOWED_PREFIXES, ROLE_PROFILE_PATHS, type AppRole } from "@/lib/roles";
 
 const ALL_ROLES = Object.values(ROLES) as AppRole[];
 
@@ -19,6 +19,15 @@ describe("roles config", () => {
       const dash = ROLE_DASHBOARDS[role];
       const allowed = ROLE_ALLOWED_PREFIXES[role];
       expect(allowed.some((p) => dash.startsWith(p))).toBe(true);
+    }
+  });
+
+  it("each role's profile path lives under one of its allowed prefixes", () => {
+    for (const role of ALL_ROLES) {
+      const profile = ROLE_PROFILE_PATHS[role];
+      const allowed = ROLE_ALLOWED_PREFIXES[role];
+      expect(profile).toMatch(/^\//);
+      expect(allowed.some((p) => profile.startsWith(p))).toBe(true);
     }
   });
 
