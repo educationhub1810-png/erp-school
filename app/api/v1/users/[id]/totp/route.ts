@@ -31,9 +31,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       select: { id: true, email: true, role: true, schoolId: true, totpEnabled: true },
     });
     if (!target) return notFound("User not found");
-    // Super admins are managed by the dedicated CLI script and are never listed
-    // in this table; refuse here to avoid accidental self-lockout.
-    if (target.role === "SUPER_ADMIN") return forbidden();
+    // A super admin may reset another super admin's 2FA, but never their own —
+    // regenerating your own secret mid-session is the classic self-lockout, so
+    // refuse it. (Self-service re-enrolment is the CLI script's job.)
+    if (target.id === actor.id) return forbidden();
 
     const secret = generateTotpSecret();
     const recoveryCodes = generateRecoveryCodes();

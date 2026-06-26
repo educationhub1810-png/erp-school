@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getUser } from "@/lib/session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/shared/pagination";
@@ -11,6 +12,11 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { School as SchoolIcon } from "lucide-react";
 import { UserFilters } from "./user-filters";
 import { UserSecurityAction } from "./user-security-action";
+import { DeleteUserAction } from "@/components/shared/delete-user-action";
+
+// Sentinel school value for the "Super Admins" view — these accounts belong to
+// no school. Kept in sync with the same constant in user-filters.tsx.
+const PLATFORM_SCOPE = "platform";
 
 interface Props {
   searchParams: Promise<{ page?: string; search?: string; role?: string; schoolId?: string }>;
@@ -25,18 +31,23 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
   const limit = 20;
   const skip = (page - 1) * limit;
 
+  const actor = getUser(session);
+
   const roleFilter = sp.role && sp.role !== "SUPER_ADMIN" && sp.role in ROLE_LABELS
     ? (sp.role as AppRole)
     : undefined;
 
-  // A school must be selected before any users are listed. With many schools
-  // and users, showing everyone at once is overwhelming, so we gate the
-  // directory on an explicit school choice.
+  // The school filter doubles as the gate: a value must be picked before any
+  // users are listed. With many schools and users, showing everyone at once is
+  // overwhelming. The sentinel "platform" lists the SUPER_ADMIN accounts, which
+  // belong to no school.
+  const platformView = sp.schoolId === PLATFORM_SCOPE;
   const schoolSelected = Boolean(sp.schoolId);
 
   const where: Prisma.UserWhereInput = {
-    role: roleFilter ?? { not: "SUPER_ADMIN" },
-    schoolId: sp.schoolId,
+    ...(platformView
+      ? { role: "SUPER_ADMIN" }
+      : { role: roleFilter ?? { not: "SUPER_ADMIN" }, schoolId: sp.schoolId }),
     ...(sp.search && {
       OR: [
         { name: { contains: sp.search, mode: "insensitive" as const } },
@@ -93,9 +104,11 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">All Users</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {schoolSelected
-              ? `${total} users in ${selectedSchool?.name ?? "selected school"}`
-              : "Choose a school to view its users"}
+            {!schoolSelected
+              ? "Choose a school to view its users"
+              : platformView
+                ? `${total} super admin${total === 1 ? "" : "s"}`
+                : `${total} users in ${selectedSchool?.name ?? "selected school"}`}
           </p>
         </div>
       </div>
@@ -136,6 +149,7 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
                     <th className="text-left px-6 py-3 font-medium text-gray-500">School</th>
                     <th className="text-left px-6 py-3 font-medium text-gray-500">Status</th>
                     <th className="text-right px-6 py-3 font-medium text-gray-500">Security</th>
+                    <th className="text-right px-6 py-3 font-medium text-gray-500">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -169,7 +183,17 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
                           name={user.name}
                           email={user.email}
                           totpEnabled={user.totpEnabled}
+                          disabled={user.id === actor.id}
                         />
+                      </td>
+                      <td className="px-6 py-3">
+                        <div className="flex justify-end">
+                          <DeleteUserAction
+                            userId={user.id}
+                            name={user.name}
+                            disabled={user.id === actor.id}
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}

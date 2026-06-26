@@ -43,12 +43,20 @@ describe("POST /api/v1/users/[id]/totp", () => {
     expect(res.status).toBe(404);
   });
 
-  it("refuses to target a SUPER_ADMIN account", async () => {
-    prismaMock.user.findUnique.mockResolvedValue(targetUser({ role: "SUPER_ADMIN" }) as never);
-    setSession(sessionFor("SUPER_ADMIN"));
-    const res = await callRoute(POST, buildRequest("/api/v1/users/u1/totp", { method: "POST" }), paramsCtx({ id: "u1" }));
+  it("refuses to reset the actor's OWN 2FA (self-lockout guard)", async () => {
+    prismaMock.user.findUnique.mockResolvedValue(targetUser({ id: "user-super_admin", role: "SUPER_ADMIN" }) as never);
+    setSession(sessionFor("SUPER_ADMIN")); // id === "user-super_admin"
+    const res = await callRoute(POST, buildRequest("/api/v1/users/user-super_admin/totp", { method: "POST" }), paramsCtx({ id: "user-super_admin" }));
     expect(res.status).toBe(403);
     expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+
+  it("allows resetting another SUPER_ADMIN's 2FA", async () => {
+    prismaMock.user.findUnique.mockResolvedValue(targetUser({ id: "u1", role: "SUPER_ADMIN" }) as never);
+    setSession(sessionFor("SUPER_ADMIN"));
+    const res = await callRoute(POST, buildRequest("/api/v1/users/u1/totp", { method: "POST" }), paramsCtx({ id: "u1" }));
+    expect(res.status).toBe(200);
+    expect(prismaMock.user.update).toHaveBeenCalled();
   });
 
   it("enrolls the user: enables 2FA and stores an encrypted secret + hashed recovery codes", async () => {

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { CreateUserDialog } from "./create-user-dialog";
+import { DeleteUserAction } from "@/components/shared/delete-user-action";
 import { ROLE_LABELS } from "@/lib/roles";
 import { Users } from "lucide-react";
 import type { AppRole } from "@/lib/roles";
@@ -96,6 +97,7 @@ export default async function UsersPage({ searchParams }: Props) {
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Joined</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -123,6 +125,15 @@ export default async function UsersPage({ searchParams }: Props) {
                     </TableCell>
                     <TableCell className="text-sm text-gray-400">
                       {new Date(user.createdAt).toLocaleDateString("en-IN")}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end">
+                        <DeleteUserAction
+                          userId={user.id}
+                          name={user.name}
+                          disabled={user.id === session?.user.id}
+                        />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
