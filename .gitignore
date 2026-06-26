@@ -37,6 +37,9 @@ yarn-error.log*
 # local secrets / credential dumps (never commit)
 *.local.md
 
+# local Claude Code settings
+.claude/settings.local.json
+
 # vercel
 .vercel
 
