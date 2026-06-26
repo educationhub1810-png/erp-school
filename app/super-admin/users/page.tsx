@@ -8,6 +8,7 @@ import { Users } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/roles";
 import type { AppRole } from "@/lib/roles";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { School as SchoolIcon } from "lucide-react";
 import { UserFilters } from "./user-filters";
 import { UserSecurityAction } from "./user-security-action";
 
@@ -28,9 +29,14 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
     ? (sp.role as AppRole)
     : undefined;
 
+  // A school must be selected before any users are listed. With many schools
+  // and users, showing everyone at once is overwhelming, so we gate the
+  // directory on an explicit school choice.
+  const schoolSelected = Boolean(sp.schoolId);
+
   const where: Prisma.UserWhereInput = {
     role: roleFilter ?? { not: "SUPER_ADMIN" },
-    ...(sp.schoolId && { schoolId: sp.schoolId }),
+    schoolId: sp.schoolId,
     ...(sp.search && {
       OR: [
         { name: { contains: sp.search, mode: "insensitive" as const } },
@@ -40,18 +46,26 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
     }),
   };
 
-  const [users, total, schools] = await Promise.all([
-    prisma.user.findMany({
-      where,
-      include: { school: { select: { name: true, code: true } } },
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: limit,
-    }),
-    prisma.user.count({ where }),
-    prisma.school.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, code: true } }),
-  ]);
+  const schools = await prisma.school.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, code: true },
+  });
+
+  const [users, total] = schoolSelected
+    ? await Promise.all([
+        prisma.user.findMany({
+          where,
+          include: { school: { select: { name: true, code: true } } },
+          orderBy: { createdAt: "desc" },
+          skip,
+          take: limit,
+        }),
+        prisma.user.count({ where }),
+      ])
+    : [[], 0];
   const totalPages = Math.ceil(total / limit);
+
+  const selectedSchool = schools.find((s) => s.id === sp.schoolId);
 
   const queryString = [
     sp.search && `search=${encodeURIComponent(sp.search)}`,
@@ -78,12 +92,30 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">All Users</h1>
-          <p className="text-sm text-gray-500 mt-1">{total} users across all schools</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {schoolSelected
+              ? `${total} users in ${selectedSchool?.name ?? "selected school"}`
+              : "Choose a school to view its users"}
+          </p>
         </div>
       </div>
 
       <UserFilters schools={schools} />
 
+      {!schoolSelected ? (
+        <Card className="border-0 shadow-sm">
+          <CardContent className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+            <div className="rounded-full bg-indigo-50 p-4">
+              <SchoolIcon className="w-8 h-8 text-indigo-600" />
+            </div>
+            <p className="text-base font-medium text-gray-900">Select a school to get started</p>
+            <p className="text-sm text-gray-500 max-w-sm">
+              Pick a school from the filter above to list its users. You can then narrow down by role
+              or search by name, email, or mobile.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -147,8 +179,11 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
           )}
         </CardContent>
       </Card>
+      )}
 
-      <Pagination page={page} totalPages={totalPages} total={total} limit={limit} skip={skip} queryString={queryString} />
+      {schoolSelected && (
+        <Pagination page={page} totalPages={totalPages} total={total} limit={limit} skip={skip} queryString={queryString} />
+      )}
     </div>
   );
 }
