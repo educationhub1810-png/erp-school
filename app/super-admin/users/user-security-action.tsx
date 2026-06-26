@@ -21,6 +21,8 @@ interface Props {
   name: string;
   email: string | null;
   totpEnabled: boolean;
+  /** Hide the control for the acting admin's own row (no self-reset). */
+  disabled?: boolean;
 }
 
 interface TotpResult {
@@ -30,11 +32,15 @@ interface TotpResult {
   regenerated: boolean;
 }
 
-export function UserSecurityAction({ userId, name, email, totpEnabled }: Props) {
+export function UserSecurityAction({ userId, name, email, totpEnabled, disabled }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TotpResult | null>(null);
+
+  if (disabled) {
+    return <span className="text-xs text-gray-300" title="You can't reset your own 2FA here">—</span>;
+  }
 
   function onOpenChange(next: boolean) {
     setOpen(next);

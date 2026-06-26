@@ -17,6 +17,10 @@ interface School {
 
 const ROLE_OPTIONS = (Object.keys(ROLE_LABELS) as AppRole[]).filter((r) => r !== "SUPER_ADMIN");
 
+// Sentinel school value for the platform-level "Super Admins" view (these
+// accounts belong to no school). Kept in sync with PLATFORM_SCOPE in page.tsx.
+const PLATFORM_SCOPE = "platform";
+
 export function UserFilters({ schools }: { schools: School[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -59,12 +63,14 @@ export function UserFilters({ schools }: { schools: School[] }) {
           <SelectTrigger className="w-56">
             <SelectValue placeholder="Select a school">
               {(value: string) => {
+                if (value === PLATFORM_SCOPE) return "Super Admins";
                 if (!value || value === "all") return "Select a school";
                 return schools.find((s) => s.id === value)?.name ?? "Select a school";
               }}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value={PLATFORM_SCOPE}>Super Admins (platform)</SelectItem>
             {schools.map((s) => (
               <SelectItem key={s.id} value={s.id}>{s.name} ({s.code})</SelectItem>
             ))}
