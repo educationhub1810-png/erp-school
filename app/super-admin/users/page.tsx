@@ -9,6 +9,7 @@ import { ROLE_LABELS } from "@/lib/roles";
 import type { AppRole } from "@/lib/roles";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { UserFilters } from "./user-filters";
+import { UserSecurityAction } from "./user-security-action";
 
 interface Props {
   searchParams: Promise<{ page?: string; search?: string; role?: string; schoolId?: string }>;
@@ -102,6 +103,7 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
                     <th className="text-left px-6 py-3 font-medium text-gray-500">Role</th>
                     <th className="text-left px-6 py-3 font-medium text-gray-500">School</th>
                     <th className="text-left px-6 py-3 font-medium text-gray-500">Status</th>
+                    <th className="text-right px-6 py-3 font-medium text-gray-500">Security</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -128,6 +130,14 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
                         }>
                           {user.isActive ? "Active" : "Inactive"}
                         </Badge>
+                      </td>
+                      <td className="px-6 py-3 text-right">
+                        <UserSecurityAction
+                          userId={user.id}
+                          name={user.name}
+                          email={user.email}
+                          totpEnabled={user.totpEnabled}
+                        />
                       </td>
                     </tr>
                   ))}
