@@ -37,6 +37,10 @@ yarn-error.log*
 # local secrets / credential dumps (never commit)
 *.local.md
 
+# scripts/totp-qr-png.ts renders live, decodable authenticator QR codes here —
+# never commit these, they're a working credential, not a screenshot.
+/totp-qr/
+
 # local Claude Code settings
 .claude/settings.local.json
 
