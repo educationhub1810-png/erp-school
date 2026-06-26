@@ -65,20 +65,53 @@ describe("LoginForm", () => {
     expect(screen.getByText(/DOB as DDMMYYYY/i)).toBeInTheDocument();
   });
 
-  it("shows the Authenticator code field for Super Admin and School Admin, not for other roles", async () => {
+  it("shows the Authenticator code field, and hides Email/Password, for Super Admin and School Admin", async () => {
     const user = userEvent.setup();
     render(<LoginForm />);
     expect(screen.queryByLabelText(/authenticator code/i)).not.toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
     expect(screen.getByLabelText(/authenticator code/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/email or mobile/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^password/i)).not.toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText(/role/i), "SCHOOL_ADMIN");
     expect(screen.getByLabelText(/authenticator code/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/email or mobile/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^password/i)).not.toBeInTheDocument();
 
-    // a role without 2FA hides the field again
+    // any other role goes back to the normal email/password form
     await user.selectOptions(screen.getByLabelText(/role/i), "TEACHER");
     expect(screen.queryByLabelText(/authenticator code/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/email or mobile/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
+  });
+
+  it("requires an authenticator code (not username/password) before submitting for Super Admin", async () => {
+    const user = userEvent.setup();
+    render(<LoginForm />);
+    await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
+    await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
+
+    expect(await screen.findByText(/authenticator code is required/i)).toBeInTheDocument();
+    expect(signInMock).not.toHaveBeenCalled();
+  });
+
+  it("submits just role + authenticator code (no username/password) for Super Admin / School Admin", async () => {
+    signInMock.mockResolvedValue({ ok: true });
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    await user.selectOptions(screen.getByLabelText(/role/i), "SCHOOL_ADMIN");
+    await user.type(screen.getByLabelText(/authenticator code/i), "654321");
+    await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
+
+    await waitFor(() => expect(signInMock).toHaveBeenCalledOnce());
+    expect(signInMock).toHaveBeenCalledWith("credentials", {
+      role: "SCHOOL_ADMIN",
+      totp: "654321",
+      redirect: false,
+    });
   });
 
   it("shows an error message when credentials are rejected", async () => {
@@ -87,8 +120,7 @@ describe("LoginForm", () => {
     render(<LoginForm />);
 
     await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
-    await user.type(screen.getByLabelText(/email or mobile/i), "x");
-    await user.type(screen.getByLabelText(/password/i), "y");
+    await user.type(screen.getByLabelText(/authenticator code/i), "000000");
     await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
 
     expect(await screen.findByText(/invalid credentials/i)).toBeInTheDocument();

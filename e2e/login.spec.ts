@@ -13,12 +13,13 @@ test.describe("login → role dashboard", () => {
 });
 
 test.describe("login failures", () => {
-  test("rejects bad super-admin credentials with an inline error", async ({ page }) => {
+  test("rejects a wrong authenticator code for Super Admin with an inline error", async ({ page }) => {
+    // Super Admin has no email/password field at all — code-only login.
     await page.goto("/login");
     await expect(page.getByRole("button", { name: /sign in/i })).toBeVisible();
     await page.selectOption("#role", "SUPER_ADMIN");
-    await page.fill("#username", "superadmin");
-    await page.fill("#password", "wrong-password");
+    await expect(page.locator("#username")).toHaveCount(0);
+    await page.fill("#totp", "000000");
     await page.getByRole("button", { name: /sign in/i }).click();
     await expect(page.getByText(/invalid credentials/i)).toBeVisible();
   });

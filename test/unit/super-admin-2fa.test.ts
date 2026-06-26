@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { authenticator } from "otplib";
-import { passesSuperAdminGate, passesEnrolledTotpGate, verifyAnySuperAdminTotp } from "@/lib/super-admin-2fa";
+import { passesSuperAdminGate, passesEnrolledTotpGate, verifyAnySuperAdminTotp, findAccountByTotp } from "@/lib/super-admin-2fa";
 import { encryptSecret } from "@/lib/totp";
 import { prismaMock } from "../mocks/prisma";
 
@@ -68,5 +68,38 @@ describe("verifyAnySuperAdminTotp", () => {
       { id: "sa1", totpSecret: encryptSecret(SECRET), totpRecoveryCodes: null },
     ] as never);
     expect(await verifyAnySuperAdminTotp("000000")).toBe(false);
+  });
+});
+
+describe("findAccountByTotp (code-only login for Super Admin / School Admin)", () => {
+  it("returns null when no code is given", async () => {
+    expect(await findAccountByTotp("SUPER_ADMIN", undefined)).toBeNull();
+  });
+
+  it("identifies which enrolled account of the given role the code belongs to", async () => {
+    prismaMock.user.findMany.mockResolvedValue([
+      { id: "sa1", totpSecret: encryptSecret("OTHERSECRET234"), totpRecoveryCodes: null },
+      { id: "sa2", totpSecret: encryptSecret(SECRET), totpRecoveryCodes: null },
+    ] as never);
+    const account = await findAccountByTotp("SUPER_ADMIN", authenticator.generate(SECRET));
+    expect(account?.id).toBe("sa2");
+    expect(prismaMock.user.findMany.mock.calls[0][0]!.where).toMatchObject({
+      role: "SUPER_ADMIN",
+      totpEnabled: true,
+      isActive: true,
+    });
+  });
+
+  it("scopes the lookup to the given role (School Admin codes don't match Super Admin)", async () => {
+    prismaMock.user.findMany.mockResolvedValue([] as never);
+    await findAccountByTotp("SCHOOL_ADMIN", authenticator.generate(SECRET));
+    expect(prismaMock.user.findMany.mock.calls[0][0]!.where).toMatchObject({ role: "SCHOOL_ADMIN" });
+  });
+
+  it("returns null when no enrolled account matches the code", async () => {
+    prismaMock.user.findMany.mockResolvedValue([
+      { id: "sa1", totpSecret: encryptSecret(SECRET), totpRecoveryCodes: null },
+    ] as never);
+    expect(await findAccountByTotp("SUPER_ADMIN", "000000")).toBeNull();
   });
 });

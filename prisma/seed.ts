@@ -2,11 +2,21 @@ import "dotenv/config";
 import { PrismaClient } from "../lib/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
+import { encryptSecret } from "../lib/totp";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 const SECTION_LETTERS = ["A", "B", "C", "D", "E", "F", "G"];
+
+// Fixed (not randomly generated) so e2e tests can compute a valid code on
+// every run — see e2e/credentials.ts, which has these same two values.
+// Super Admin / School Admin no longer log in with email+password at all
+// (the login form hides those fields for these two roles — see auth.ts's
+// code-only branch), so both seeded accounts MUST be TOTP-enrolled or
+// nothing can sign in as them.
+const SUPER_ADMIN_TOTP_SECRET = "HZPDANDAHRDGMSZI";
+const SCHOOL_ADMIN_TOTP_SECRET = "CQFA4BQ5JZ7HQOTH";
 
 async function main() {
   console.log("🌱 Seeding database...");
@@ -15,9 +25,10 @@ async function main() {
 
   // ── Super Admin ────────────────────────────────────────────────
   const superAdminHash = await bcrypt.hash("admin123", 10);
+  const superAdminTotp = { totpSecret: encryptSecret(SUPER_ADMIN_TOTP_SECRET), totpEnabled: true };
   const superAdmin = await prisma.user.upsert({
     where: { email: "superadmin" },
-    update: {},
+    update: superAdminTotp,
     create: {
       name: "Super Admin",
       email: "superadmin",
@@ -25,6 +36,7 @@ async function main() {
       passwordHash: superAdminHash,
       role: "SUPER_ADMIN",
       isActive: true,
+      ...superAdminTotp,
     },
   });
   console.log("✅ Super Admin created:", superAdmin.email);
@@ -105,9 +117,13 @@ async function main() {
   const createdUsers: Record<string, string> = {};
 
   for (const roleData of roles) {
+    const totpFields =
+      roleData.role === "SCHOOL_ADMIN"
+        ? { totpSecret: encryptSecret(SCHOOL_ADMIN_TOTP_SECRET), totpEnabled: true }
+        : {};
     const user = await prisma.user.upsert({
       where: { email: roleData.email },
-      update: {},
+      update: totpFields,
       create: {
         schoolId: school.id,
         name: roleData.name,
@@ -117,6 +133,7 @@ async function main() {
         role: roleData.role,
         isActive: true,
         createdBy: superAdmin.id,
+        ...totpFields,
       },
     });
     createdUsers[roleData.role] = user.id;
@@ -1164,8 +1181,10 @@ async function main() {
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("🔑 Login Credentials (password: Admin@123 unless noted)");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("Super Admin    | superadmin             | password: admin123 | (no school code)");
-  console.log("School Admin   | admin@sch001.com       | School Code: SCH001");
+  console.log("Super Admin    | code-only login — no email/password field shown");
+  console.log("               | authenticator key: " + SUPER_ADMIN_TOTP_SECRET);
+  console.log("School Admin   | code-only login — no email/password field shown");
+  console.log("               | authenticator key: " + SCHOOL_ADMIN_TOTP_SECRET);
   console.log("Principal      | principal@sch001.com   | School Code: SCH001");
   console.log("Teacher 1      | teacher@sch001.com     | School Code: SCH001  (Priya Singh, Maths)");
   console.log("Teacher 2      | teacher2@sch001.com    | School Code: SCH001  (Anita Rao, Science)");

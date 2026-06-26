@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { verifyTotp, decryptSecret, matchRecoveryCode } from "@/lib/totp";
+import type { AppRole } from "@/lib/roles";
 
 export interface TotpAccount {
   id: string;
@@ -80,4 +81,26 @@ export async function verifyAnySuperAdminTotp(code: string | undefined): Promise
     if (await verifySuperAdminTotp(a, code)) return true;
   }
   return false;
+}
+
+/**
+ * Identify which enrolled account of a given role a fresh code belongs to —
+ * used by the code-only login for Super Admin / School Admin, where the
+ * login form never collects email/password for these roles, so the account
+ * itself must be found from the code. Returns the matched account, or null
+ * if no enrolled account of that role has a currently-valid code.
+ */
+export async function findAccountByTotp(
+  role: AppRole,
+  code: string | undefined,
+): Promise<TotpAccount | null> {
+  if (!code) return null;
+  const accounts = await prisma.user.findMany({
+    where: { role, totpEnabled: true, isActive: true },
+    select: { id: true, totpSecret: true, totpRecoveryCodes: true },
+  });
+  for (const a of accounts) {
+    if (await verifySuperAdminTotp(a, code)) return a;
+  }
+  return null;
 }

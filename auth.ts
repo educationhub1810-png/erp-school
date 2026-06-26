@@ -7,7 +7,7 @@ import { authConfig } from "./auth.config";
 import type { AppRole } from "@/lib/roles";
 import { writeAuditLog, clientIp } from "@/lib/audit";
 import { isTotpEnforced } from "@/lib/totp";
-import { passesSuperAdminGate, passesEnrolledTotpGate } from "@/lib/super-admin-2fa";
+import { passesSuperAdminGate, passesEnrolledTotpGate, findAccountByTotp } from "@/lib/super-admin-2fa";
 
 function dobToPassword(dob: Date): string {
   const d = String(dob.getUTCDate()).padStart(2, "0");
@@ -77,6 +77,27 @@ async function authorizeUser(
       role: user.role as AppRole,
       schoolId: user.schoolId ?? undefined,
       isImpersonating: true,
+    };
+  }
+
+  // Code-only login — the login form hides email/password entirely for
+  // Super Admin and School Admin, so these two roles authenticate with just
+  // the role + a fresh authenticator code. The account is identified by
+  // trying the code against every enrolled account of that role (same
+  // pattern as the existing Support/admin-access gate's
+  // `verifyAnySuperAdminTotp`, generalized to also resolve *which* account
+  // matched and to cover School Admin).
+  if ((role === "SUPER_ADMIN" || role === "SCHOOL_ADMIN") && !username && !password) {
+    const account = await findAccountByTotp(role as AppRole, totp);
+    if (!account) return null;
+    const user = await prisma.user.findUnique({ where: { id: account.id } });
+    if (!user || !user.isActive || user.role !== role) return null;
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email ?? undefined,
+      role: user.role as AppRole,
+      schoolId: user.schoolId ?? undefined,
     };
   }
 
