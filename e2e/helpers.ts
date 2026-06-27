@@ -7,7 +7,7 @@ import type { Credential } from "./credentials";
 // email/password field at all — a freshly computed authenticator code.
 export async function login(page: Page, cred: Credential) {
   await page.goto("/login");
-  await expect(page.getByRole("button", { name: /sign in/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /login to dashboard/i })).toBeVisible();
 
   await page.selectOption("#role", cred.role);
 
@@ -18,5 +18,5 @@ export async function login(page: Page, cred: Credential) {
     await page.fill("#password", cred.password);
   }
 
-  await page.getByRole("button", { name: /sign in/i }).click();
+  await page.getByRole("button", { name: /login to dashboard/i }).click();
 }
