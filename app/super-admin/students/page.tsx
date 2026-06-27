@@ -11,6 +11,7 @@ import { getStudentAvatarSrc } from "@/lib/student-avatar";
 import { Pagination } from "@/components/shared/pagination";
 import { sortClassesByGrade } from "@/lib/class-order";
 import { ensureClassSections } from "@/lib/ensure-class-sections";
+import { getPrincipalName } from "@/lib/principal";
 
 const GENDER_BADGE: Record<string, string> = {
   MALE: "bg-blue-100 text-blue-700",
@@ -54,7 +55,7 @@ export default async function SuperAdminStudentsPage({ searchParams }: Props) {
     }),
   };
 
-  const [students, total, schools, classesQuery] = await Promise.all([
+  const [students, total, schools, classesQuery, principalName] = await Promise.all([
     prisma.student.findMany({
       where,
       include: {
@@ -72,6 +73,7 @@ export default async function SuperAdminStudentsPage({ searchParams }: Props) {
     sp.schoolId
       ? prisma.class.findMany({ where: { schoolId: sp.schoolId }, include: { sections: true } })
       : Promise.resolve([]),
+    sp.schoolId ? getPrincipalName(sp.schoolId) : Promise.resolve(null),
   ]);
   let classesRaw = classesQuery;
   if (sp.schoolId && (await ensureClassSections(classesRaw))) {
@@ -93,7 +95,10 @@ export default async function SuperAdminStudentsPage({ searchParams }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Students</h1>
-          <p className="text-sm text-gray-500 mt-1">{total} student{total !== 1 ? "s" : ""} across all schools</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {total} student{total !== 1 ? "s" : ""} across all schools
+            {principalName && <span> · Principal: <span className="text-gray-700 font-medium">{principalName}</span></span>}
+          </p>
         </div>
         <CreateStudentDialog schools={schools} />
       </div>

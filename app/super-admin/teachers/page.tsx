@@ -7,6 +7,7 @@ import { CreateTeacherDialog } from "./create-teacher-dialog";
 import { TeacherFilters } from "./teacher-filters";
 import { TeacherRowActions } from "./teacher-row-actions";
 import { UserCheck } from "lucide-react";
+import { getPrincipalName } from "@/lib/principal";
 
 interface Props {
   searchParams: Promise<{ schoolId?: string; search?: string; page?: string }>;
@@ -31,7 +32,7 @@ export default async function SuperAdminTeachersPage({ searchParams }: Props) {
     }),
   };
 
-  const [teachers, total, schools] = await Promise.all([
+  const [teachers, total, schools, principalName] = await Promise.all([
     prisma.teacher.findMany({
       where,
       include: {
@@ -44,6 +45,7 @@ export default async function SuperAdminTeachersPage({ searchParams }: Props) {
     }),
     prisma.teacher.count({ where }),
     prisma.school.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, code: true } }),
+    sp.schoolId ? getPrincipalName(sp.schoolId) : Promise.resolve(null),
   ]);
 
   const totalPages = Math.ceil(total / limit);
@@ -53,7 +55,10 @@ export default async function SuperAdminTeachersPage({ searchParams }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Teachers</h1>
-          <p className="text-sm text-gray-500 mt-1">{total} teacher{total !== 1 ? "s" : ""} across all schools</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {total} teacher{total !== 1 ? "s" : ""} across all schools
+            {principalName && <span> · Principal: <span className="text-gray-700 font-medium">{principalName}</span></span>}
+          </p>
         </div>
         <CreateTeacherDialog schools={schools} />
       </div>

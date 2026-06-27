@@ -10,6 +10,7 @@ import { GraduationCap, UserPlus } from "lucide-react";
 import { StudentFilters } from "./student-filters";
 import { sortClassesByGrade } from "@/lib/class-order";
 import { ensureClassSections } from "@/lib/ensure-class-sections";
+import { getPrincipalName } from "@/lib/principal";
 
 interface Props {
   searchParams: Promise<{ classId?: string; sectionId?: string; search?: string; page?: string }>;
@@ -39,7 +40,7 @@ export default async function StudentsPage({ searchParams }: Props) {
     }),
   };
 
-  const [students, total, classesQuery] = await Promise.all([
+  const [students, total, classesQuery, principalName] = await Promise.all([
     prisma.student.findMany({
       where,
       include: {
@@ -56,6 +57,7 @@ export default async function StudentsPage({ searchParams }: Props) {
       where: { schoolId },
       include: { sections: true },
     }),
+    getPrincipalName(schoolId),
   ]);
   let classesRaw = classesQuery;
   if (await ensureClassSections(classesRaw)) {
@@ -70,7 +72,10 @@ export default async function StudentsPage({ searchParams }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Students</h1>
-          <p className="text-sm text-gray-500 mt-1">{total} student{total !== 1 ? "s" : ""} enrolled</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {total} student{total !== 1 ? "s" : ""} enrolled
+            {principalName && <span> · Principal: <span className="text-gray-700 font-medium">{principalName}</span></span>}
+          </p>
         </div>
         <AddStudentDialog classes={classes} schoolId={schoolId} />
       </div>
