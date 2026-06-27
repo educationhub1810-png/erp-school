@@ -19,11 +19,18 @@ describe("LoginForm", () => {
   it("renders the role dropdown, username and password fields", () => {
     render(<LoginForm />);
     expect(screen.getByLabelText(/role/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/email or mobile/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/user code/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     // the role dropdown lists the known roles
     expect(screen.getByRole("option", { name: "Teacher" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Super Admin" })).toBeInTheDocument();
+  });
+
+  it("does not offer Accountant, Librarian, Transport/HR/Warden/Mess Manager in the role dropdown", () => {
+    render(<LoginForm />);
+    for (const name of ["Accountant", "Librarian", "Transport Manager", "HR Manager", "Warden Manager", "Mess Manager"]) {
+      expect(screen.queryByRole("option", { name })).not.toBeInTheDocument();
+    }
   });
 
   it("shows validation errors and does not call signIn when fields are empty", async () => {
@@ -41,7 +48,7 @@ describe("LoginForm", () => {
     render(<LoginForm />);
 
     await user.selectOptions(screen.getByLabelText(/role/i), "TEACHER");
-    await user.type(screen.getByLabelText(/email or mobile/i), "teacher@sch001.com");
+    await user.type(screen.getByLabelText(/teacher code/i), "teacher@sch001.com");
     await user.type(screen.getByLabelText(/password/i), "Admin@123");
     await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
 
@@ -65,6 +72,29 @@ describe("LoginForm", () => {
     expect(screen.getByText(/DOB as DDMMYYYY/i)).toBeInTheDocument();
   });
 
+  it("labels the username field as '<Role> Code' once a role is selected, and reverts when none is chosen", async () => {
+    const user = userEvent.setup();
+    render(<LoginForm />);
+    // no role selected yet — generic label + placeholder
+    expect(screen.getByText("User Code")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Enter user code")).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/role/i), "TEACHER");
+    expect(screen.getByLabelText("Teacher Code")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Enter teacher code")).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/role/i), "PRINCIPAL");
+    expect(screen.getByLabelText("Principal Code")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Enter principal code")).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/role/i), "PARENT");
+    expect(screen.getByLabelText("Parent Code")).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/role/i), "STUDENT");
+    expect(screen.getByLabelText("Student Code")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Enter student code")).toBeInTheDocument();
+  });
+
   it("shows the Authenticator code field, and hides Email/Password, for Super Admin and School Admin", async () => {
     const user = userEvent.setup();
     render(<LoginForm />);
@@ -72,18 +102,18 @@ describe("LoginForm", () => {
 
     await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
     expect(screen.getByLabelText(/authenticator code/i)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/email or mobile/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/super admin code/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/^password/i)).not.toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText(/role/i), "SCHOOL_ADMIN");
     expect(screen.getByLabelText(/authenticator code/i)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/email or mobile/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/school admin code/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/^password/i)).not.toBeInTheDocument();
 
     // any other role goes back to the normal email/password form
     await user.selectOptions(screen.getByLabelText(/role/i), "TEACHER");
     expect(screen.queryByLabelText(/authenticator code/i)).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/email or mobile/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/teacher code/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
   });
 
