@@ -23,7 +23,6 @@ import {
   Users,
   BarChart3,
   Cloud,
-  KeyRound,
   BookOpen,
   PenLine,
   Star,
@@ -84,12 +83,6 @@ const BG_SPARKLES = [
   { className: "top-[8%] right-[40%] w-1.5 h-1.5 bg-teal-300 animate-twinkle-c" },
 ];
 
-// Super Admin and School Admin log in with just a fresh authenticator code —
-// the form never collects email/password for these roles (see auth.ts's
-// code-only branch), so they're optional here and required only for
-// everyone else; for these two roles the code itself becomes required.
-const CODE_ONLY_ROLES = new Set(["SUPER_ADMIN", "SCHOOL_ADMIN"]);
-
 // These roles log in with their code (student/employee/parent code) as the
 // username and their date of birth as the password — see auth.ts's matching
 // lookup paths. They can also still log in with an email/mobile + their real
@@ -101,20 +94,13 @@ const schema = z
     role: z.string().min(1, "Please select your role"),
     username: z.string().optional(),
     password: z.string().optional(),
-    totp: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    if (CODE_ONLY_ROLES.has(data.role)) {
-      if (!data.totp?.trim()) {
-        ctx.addIssue({ code: "custom", message: "Authenticator code is required", path: ["totp"] });
-      }
-    } else {
-      if (!data.username?.trim()) {
-        ctx.addIssue({ code: "custom", message: "Username is required", path: ["username"] });
-      }
-      if (!data.password?.trim()) {
-        ctx.addIssue({ code: "custom", message: "Password is required", path: ["password"] });
-      }
+    if (!data.username?.trim()) {
+      ctx.addIssue({ code: "custom", message: "Username is required", path: ["username"] });
+    }
+    if (!data.password?.trim()) {
+      ctx.addIssue({ code: "custom", message: "Password is required", path: ["password"] });
     }
   });
 
@@ -128,7 +114,6 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [adminCode, setAdminCode] = useState("");
-  const [adminTotp, setAdminTotp] = useState("");
   const [adminError, setAdminError] = useState<string | null>(null);
   const [adminLoading, setAdminLoading] = useState(false);
 
@@ -141,9 +126,6 @@ export function LoginForm() {
 
   const selectedRole = watch("role");
   const usesDobPassword = DOB_PASSWORD_ROLES.has(selectedRole);
-  // Super Admin / School Admin: code-only login. Email/mobile + password are
-  // hidden entirely and only the authenticator code is collected.
-  const isCodeOnly = selectedRole === "SUPER_ADMIN" || selectedRole === "SCHOOL_ADMIN";
   // Label/placeholder follow the selected role (e.g. "Teacher Code").
   const usernameLabel = selectedRole
     ? `${ROLE_LABELS[selectedRole as keyof typeof ROLE_LABELS]} Code`
@@ -156,7 +138,7 @@ export function LoginForm() {
       const res = await fetch("/api/admin-access/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: adminCode.trim(), totp: adminTotp.trim() }),
+        body: JSON.stringify({ code: adminCode.trim() }),
       });
       if (!res.ok) {
         setAdminError("Invalid code or authenticator. Try again.");
@@ -172,12 +154,12 @@ export function LoginForm() {
     setError(null);
     setLoading(true);
     try {
-      const result = await signIn(
-        "credentials",
-        CODE_ONLY_ROLES.has(data.role)
-          ? { role: data.role, totp: data.totp ?? "", redirect: false }
-          : { role: data.role, username: data.username, password: data.password, totp: data.totp ?? "", redirect: false },
-      );
+      const result = await signIn("credentials", {
+        role: data.role,
+        username: data.username,
+        password: data.password,
+        redirect: false,
+      });
 
       if (result?.error || !result?.ok) {
         setError("Invalid credentials. Please check your details.");
@@ -310,94 +292,60 @@ export function LoginForm() {
                 {errors.role && <p className="text-xs text-red-500">{errors.role.message}</p>}
               </div>
 
-              {/* Email/mobile + password — hidden entirely for Super Admin /
-                  School Admin, who log in with just a fresh authenticator
-                  code instead (see the Authenticator code field below). */}
-              {!isCodeOnly && (
-                <>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="username">{usernameLabel}</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                      <Input
-                        id="username"
-                        type="text"
-                        placeholder={`Enter ${usernameLabel.toLowerCase()}`}
-                        {...register("username")}
-                        autoComplete="username"
-                        className="pl-10"
-                      />
-                    </div>
-                    {errors.username && (
-                      <p className="text-xs text-red-500">{errors.username.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="password">
-                      Password
-                      {usesDobPassword && (
-                        <span className="text-gray-400 font-normal text-xs ml-1">
-                          (DOB as DDMMYYYY, or your real password)
-                        </span>
-                      )}
-                    </Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder={usesDobPassword ? "e.g. 15082005" : "Enter your password"}
-                        {...register("password")}
-                        autoComplete="current-password"
-                        className="pl-10 pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((v) => !v)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        tabIndex={-1}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-                    {errors.password && (
-                      <p className="text-xs text-red-500">{errors.password.message}</p>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {/* Authenticator code — the sole credential for Super Admin /
-                  School Admin (see above); other roles never see this field. */}
-              {isCodeOnly && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="totp">
-                    Authenticator code
-                    <span className="text-gray-400 font-normal text-xs ml-1">
-                      (6 digits, or a recovery code)
-                    </span>
-                  </Label>
-                  <div className="relative">
-                    <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    <Input
-                      id="totp"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      placeholder="123456"
-                      autoFocus
-                      {...register("totp")}
-                      className="pl-10"
-                    />
-                  </div>
-                  {errors.totp && <p className="text-xs text-red-500">{errors.totp.message}</p>}
+              <div className="space-y-1.5">
+                <Label htmlFor="username">{usernameLabel}</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder={`Enter ${usernameLabel.toLowerCase()}`}
+                    {...register("username")}
+                    autoComplete="username"
+                    className="pl-10"
+                  />
                 </div>
-              )}
+                {errors.username && (
+                  <p className="text-xs text-red-500">{errors.username.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="password">
+                  Password
+                  {usesDobPassword && (
+                    <span className="text-gray-400 font-normal text-xs ml-1">
+                      (DOB as DDMMYYYY, or your real password)
+                    </span>
+                  )}
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder={usesDobPassword ? "e.g. 15082005" : "Enter your password"}
+                    {...register("password")}
+                    autoComplete="current-password"
+                    className="pl-10 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-xs text-red-500">{errors.password.message}</p>
+                )}
+              </div>
 
               <Button
                 type="submit"
@@ -431,16 +379,6 @@ export function LoginForm() {
                     onKeyDown={(e) => e.key === "Enter" && handleAdminAccess()}
                     placeholder="Access code"
                     autoFocus
-                    className="w-44 h-7 rounded border border-gray-200 bg-white px-2.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-gray-300"
-                  />
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    value={adminTotp}
-                    onChange={(e) => setAdminTotp(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleAdminAccess()}
-                    placeholder="Authenticator code"
                     className="w-44 h-7 rounded border border-gray-200 bg-white px-2.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-gray-300"
                   />
                   <div className="flex items-center gap-2">

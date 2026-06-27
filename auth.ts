@@ -6,8 +6,6 @@ import { prisma } from "@/lib/prisma";
 import { authConfig } from "./auth.config";
 import type { AppRole } from "@/lib/roles";
 import { writeAuditLog, clientIp } from "@/lib/audit";
-import { isTotpEnforced } from "@/lib/totp";
-import { passesSuperAdminGate, passesEnrolledTotpGate, findAccountByTotp } from "@/lib/super-admin-2fa";
 
 function dobToPassword(dob: Date): string {
   const d = String(dob.getUTCDate()).padStart(2, "0");
@@ -56,11 +54,10 @@ const DUMMY_HASH = bcrypt.hashSync("nonexistent-account-placeholder", 12);
 async function authorizeUser(
   credentials: Record<string, unknown> | undefined,
 ): Promise<AuthorizedUser | null> {
-  const { role, username, password, totp, impersonateToken } = (credentials ?? {}) as {
+  const { role, username, password, impersonateToken } = (credentials ?? {}) as {
     role: string;
     username: string;
     password: string;
-    totp: string;
     impersonateToken: string;
   };
 
@@ -80,37 +77,12 @@ async function authorizeUser(
     };
   }
 
-  // Code-only login — the login form hides email/password entirely for
-  // Super Admin and School Admin, so these two roles authenticate with just
-  // the role + a fresh authenticator code. The account is identified by
-  // trying the code against every enrolled account of that role (same
-  // pattern as the existing Support/admin-access gate's
-  // `verifyAnySuperAdminTotp`, generalized to also resolve *which* account
-  // matched and to cover School Admin).
-  if ((role === "SUPER_ADMIN" || role === "SCHOOL_ADMIN") && !username && !password) {
-    const account = await findAccountByTotp(role as AppRole, totp);
-    if (!account) return null;
-    const user = await prisma.user.findUnique({ where: { id: account.id } });
-    if (!user || !user.isActive || user.role !== role) return null;
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email ?? undefined,
-      role: user.role as AppRole,
-      schoolId: user.schoolId ?? undefined,
-    };
-  }
-
   if (!username || !password || !role) return null;
 
   // No school is collected on the login form — student codes and emails are
   // globally unique, so the account is resolved by username alone. The user
   // selects their role on the form and we enforce it against the account below.
   let candidate: AuthorizedUser | null = null;
-  // The resolved DB row for non-student logins — needed for the super-admin
-  // 2FA fields (totpSecret / totpEnabled / totpRecoveryCodes).
-  let account: { id: string; totpSecret: string | null; totpEnabled: boolean; totpRecoveryCodes: string | null } | null =
-    null;
 
   // 1. Student path — username = studentCode (global), password = DOB (DDMMYYYY)
   const student = await prisma.student.findFirst({
@@ -201,27 +173,11 @@ async function authorizeUser(
       role: user.role as AppRole,
       schoolId: user.schoolId ?? undefined,
     };
-    account = user;
   }
 
   // Enforce the role the user selected on the form against their real account
   // role — a mismatch is treated as a failed login.
   if (candidate.role !== role) return null;
-
-  // Super-admin two-factor. In production a super admin MUST be TOTP-enrolled
-  // and present a valid code (no bypass for legacy/un-enrolled accounts);
-  // localhost is password-only (isTotpEnforced() === false).
-  if (candidate.role === "SUPER_ADMIN") {
-    const ok = await passesSuperAdminGate(account, totp, isTotpEnforced());
-    if (!ok) return null;
-  } else {
-    // Opt-in 2FA for any other role (e.g. a school admin enrolled via
-    // `npm run totp:school-admin`): an enrolled account must present a valid
-    // code; un-enrolled accounts remain password-only. `account` is null on
-    // the student-DOB path, which this correctly passes through.
-    const ok = await passesEnrolledTotpGate(account, totp);
-    if (!ok) return null;
-  }
 
   return candidate;
 }
@@ -282,7 +238,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         role: { label: "Role", type: "text" },
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
-        totp: { label: "Authenticator code", type: "text" },
         impersonateToken: { label: "Impersonate Token", type: "text" },
       },
       async authorize(credentials, request) {

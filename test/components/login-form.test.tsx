@@ -105,51 +105,47 @@ describe("LoginForm", () => {
     expect(screen.getByPlaceholderText("Enter student code")).toBeInTheDocument();
   });
 
-  it("shows the Authenticator code field, and hides Email/Password, for Super Admin and School Admin", async () => {
+  it("shows username + password (no authenticator field) for Super Admin and School Admin", async () => {
     const user = userEvent.setup();
     render(<LoginForm />);
+    // the authenticator field no longer exists for any role
     expect(screen.queryByLabelText(/authenticator code/i)).not.toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
-    expect(screen.getByLabelText(/authenticator code/i)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/super admin code/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/^password/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/super admin code/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/authenticator code/i)).not.toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText(/role/i), "SCHOOL_ADMIN");
-    expect(screen.getByLabelText(/authenticator code/i)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/school admin code/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/^password/i)).not.toBeInTheDocument();
-
-    // any other role goes back to the normal email/password form
-    await user.selectOptions(screen.getByLabelText(/role/i), "TEACHER");
-    expect(screen.queryByLabelText(/authenticator code/i)).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/teacher code/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/school admin code/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
   });
 
-  it("requires an authenticator code (not username/password) before submitting for Super Admin", async () => {
+  it("requires username + password before submitting for Super Admin", async () => {
     const user = userEvent.setup();
     render(<LoginForm />);
     await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
     await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
 
-    expect(await screen.findByText(/authenticator code is required/i)).toBeInTheDocument();
+    expect(await screen.findByText(/username is required/i)).toBeInTheDocument();
     expect(signInMock).not.toHaveBeenCalled();
   });
 
-  it("submits just role + authenticator code (no username/password) for Super Admin / School Admin", async () => {
+  it("submits role + username + password for Super Admin / School Admin", async () => {
     signInMock.mockResolvedValue({ ok: true });
     const user = userEvent.setup();
     render(<LoginForm />);
 
     await user.selectOptions(screen.getByLabelText(/role/i), "SCHOOL_ADMIN");
-    await user.type(screen.getByLabelText(/authenticator code/i), "654321");
+    await user.type(screen.getByLabelText(/school admin code/i), "admin@sch001.com");
+    await user.type(screen.getByLabelText(/^password/i), "Admin@123");
     await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
 
     await waitFor(() => expect(signInMock).toHaveBeenCalledOnce());
     expect(signInMock).toHaveBeenCalledWith("credentials", {
       role: "SCHOOL_ADMIN",
-      totp: "654321",
+      username: "admin@sch001.com",
+      password: "Admin@123",
       redirect: false,
     });
   });
@@ -160,7 +156,8 @@ describe("LoginForm", () => {
     render(<LoginForm />);
 
     await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
-    await user.type(screen.getByLabelText(/authenticator code/i), "000000");
+    await user.type(screen.getByLabelText(/super admin code/i), "superadmin");
+    await user.type(screen.getByLabelText(/^password/i), "wrong");
     await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
 
     expect(await screen.findByText(/invalid credentials/i)).toBeInTheDocument();

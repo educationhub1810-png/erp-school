@@ -11,7 +11,6 @@ const baseData: ProfileData = {
   role: "SCHOOL_ADMIN",
   isActive: true,
   createdAt: new Date("2024-01-15"),
-  totpEnabled: false,
   schoolName: "Delhi Public School",
   schoolCode: "SCH001",
   photoUrl: null,
@@ -27,17 +26,6 @@ describe("ProfileView", () => {
     expect(screen.getByText("jane@sch001.com")).toBeInTheDocument();
     expect(screen.getByText("9999999999")).toBeInTheDocument();
     expect(screen.getByText("Delhi Public School (SCH001)")).toBeInTheDocument();
-  });
-
-  it("shows the Two-Factor Auth field for Super Admin / School Admin only", () => {
-    render(<ProfileView data={baseData} />);
-    expect(screen.getByText("Two-Factor Auth")).toBeInTheDocument();
-    expect(screen.getByText("Not enabled")).toBeInTheDocument();
-  });
-
-  it("hides the Two-Factor Auth field for non-admin roles", () => {
-    render(<ProfileView data={{ ...baseData, role: "TEACHER" }} />);
-    expect(screen.queryByText("Two-Factor Auth")).not.toBeInTheDocument();
   });
 
   it("shows Inactive badge when the account is disabled", () => {

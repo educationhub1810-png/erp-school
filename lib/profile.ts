@@ -14,7 +14,6 @@ export interface ProfileData {
   role: AppRole;
   isActive: boolean;
   createdAt: Date;
-  totpEnabled: boolean;
   schoolName: string | null;
   schoolCode: string | null;
   photoUrl: string | null;
@@ -50,7 +49,6 @@ export async function getProfileData(userId: string, role: AppRole): Promise<Pro
     role: user.role as AppRole,
     isActive: user.isActive,
     createdAt: user.createdAt,
-    totpEnabled: user.totpEnabled,
     schoolName: user.school?.name ?? null,
     schoolCode: user.school?.code ?? null,
     photoUrl: null,

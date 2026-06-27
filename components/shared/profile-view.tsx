@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Mail, Phone, Calendar, ShieldCheck, School, IdCard, type LucideIcon } from "lucide-react";
+import { Mail, Phone, Calendar, School, IdCard, type LucideIcon } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/roles";
 import type { ProfileData } from "@/lib/profile";
 
@@ -24,8 +24,6 @@ export function ProfileView({ data }: { data: ProfileData }) {
     .join("")
     .toUpperCase()
     .slice(0, 2);
-
-  const showTotp = data.role === "SUPER_ADMIN" || data.role === "SCHOOL_ADMIN";
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -70,13 +68,6 @@ export function ProfileView({ data }: { data: ProfileData }) {
               value={data.schoolName ? `${data.schoolName} (${data.schoolCode})` : "—"}
             />
             <Field icon={Calendar} label="Member Since" value={new Date(data.createdAt).toLocaleDateString("en-IN")} />
-            {showTotp && (
-              <Field
-                icon={ShieldCheck}
-                label="Two-Factor Auth"
-                value={data.totpEnabled ? "Enabled" : "Not enabled"}
-              />
-            )}
           </div>
         </CardContent>
       </Card>
