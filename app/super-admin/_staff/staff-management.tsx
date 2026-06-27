@@ -48,7 +48,7 @@ export async function StaffManagement({ role, roleLabel, roleLabelPlural, search
       take: limit,
     }),
     prisma.staff.count({ where }),
-    prisma.school.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, code: true } }),
+    prisma.school.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, code: true, principalName: true } }),
   ]);
 
   const totalPages = Math.ceil(total / limit);
