@@ -1,4 +1,8 @@
-const PRE_PRIMARY_SEQUENCE = ["play group", "pre nursery", "nursery", "junior kg", "lkg", "senior kg", "ukg"];
+const PRE_PRIMARY_SEQUENCE = [
+  "play group", "pre nursery", "nursery",
+  "junior kg", "jr. kg", "jr kg", "lkg",
+  "senior kg", "sr. kg", "sr kg", "ukg",
+];
 
 function classRank(name: string): number {
   const normalized = name.trim().toLowerCase();

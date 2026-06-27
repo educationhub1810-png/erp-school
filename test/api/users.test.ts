@@ -87,7 +87,7 @@ describe("POST /api/v1/users", () => {
     expect(body.totp.secret).toBeTruthy();
     expect(body.totp.qr).toMatch(/^data:image\/png;base64,/);
     expect(body.totp.recoveryCodes.length).toBeGreaterThan(0);
-  });
+  }, 15000); // bcrypt + TOTP secret + QR generation are CPU-bound and can exceed the default timeout under full-suite parallel load
 
   it("does not enroll TOTP for non-admin roles, which still log in with email/mobile + password", async () => {
     setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));

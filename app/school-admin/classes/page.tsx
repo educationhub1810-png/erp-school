@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpen, Users } from "lucide-react";
 import { sortClassesByGrade } from "@/lib/class-order";
 import { ensureClassSections } from "@/lib/ensure-class-sections";
+import { CreateClassDialog } from "./create-class-dialog";
 
 export default async function ClassesPage() {
   const session = await auth();
@@ -30,9 +31,12 @@ export default async function ClassesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Classes</h1>
-        <p className="text-sm text-gray-500 mt-1">{classes.length} classes configured</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Classes</h1>
+          <p className="text-sm text-gray-500 mt-1">{classes.length} classes configured</p>
+        </div>
+        <CreateClassDialog />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {classes.length === 0 ? (
