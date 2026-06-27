@@ -15,6 +15,7 @@ import { UserPlus, Loader2, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorDialog } from "@/components/shared/error-dialog";
 import { formatDobAsPassword } from "@/lib/utils";
+import { DOB_PASSWORD_STAFF_ROLES } from "@/lib/roles";
 import { ROLE_FIELDS, type StaffRole } from "./role-fields";
 
 const baseSchema = z.object({
@@ -56,9 +57,6 @@ interface Props {
 
 const CODE_LABEL: Partial<Record<StaffRole, string>> = { PRINCIPAL: "Principal Code" };
 const CODE_PREFIX: Partial<Record<StaffRole, string>> = { PRINCIPAL: "PRN" };
-// Principals log in with their date of birth as the password (like
-// students); everyone else gets the fixed default password.
-const DOB_PASSWORD_ROLES: StaffRole[] = ["PRINCIPAL"];
 
 export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
   const router = useRouter();
@@ -72,7 +70,7 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
   const hasAutoCode = role in CODE_LABEL;
   const codeLabel = CODE_LABEL[role];
   const codePrefix = CODE_PREFIX[role];
-  const requiresDob = DOB_PASSWORD_ROLES.includes(role);
+  const requiresDob = DOB_PASSWORD_STAFF_ROLES.includes(role);
 
   const schema = baseSchema.superRefine((data, ctx) => {
     if (!hasAutoCode && !data.employeeId) {

@@ -72,6 +72,16 @@ describe("LoginForm", () => {
     expect(screen.getByText(/DOB as DDMMYYYY/i)).toBeInTheDocument();
   });
 
+  it("shows the DOB-password hint for Principal, Teacher and Parent too", async () => {
+    const user = userEvent.setup();
+    render(<LoginForm />);
+    expect(screen.queryByText(/DOB as DDMMYYYY/i)).not.toBeInTheDocument();
+    for (const role of ["PRINCIPAL", "TEACHER", "PARENT"]) {
+      await user.selectOptions(screen.getByLabelText(/role/i), role);
+      expect(screen.getByText(/DOB as DDMMYYYY/i)).toBeInTheDocument();
+    }
+  });
+
   it("labels the username field as '<Role> Code' once a role is selected, and reverts when none is chosen", async () => {
     const user = userEvent.setup();
     render(<LoginForm />);
