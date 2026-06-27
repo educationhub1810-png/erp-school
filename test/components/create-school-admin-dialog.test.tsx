@@ -36,8 +36,8 @@ describe("CreateSchoolAdminDialog", () => {
       json: async () => ({
         success: true,
         data: {
-          user: { name: "Anita Desai" },
-          totp: { secret: "JBSWY3DPEHPK3PXP", qr: "data:image/png;base64,abc123", recoveryCodes: ["aaaaa-11111", "bbbbb-22222"] },
+          user: { name: "Anita Desai", email: "anita@sch001.com" },
+          defaultPassword: "Scho@123",
         },
       }),
     }) as never;
@@ -73,7 +73,7 @@ describe("CreateSchoolAdminDialog", () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
-  it("submits with role SCHOOL_ADMIN to /api/v1/users and shows the TOTP enrollment QR/secret/recovery codes", async () => {
+  it("submits with role SCHOOL_ADMIN to /api/v1/users and shows the login ID + temporary password", async () => {
     const user = userEvent.setup();
     render(<CreateSchoolAdminDialog schools={schools} />);
     await user.click(screen.getByRole("button", { name: /add school admin/i }));
@@ -82,10 +82,9 @@ describe("CreateSchoolAdminDialog", () => {
     await user.type(screen.getByPlaceholderText("admin@school.com"), "anita@sch001.com");
     await user.click(submitButton());
 
-    expect(await screen.findByText(/set up login/i)).toBeInTheDocument();
-    expect(screen.getByText("JBSWY3DPEHPK3PXP")).toBeInTheDocument();
-    expect(screen.getByText("aaaaa-11111")).toBeInTheDocument();
-    expect(screen.getByAltText(/scan in your authenticator/i)).toHaveAttribute("src", "data:image/png;base64,abc123");
+    expect(await screen.findByText(/login details/i)).toBeInTheDocument();
+    expect(screen.getByText("anita@sch001.com")).toBeInTheDocument();
+    expect(screen.getByText("Scho@123")).toBeInTheDocument();
 
     const [url, opts] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(url).toBe("/api/v1/users");

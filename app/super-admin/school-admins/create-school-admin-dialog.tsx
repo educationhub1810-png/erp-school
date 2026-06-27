@@ -33,7 +33,7 @@ export function CreateSchoolAdminDialog({ schools }: { schools: School[] }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [enrollment, setEnrollment] = useState<{ qr: string; secret: string; recoveryCodes: string[] } | null>(null);
+  const [credentials, setCredentials] = useState<{ name: string; loginId: string; password: string } | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormValues>({
@@ -50,7 +50,7 @@ export function CreateSchoolAdminDialog({ schools }: { schools: School[] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, role: "SCHOOL_ADMIN" }),
       });
-      const json: { data?: { user?: { name?: string }; totp?: { qr: string; secret: string; recoveryCodes: string[] } }; error?: string } = await res.json();
+      const json: { data?: { user?: { name?: string; email?: string }; defaultPassword?: string }; error?: string } = await res.json();
       if (!res.ok) {
         setError(json.error || `Request failed (HTTP ${res.status})`);
         return;
@@ -58,7 +58,13 @@ export function CreateSchoolAdminDialog({ schools }: { schools: School[] }) {
       toast.success(`School Admin "${json.data?.user?.name}" added`);
       reset();
       setOpen(false);
-      if (json.data?.totp) setEnrollment(json.data.totp);
+      if (json.data?.defaultPassword) {
+        setCredentials({
+          name: json.data.user?.name ?? "School Admin",
+          loginId: json.data.user?.email ?? data.email ?? data.mobile ?? "—",
+          password: json.data.defaultPassword,
+        });
+      }
       router.refresh();
     } catch (e) {
       setError(`Network error: ${e instanceof Error ? e.message : String(e)}`);
@@ -134,39 +140,40 @@ export function CreateSchoolAdminDialog({ schools }: { schools: School[] }) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!enrollment} onOpenChange={(o) => { if (!o) setEnrollment(null); }}>
+      <Dialog open={!!credentials} onOpenChange={(o) => { if (!o) setCredentials(null); }}>
         <DialogContent showCloseButton={false} className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>School Admin Added — Set Up Login</DialogTitle>
+            <DialogTitle>School Admin Added — Login Details</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            School Admin logs in with just an authenticator code — no password. Have the admin scan this QR code in
-            Google Authenticator (or a similar app) now; this can&apos;t be shown again.
+            Share these credentials with <span className="font-medium">{credentials?.name}</span>. They log in with
+            their email/mobile and this password — advise them to change it after first login. This password
+            can&apos;t be shown again.
           </p>
           <div className="space-y-3">
-            {enrollment?.qr && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={enrollment.qr} alt="Scan in your authenticator app" className="mx-auto h-40 w-40" />
-            )}
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Manual key (if they can&apos;t scan)</Label>
+              <Label className="text-xs text-muted-foreground">Login ID (email or mobile)</Label>
               <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
-                <span className="font-mono text-sm font-semibold tracking-wide break-all">{enrollment?.secret}</span>
-                <Button type="button" variant="outline" size="sm" onClick={() => enrollment && copy("secret", enrollment.secret)}>
-                  {copiedField === "secret" ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
-                  {copiedField === "secret" ? "Copied" : "Copy"}
+                <span className="font-mono text-sm font-semibold tracking-wide break-all">{credentials?.loginId}</span>
+                <Button type="button" variant="outline" size="sm" onClick={() => credentials && copy("loginId", credentials.loginId)}>
+                  {copiedField === "loginId" ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                  {copiedField === "loginId" ? "Copied" : "Copy"}
                 </Button>
               </div>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Recovery codes (each usable once — save them)</Label>
-              <div className="grid grid-cols-2 gap-1.5 rounded-lg border bg-muted/50 px-3 py-2.5 font-mono text-xs">
-                {enrollment?.recoveryCodes.map((c) => <span key={c}>{c}</span>)}
+              <Label className="text-xs text-muted-foreground">Temporary password</Label>
+              <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
+                <span className="font-mono text-sm font-semibold tracking-wide break-all">{credentials?.password}</span>
+                <Button type="button" variant="outline" size="sm" onClick={() => credentials && copy("password", credentials.password)}>
+                  {copiedField === "password" ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                  {copiedField === "password" ? "Copied" : "Copy"}
+                </Button>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" className="bg-indigo-600 hover:bg-indigo-700" onClick={() => setEnrollment(null)}>Done</Button>
+            <Button type="button" className="bg-indigo-600 hover:bg-indigo-700" onClick={() => setCredentials(null)}>Done</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

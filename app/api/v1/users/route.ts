@@ -3,10 +3,8 @@ import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
 import { writeAuditLog, clientIp } from "@/lib/audit";
-import { generateTotpSecret, totpKeyUri, encryptSecret, generateRecoveryCodes, hashRecoveryCodes } from "@/lib/totp";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import QRCode from "qrcode";
 
 const createSchema = z.object({
   schoolId: z.string().optional(),
@@ -79,16 +77,6 @@ export async function POST(req: Request) {
     const rawPassword = data.password || `${data.role.charAt(0)}${data.role.slice(1, 4).toLowerCase()}@123`;
     const passwordHash = await bcrypt.hash(rawPassword, 12);
 
-    // The login form is code-only for School Admin (no email/password field at
-    // all — see CODE_ONLY_ROLES in login-form.tsx), so a School Admin account
-    // is unusable until it's TOTP-enrolled. Enroll it here, at creation time,
-    // the same way `scripts/setup-school-admin-totp.ts` does, and hand the
-    // one-time QR/secret/recovery codes back so the Super Admin can hand them
-    // to the new admin immediately.
-    const isSchoolAdmin = data.role === "SCHOOL_ADMIN";
-    const totpSecret = isSchoolAdmin ? generateTotpSecret() : null;
-    const recoveryCodes = isSchoolAdmin ? generateRecoveryCodes() : null;
-
     const user = await prisma.user.create({
       data: {
         schoolId,
@@ -99,11 +87,6 @@ export async function POST(req: Request) {
         role: data.role,
         isActive: true,
         createdBy: session!.user.id,
-        ...(totpSecret && recoveryCodes && {
-          totpEnabled: true,
-          totpSecret: encryptSecret(totpSecret),
-          totpRecoveryCodes: JSON.stringify(await hashRecoveryCodes(recoveryCodes)),
-        }),
       },
       select: { id: true, name: true, email: true, role: true, createdAt: true },
     });
@@ -119,13 +102,7 @@ export async function POST(req: Request) {
       ip: clientIp(req),
     });
 
-    const totpQr = totpSecret ? await QRCode.toDataURL(totpKeyUri(data.email || data.name, totpSecret)) : null;
-
-    return created({
-      user,
-      defaultPassword: rawPassword,
-      ...(totpSecret && recoveryCodes && { totp: { secret: totpSecret, qr: totpQr, recoveryCodes } }),
-    });
+    return created({ user, defaultPassword: rawPassword });
   } catch (e) {
     return serverError(e);
   }

@@ -62,7 +62,7 @@ describe("POST /api/v1/users", () => {
     expect(res.status).toBe(403);
   });
 
-  it("lets a Super Admin create a School Admin for a school named in the request body, enrolling TOTP since the login form is code-only for this role", async () => {
+  it("lets a Super Admin create a School Admin for a school named in the request body, returning a temporary password", async () => {
     setSession(sessionFor("SUPER_ADMIN"));
     prismaMock.user.findUnique.mockResolvedValue(null as never);
     prismaMock.user.create.mockResolvedValue(makeUser({ id: "user-new", role: "SCHOOL_ADMIN" }) as never);
@@ -79,30 +79,12 @@ describe("POST /api/v1/users", () => {
     const args = prismaMock.user.create.mock.calls[0][0]!.data as Record<string, unknown>;
     expect(args.schoolId).toBe("school-9");
     expect(args.role).toBe("SCHOOL_ADMIN");
-    expect(args.totpEnabled).toBe(true);
-    expect(typeof args.totpSecret).toBe("string");
-    expect(args.totpSecret).not.toBe(""); // encrypted, never the raw secret
-
-    const body = (res.body as { data: { totp: { secret: string; qr: string; recoveryCodes: string[] } } }).data;
-    expect(body.totp.secret).toBeTruthy();
-    expect(body.totp.qr).toMatch(/^data:image\/png;base64,/);
-    expect(body.totp.recoveryCodes.length).toBeGreaterThan(0);
-  }, 15000); // bcrypt + TOTP secret + QR generation are CPU-bound and can exceed the default timeout under full-suite parallel load
-
-  it("does not enroll TOTP for non-admin roles, which still log in with email/mobile + password", async () => {
-    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
-    prismaMock.user.findUnique.mockResolvedValue(null as never);
-    prismaMock.user.create.mockResolvedValue(makeUser({ id: "user-new", role: "ACCOUNTANT" }) as never);
-
-    const res = await callRoute(
-      POST,
-      buildRequest("/api/v1/users", { method: "POST", body: { name: "New Accountant", role: "ACCOUNTANT", email: "acc2@sch.com" } }),
-    );
-    expect(res.status).toBe(201);
-
-    const args = prismaMock.user.create.mock.calls[0][0]!.data as Record<string, unknown>;
+    // No 2FA is enrolled — admins log in with email/mobile + password.
     expect(args.totpEnabled).toBeUndefined();
-    const body = (res.body as { data: { totp?: unknown } }).data;
+    expect(args.totpSecret).toBeUndefined();
+
+    const body = (res.body as { data: { defaultPassword: string; totp?: unknown } }).data;
+    expect(body.defaultPassword).toBeTruthy();
     expect(body.totp).toBeUndefined();
   });
 

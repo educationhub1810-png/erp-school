@@ -10,7 +10,6 @@ const baseUser = {
   role: "SUPER_ADMIN",
   isActive: true,
   createdAt: new Date("2024-01-15"),
-  totpEnabled: true,
   school: null,
 };
 
@@ -35,7 +34,6 @@ describe("getProfileData", () => {
       mobile: "9999999999",
       role: "SUPER_ADMIN",
       isActive: true,
-      totpEnabled: true,
       schoolName: null,
       schoolCode: null,
       details: [],

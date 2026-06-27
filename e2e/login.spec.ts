@@ -95,13 +95,12 @@ test.describe("code + DOB login (Principal, Teacher, Parent)", () => {
 });
 
 test.describe("login failures", () => {
-  test("rejects a wrong authenticator code for Super Admin with an inline error", async ({ page }) => {
-    // Super Admin has no email/password field at all — code-only login.
+  test("rejects a wrong password for Super Admin with an inline error", async ({ page }) => {
     await page.goto("/login");
     await expect(page.getByRole("button", { name: /login to dashboard/i })).toBeVisible();
     await page.selectOption("#role", "SUPER_ADMIN");
-    await expect(page.locator("#username")).toHaveCount(0);
-    await page.fill("#totp", "000000");
+    await page.fill("#username", "superadmin");
+    await page.fill("#password", "wrong-password");
     await page.getByRole("button", { name: /login to dashboard/i }).click();
     await expect(page.getByText(/invalid credentials/i)).toBeVisible();
   });
