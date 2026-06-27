@@ -11,7 +11,6 @@ import type { AppRole } from "@/lib/roles";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { School as SchoolIcon } from "lucide-react";
 import { UserFilters } from "./user-filters";
-import { UserSecurityAction } from "./user-security-action";
 import { DeleteUserAction } from "@/components/shared/delete-user-action";
 
 // Sentinel school value for the "Super Admins" view — these accounts belong to
@@ -148,7 +147,6 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
                     <th className="text-left px-6 py-3 font-medium text-gray-500">Role</th>
                     <th className="text-left px-6 py-3 font-medium text-gray-500">School</th>
                     <th className="text-left px-6 py-3 font-medium text-gray-500">Status</th>
-                    <th className="text-right px-6 py-3 font-medium text-gray-500">Security</th>
                     <th className="text-right px-6 py-3 font-medium text-gray-500">Actions</th>
                   </tr>
                 </thead>
@@ -176,15 +174,6 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
                         }>
                           {user.isActive ? "Active" : "Inactive"}
                         </Badge>
-                      </td>
-                      <td className="px-6 py-3 text-right">
-                        <UserSecurityAction
-                          userId={user.id}
-                          name={user.name}
-                          email={user.email}
-                          totpEnabled={user.totpEnabled}
-                          disabled={user.id === actor.id}
-                        />
                       </td>
                       <td className="px-6 py-3">
                         <div className="flex justify-end">
