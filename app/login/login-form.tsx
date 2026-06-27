@@ -126,10 +126,12 @@ export function LoginForm() {
 
   const selectedRole = watch("role");
   const usesDobPassword = DOB_PASSWORD_ROLES.has(selectedRole);
-  // Label/placeholder follow the selected role (e.g. "Teacher Code").
-  const usernameLabel = selectedRole
+  // Code/DOB roles (student, teacher, principal, parent) sign in with their
+  // own code (e.g. "Teacher Code"); everyone else — including Super Admin and
+  // School Admin — signs in with their email or mobile.
+  const usernameLabel = usesDobPassword
     ? `${ROLE_LABELS[selectedRole as keyof typeof ROLE_LABELS]} Code`
-    : "User Code";
+    : "Email or Mobile";
 
   const handleAdminAccess = async () => {
     setAdminError(null);
