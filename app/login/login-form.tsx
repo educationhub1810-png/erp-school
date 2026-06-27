@@ -37,8 +37,21 @@ import {
 import { ROLE_LABELS } from "@/lib/roles";
 import { SchoolIllustration } from "./school-illustration";
 
+// Temporarily not selectable from the login dropdown — accounts with these
+// roles cannot sign in via this form while hidden here.
+const HIDDEN_ROLES = new Set([
+  "ACCOUNTANT",
+  "LIBRARIAN",
+  "TRANSPORT_MANAGER",
+  "HR_MANAGER",
+  "WARDEN_MANAGER",
+  "MESS_MANAGER",
+]);
+
 // Order roles are presented in the dropdown.
-const ROLE_OPTIONS = Object.entries(ROLE_LABELS) as [keyof typeof ROLE_LABELS, string][];
+const ROLE_OPTIONS = (Object.entries(ROLE_LABELS) as [keyof typeof ROLE_LABELS, string][]).filter(
+  ([value]) => !HIDDEN_ROLES.has(value),
+);
 
 const FEATURES = [
   { icon: ShieldCheck, label: "Secure Platform", color: "bg-blue-500" },
@@ -125,6 +138,11 @@ export function LoginForm() {
   // Super Admin / School Admin: code-only login. Email/mobile + password are
   // hidden entirely and only the authenticator code is collected.
   const isCodeOnly = selectedRole === "SUPER_ADMIN" || selectedRole === "SCHOOL_ADMIN";
+  // Label/placeholder follow the selected role (e.g. "Teacher Code") — still
+  // an email/mobile value under the hood for every role except Student.
+  const usernameLabel = selectedRole
+    ? `${ROLE_LABELS[selectedRole as keyof typeof ROLE_LABELS]} Code`
+    : "User Code";
 
   const handleAdminAccess = async () => {
     setAdminError(null);
@@ -293,20 +311,13 @@ export function LoginForm() {
               {!isCodeOnly && (
                 <>
                   <div className="space-y-1.5">
-                    <Label htmlFor="username">
-                      Email or Mobile Number
-                      {isStudent && (
-                        <span className="text-gray-400 font-normal text-xs ml-1">
-                          (student code)
-                        </span>
-                      )}
-                    </Label>
+                    <Label htmlFor="username">{usernameLabel}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                       <Input
                         id="username"
                         type="text"
-                        placeholder={isStudent ? "Student code or email" : "Enter email or mobile number"}
+                        placeholder={`Enter ${usernameLabel.toLowerCase()}`}
                         {...register("username")}
                         autoComplete="username"
                         className="pl-10"

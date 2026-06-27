@@ -2,14 +2,34 @@ import { test, expect } from "@playwright/test";
 import { CREDENTIALS } from "./credentials";
 import { login } from "./helpers";
 
-// Every seeded role should sign in and land on its own dashboard.
+// Temporarily removed from the role dropdown in app/login/login-form.tsx —
+// these accounts can't sign in via the form at all while hidden there.
+const ROLES_HIDDEN_FROM_LOGIN = new Set([
+  "ACCOUNTANT",
+  "LIBRARIAN",
+  "TRANSPORT_MANAGER",
+  "HR_MANAGER",
+  "WARDEN_MANAGER",
+  "MESS_MANAGER",
+]);
+
+// Every seeded, selectable role should sign in and land on its own dashboard.
 test.describe("login → role dashboard", () => {
-  for (const cred of CREDENTIALS) {
+  for (const cred of CREDENTIALS.filter((c) => !ROLES_HIDDEN_FROM_LOGIN.has(c.role))) {
     test(`${cred.role} signs in and reaches ${cred.dashboard}`, async ({ page }) => {
       await login(page, cred);
       await expect(page).toHaveURL(new RegExp(cred.dashboard.replace(/\//g, "\\/")), { timeout: 30_000 });
     });
   }
+});
+
+test.describe("login → role dashboard (hidden roles)", () => {
+  test("the role dropdown does not offer the hidden roles at all", async ({ page }) => {
+    await page.goto("/login");
+    for (const role of ROLES_HIDDEN_FROM_LOGIN) {
+      expect(await page.locator(`#role option[value="${role}"]`).count()).toBe(0);
+    }
+  });
 });
 
 test.describe("login failures", () => {
