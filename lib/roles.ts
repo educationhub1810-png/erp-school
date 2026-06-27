@@ -76,3 +76,9 @@ export const ROLE_ALLOWED_PREFIXES: Record<AppRole, string[]> = {
   WARDEN_MANAGER: ["/warden"],
   MESS_MANAGER: ["/mess"],
 };
+
+// Staff roles whose login password is their date of birth (DDMMYYYY), set at
+// account creation instead of a fixed default — these accounts are looked up
+// by Staff.employeeId at login, not email/mobile, since they're admin-created
+// in bulk and may never get a real email/mobile on file.
+export const DOB_PASSWORD_STAFF_ROLES: AppRole[] = ["PRINCIPAL"];

@@ -90,6 +90,12 @@ const BG_SPARKLES = [
 // everyone else; for these two roles the code itself becomes required.
 const CODE_ONLY_ROLES = new Set(["SUPER_ADMIN", "SCHOOL_ADMIN"]);
 
+// These roles log in with their code (student/employee/parent code) as the
+// username and their date of birth as the password — see auth.ts's matching
+// lookup paths. They can also still log in with an email/mobile + their real
+// password if they have one on file.
+const DOB_PASSWORD_ROLES = new Set(["STUDENT", "PRINCIPAL", "TEACHER", "PARENT"]);
+
 const schema = z
   .object({
     role: z.string().min(1, "Please select your role"),
@@ -134,12 +140,11 @@ export function LoginForm() {
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   const selectedRole = watch("role");
-  const isStudent = selectedRole === "STUDENT";
+  const usesDobPassword = DOB_PASSWORD_ROLES.has(selectedRole);
   // Super Admin / School Admin: code-only login. Email/mobile + password are
   // hidden entirely and only the authenticator code is collected.
   const isCodeOnly = selectedRole === "SUPER_ADMIN" || selectedRole === "SCHOOL_ADMIN";
-  // Label/placeholder follow the selected role (e.g. "Teacher Code") — still
-  // an email/mobile value under the hood for every role except Student.
+  // Label/placeholder follow the selected role (e.g. "Teacher Code").
   const usernameLabel = selectedRole
     ? `${ROLE_LABELS[selectedRole as keyof typeof ROLE_LABELS]} Code`
     : "User Code";
@@ -331,9 +336,9 @@ export function LoginForm() {
                   <div className="space-y-1.5">
                     <Label htmlFor="password">
                       Password
-                      {isStudent && (
+                      {usesDobPassword && (
                         <span className="text-gray-400 font-normal text-xs ml-1">
-                          (DOB as DDMMYYYY for students)
+                          (DOB as DDMMYYYY, or your real password)
                         </span>
                       )}
                     </Label>
@@ -342,7 +347,7 @@ export function LoginForm() {
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder={isStudent ? "e.g. 15082005" : "Enter your password"}
+                        placeholder={usesDobPassword ? "e.g. 15082005" : "Enter your password"}
                         {...register("password")}
                         autoComplete="current-password"
                         className="pl-10 pr-10"

@@ -129,7 +129,61 @@ async function authorizeUser(
     };
   }
 
-  // 2. Everyone else (and students who log in with an email) — email/mobile + bcrypt
+  // 2. Principal path — username = Staff.employeeId, password = DOB (DDMMYYYY).
+  // Mirrors the student path: these accounts may have no email/mobile on file
+  // at all, so path 5 below can never resolve them.
+  if (!candidate) {
+    const staff = await prisma.staff.findFirst({
+      where: { employeeId: username },
+      include: { user: { select: { id: true, name: true, email: true, role: true, isActive: true } } },
+    });
+    if (staff && staff.user.isActive && staff.dob && password === dobToPassword(staff.dob)) {
+      candidate = {
+        id: staff.user.id,
+        name: staff.user.name,
+        email: staff.user.email ?? undefined,
+        role: staff.user.role as AppRole,
+        schoolId: staff.schoolId ?? undefined,
+      };
+    }
+  }
+
+  // 3. Teacher path — username = Teacher.employeeId, password = DOB (DDMMYYYY).
+  if (!candidate) {
+    const teacher = await prisma.teacher.findFirst({
+      where: { employeeId: username },
+      include: { user: { select: { id: true, name: true, email: true, role: true, isActive: true } } },
+    });
+    if (teacher && teacher.user.isActive && teacher.dob && password === dobToPassword(teacher.dob)) {
+      candidate = {
+        id: teacher.user.id,
+        name: teacher.user.name,
+        email: teacher.user.email ?? undefined,
+        role: teacher.user.role as AppRole,
+        schoolId: teacher.schoolId ?? undefined,
+      };
+    }
+  }
+
+  // 4. Parent path — username = ParentProfile.parentCode, password = DOB (DDMMYYYY).
+  if (!candidate) {
+    const parent = await prisma.parentProfile.findFirst({
+      where: { parentCode: username },
+      include: { user: { select: { id: true, name: true, email: true, role: true, isActive: true } } },
+    });
+    if (parent && parent.user.isActive && parent.dob && password === dobToPassword(parent.dob)) {
+      candidate = {
+        id: parent.user.id,
+        name: parent.user.name,
+        email: parent.user.email ?? undefined,
+        role: parent.user.role as AppRole,
+        schoolId: parent.schoolId ?? undefined,
+      };
+    }
+  }
+
+  // 5. Everyone else (and the above roles when they log in with an email/mobile
+  // and their real password instead) — email/mobile + bcrypt
   if (!candidate) {
     const user = await prisma.user.findFirst({
       where: { OR: [{ email: username }, { mobile: username }], isActive: true },

@@ -3,14 +3,11 @@ import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError, duplicateValue } from "@/lib/api-response";
 import { formatDobAsPassword } from "@/lib/utils";
+import { DOB_PASSWORD_STAFF_ROLES } from "@/lib/roles";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
 const STAFF_ROLES = ["PRINCIPAL", "ACCOUNTANT", "LIBRARIAN", "TRANSPORT_MANAGER", "HR_MANAGER", "WARDEN_MANAGER", "MESS_MANAGER"] as const;
-
-// Principals log in with their date of birth as the password (like
-// students); everyone else gets the fixed default password below.
-const DOB_PASSWORD_ROLES = ["PRINCIPAL"] as const;
 
 const createSchema = z.object({
   schoolId: z.string().optional(),
@@ -130,7 +127,7 @@ export async function POST(req: Request) {
       employeeId = data.employeeId;
     }
 
-    const usesDobPassword = (DOB_PASSWORD_ROLES as readonly string[]).includes(data.role);
+    const usesDobPassword = (DOB_PASSWORD_STAFF_ROLES as readonly string[]).includes(data.role);
     if (usesDobPassword && !data.dob) return badRequest("Date of birth is required");
 
     const password = await bcrypt.hash(
