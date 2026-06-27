@@ -19,7 +19,7 @@ describe("LoginForm", () => {
   it("renders the role dropdown, username and password fields", () => {
     render(<LoginForm />);
     expect(screen.getByLabelText(/role/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/user code/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email or mobile/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     // the role dropdown lists the known roles
     expect(screen.getByRole("option", { name: "Teacher" })).toBeInTheDocument();
@@ -82,12 +82,12 @@ describe("LoginForm", () => {
     }
   });
 
-  it("labels the username field as '<Role> Code' once a role is selected, and reverts when none is chosen", async () => {
+  it("labels the username field as '<Role> Code' for code/DOB roles and 'Email or Mobile' otherwise", async () => {
     const user = userEvent.setup();
     render(<LoginForm />);
-    // no role selected yet — generic label + placeholder
-    expect(screen.getByText("User Code")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Enter user code")).toBeInTheDocument();
+    // no role selected yet — defaults to the email/mobile label + placeholder
+    expect(screen.getByText("Email or Mobile")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Enter email or mobile")).toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText(/role/i), "TEACHER");
     expect(screen.getByLabelText("Teacher Code")).toBeInTheDocument();
@@ -112,12 +112,12 @@ describe("LoginForm", () => {
     expect(screen.queryByLabelText(/authenticator code/i)).not.toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
-    expect(screen.getByLabelText(/super admin code/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email or mobile/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/authenticator code/i)).not.toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText(/role/i), "SCHOOL_ADMIN");
-    expect(screen.getByLabelText(/school admin code/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email or mobile/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
   });
 
@@ -137,7 +137,7 @@ describe("LoginForm", () => {
     render(<LoginForm />);
 
     await user.selectOptions(screen.getByLabelText(/role/i), "SCHOOL_ADMIN");
-    await user.type(screen.getByLabelText(/school admin code/i), "admin@sch001.com");
+    await user.type(screen.getByLabelText(/email or mobile/i), "admin@sch001.com");
     await user.type(screen.getByLabelText(/^password/i), "Admin@123");
     await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
 
@@ -156,7 +156,7 @@ describe("LoginForm", () => {
     render(<LoginForm />);
 
     await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
-    await user.type(screen.getByLabelText(/super admin code/i), "superadmin");
+    await user.type(screen.getByLabelText(/email or mobile/i), "superadmin");
     await user.type(screen.getByLabelText(/^password/i), "wrong");
     await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
 
