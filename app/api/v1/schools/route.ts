@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
 import { writeAuditLog, clientIp } from "@/lib/audit";
+import { seedDefaultClasses } from "@/lib/default-classes";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -84,6 +85,8 @@ export async function POST(req: Request) {
     }
 
     if (school) {
+      await seedDefaultClasses(school.id);
+
       await writeAuditLog({
         action: "SCHOOL_CREATE",
         actorId: session!.user.id,
