@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,6 +47,7 @@ interface School {
   id: string;
   name: string;
   code: string;
+  principalName?: string | null;
 }
 
 interface Props {
@@ -83,11 +84,28 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { schoolId: "" },
+    defaultValues: { schoolId: "", name: "" },
   });
 
   const selectedSchoolId = watch("schoolId");
   const codePreviewLetter = (schools.find((s) => s.id === selectedSchoolId)?.name.trim()[0] || "X").toUpperCase();
+
+  // When adding a Principal, pre-fill the name from the school's record (set
+  // when the school was created) — but only while the field still holds
+  // either nothing or a previous auto-fill, so it never clobbers a name the
+  // admin has actually typed.
+  const lastAutoFilledNameRef = useRef("");
+  const handleSchoolChange = (schoolId: string) => {
+    setValue("schoolId", schoolId, { shouldValidate: true });
+    if (role !== "PRINCIPAL") return;
+    const school = schools.find((s) => s.id === schoolId);
+    if (!school?.principalName) return;
+    const currentName = watch("name");
+    if (currentName === "" || currentName === lastAutoFilledNameRef.current) {
+      setValue("name", school.principalName, { shouldValidate: true });
+      lastAutoFilledNameRef.current = school.principalName;
+    }
+  };
 
   const handleCopy = async (field: "code" | "dob", value: string) => {
     await navigator.clipboard.writeText(value);
@@ -155,7 +173,7 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
             <Label>School *</Label>
             <Select
               value={selectedSchoolId}
-              onValueChange={(v) => { if (v != null) setValue("schoolId", v as string, { shouldValidate: true }); }}
+              onValueChange={(v) => { if (v != null) handleSchoolChange(v as string); }}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select school">
