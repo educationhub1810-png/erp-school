@@ -1,16 +1,42 @@
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { getUser } from "@/lib/session";
 import { StatCard } from "@/components/shared/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardList, FileText, DollarSign, BookOpen } from "lucide-react";
 
 export default async function ParentDashboard() {
   const session = await auth();
+  const user = session ? getUser(session) : null;
+
+  const parentProfile = user
+    ? await prisma.parentProfile.findUnique({
+        where: { userId: user.id },
+        include: {
+          student: {
+            select: { firstName: true, middleName: true, lastName: true, class: { select: { name: true } }, section: { select: { name: true } } },
+          },
+        },
+      })
+    : null;
+  const child = parentProfile?.student;
+  const childName = child ? `${child.firstName} ${child.middleName ?? ""} ${child.lastName}`.replace(/\s+/g, " ").trim() : null;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Parent Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-1">Welcome back, {session?.user.name}</p>
+        <p className="text-gray-500 text-sm mt-1">
+          Welcome back, {session?.user.name}
+          {childName && (
+            <>
+              {" "}· Child: <span className="font-medium text-gray-700">{childName}</span>
+              {child?.class && (
+                <span className="text-gray-400"> ({child.class.name}{child.section ? ` - ${child.section.name}` : ""})</span>
+              )}
+            </>
+          )}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
