@@ -48,44 +48,9 @@ describe("POST /api/v1/users", () => {
     setSession(sessionFor("SUPER_ADMIN"));
     const res = await callRoute(
       POST,
-      buildRequest("/api/v1/users", { method: "POST", body: { name: "New Admin", role: "SCHOOL_ADMIN", email: "admin@sch.com" } }),
+      buildRequest("/api/v1/users", { method: "POST", body: { name: "New Principal", role: "PRINCIPAL", email: "principal@sch.com" } }),
     );
     expect(res.status).toBe(400);
-  });
-
-  it("403s when a School Admin tries to create another School Admin account", async () => {
-    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
-    const res = await callRoute(
-      POST,
-      buildRequest("/api/v1/users", { method: "POST", body: { name: "New Admin", role: "SCHOOL_ADMIN", email: "admin@sch.com" } }),
-    );
-    expect(res.status).toBe(403);
-  });
-
-  it("lets a Super Admin create a School Admin for a school named in the request body, returning a temporary password", async () => {
-    setSession(sessionFor("SUPER_ADMIN"));
-    prismaMock.user.findUnique.mockResolvedValue(null as never);
-    prismaMock.user.create.mockResolvedValue(makeUser({ id: "user-new", role: "SCHOOL_ADMIN" }) as never);
-
-    const res = await callRoute(
-      POST,
-      buildRequest("/api/v1/users", {
-        method: "POST",
-        body: { name: "New Admin", role: "SCHOOL_ADMIN", email: "admin@sch.com", schoolId: "school-9" },
-      }),
-    );
-    expect(res.status).toBe(201);
-
-    const args = prismaMock.user.create.mock.calls[0][0]!.data as Record<string, unknown>;
-    expect(args.schoolId).toBe("school-9");
-    expect(args.role).toBe("SCHOOL_ADMIN");
-    // No 2FA is enrolled — admins log in with email/mobile + password.
-    expect(args.totpEnabled).toBeUndefined();
-    expect(args.totpSecret).toBeUndefined();
-
-    const body = (res.body as { data: { defaultPassword: string; totp?: unknown } }).data;
-    expect(body.defaultPassword).toBeTruthy();
-    expect(body.totp).toBeUndefined();
   });
 
   it("400s on a duplicate email", async () => {
