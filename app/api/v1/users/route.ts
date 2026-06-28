@@ -11,7 +11,7 @@ const createSchema = z.object({
   name: z.string().min(1, "Name required"),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   mobile: z.string().optional(),
-  role: z.enum(["SCHOOL_ADMIN", "PRINCIPAL", "TEACHER", "STUDENT", "PARENT", "ACCOUNTANT", "LIBRARIAN", "TRANSPORT_MANAGER", "HR_MANAGER", "WARDEN_MANAGER", "MESS_MANAGER"]),
+  role: z.enum(["PRINCIPAL", "TEACHER", "STUDENT", "PARENT", "ACCOUNTANT", "LIBRARIAN", "TRANSPORT_MANAGER", "HR_MANAGER", "WARDEN_MANAGER", "MESS_MANAGER"]),
   password: z.string().min(6, "Min 6 characters").optional(),
 });
 
@@ -60,11 +60,6 @@ export async function POST(req: Request) {
     if (!parsed.success) return badRequest(parsed.error.issues[0].message);
 
     const data = parsed.data;
-
-    // Only a Super Admin may create another school's admin account; a School
-    // Admin creating staff for their own school still goes through this route
-    // for the other roles below.
-    if (data.role === "SCHOOL_ADMIN" && actor.role !== "SUPER_ADMIN") return forbidden();
 
     const schoolId = actor.role === "SUPER_ADMIN" ? data.schoolId : actor.schoolId;
     if (!schoolId) return badRequest("School is required");
