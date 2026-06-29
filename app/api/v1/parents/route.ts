@@ -2,22 +2,23 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError, duplicateValue } from "@/lib/api-response";
+import { nameField, optionalTextField, emailField, mobileField, aadhaarField, panField, addressField } from "@/lib/field-validation";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
 const personSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1, "Last name is required"),
+  firstName: nameField("First name"),
+  middleName: optionalTextField("Middle name"),
+  lastName: nameField("Last name"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
   dob: z.string().optional(),
   maritalStatus: z.enum(["SINGLE", "MARRIED", "DIVORCED", "WIDOWED"]).optional(),
-  nationality: z.string().optional(),
-  aadhaar: z.string().optional(),
-  pan: z.string().optional(),
-  address: z.string().optional(),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  mobile: z.string().optional(),
+  nationality: optionalTextField("Nationality"),
+  aadhaar: aadhaarField(),
+  pan: panField(),
+  address: addressField(),
+  email: emailField(),
+  mobile: mobileField(),
 });
 
 const createSchema = z.object({

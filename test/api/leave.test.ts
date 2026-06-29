@@ -73,6 +73,13 @@ describe("POST /api/v1/leave", () => {
     expect(res.status).toBe(400);
   });
 
+  it("400s when the reason is over the max length", async () => {
+    setSession(sessionFor("STUDENT", { schoolId: "school-1" }));
+    const res = await callRoute(POST, buildRequest("/api/v1/leave", { method: "POST", body: { ...validBody, reason: "a".repeat(1001) } }));
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/reason is too long/i);
+  });
+
   it("creates the leave request scoped to the caller's school and user id", async () => {
     setSession(sessionFor("STUDENT", { schoolId: "school-1", id: "user-student" }));
     const res = await callRoute(POST, buildRequest("/api/v1/leave", { method: "POST", body: validBody }));

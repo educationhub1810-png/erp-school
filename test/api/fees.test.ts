@@ -74,6 +74,26 @@ describe("POST /api/v1/fees/structures", () => {
     expect(res.status).toBe(400);
   });
 
+  it("400s when amount is over the max", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    const res = await callRoute(
+      POST_STRUCTURE,
+      buildRequest("/api/v1/fees/structures", { method: "POST", body: { ...validBody, amount: 10_000_001 } }),
+    );
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/amount is too large/i);
+  });
+
+  it("400s when the fee type is over the max length", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    const res = await callRoute(
+      POST_STRUCTURE,
+      buildRequest("/api/v1/fees/structures", { method: "POST", body: { ...validBody, feeType: "a".repeat(101) } }),
+    );
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/fee type is too long/i);
+  });
+
   it("rejects a class that does not belong to the school", async () => {
     setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
     prismaMock.class.findFirst.mockResolvedValue(null as never);
@@ -129,6 +149,16 @@ describe("POST /api/v1/fees/payments", () => {
       buildRequest("/api/v1/fees/payments", { method: "POST", body: { ...validBody, paymentMode: undefined } }),
     );
     expect(res.status).toBe(400);
+  });
+
+  it("400s when amountPaid is over the max", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    const res = await callRoute(
+      POST_PAYMENT,
+      buildRequest("/api/v1/fees/payments", { method: "POST", body: { ...validBody, amountPaid: 10_000_001 } }),
+    );
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/amount is too large/i);
   });
 
   it("400s when the student does not belong to the caller's school", async () => {

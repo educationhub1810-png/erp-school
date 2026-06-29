@@ -13,20 +13,22 @@ import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import type { School } from "@/lib/generated/prisma/client";
+import { nameField, optionalTextField, emailField, mobileField, addressField, FIELD_MAX } from "@/lib/field-validation";
+import { digitsOnlyKeyDown } from "@/lib/field-behavior";
 
 const schema = z.object({
-  name: z.string().min(2, "Required"),
-  principalName: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  city: z.string().optional(),
+  name: nameField("School name"),
+  principalName: optionalTextField("Principal name"),
+  email: emailField(),
+  phone: mobileField(),
+  address: addressField(),
+  city: optionalTextField("City"),
   state: z.string().optional(),
   country: z.string().optional(),
   timezone: z.string().optional(),
   currency: z.string().optional(),
-  regNumber: z.string().optional(),
-  affiliationNumber: z.string().optional(),
+  regNumber: optionalTextField("Registration number"),
+  affiliationNumber: optionalTextField("Affiliation number"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -89,35 +91,41 @@ export function SchoolInfoForm({ school }: { school: School }) {
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-1.5">
               <Label>School Name *</Label>
-              <Input {...register("name")} />
+              <Input maxLength={FIELD_MAX.name} {...register("name")} />
               {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label>Registration Number</Label>
-              <Input {...register("regNumber")} />
+              <Input maxLength={FIELD_MAX.shortText} {...register("regNumber")} />
+              {errors.regNumber && <p className="text-xs text-red-500">{errors.regNumber.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Affiliation Number</Label>
-              <Input {...register("affiliationNumber")} />
+              <Input maxLength={FIELD_MAX.shortText} {...register("affiliationNumber")} />
+              {errors.affiliationNumber && <p className="text-xs text-red-500">{errors.affiliationNumber.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label>Principal Name</Label>
-              <Input {...register("principalName")} />
+              <Input maxLength={FIELD_MAX.shortText} {...register("principalName")} />
+              {errors.principalName && <p className="text-xs text-red-500">{errors.principalName.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Phone</Label>
-              <Input {...register("phone")} />
+              <Input inputMode="numeric" maxLength={FIELD_MAX.mobile} onKeyDown={digitsOnlyKeyDown} {...register("phone")} />
+              {errors.phone && <p className="text-xs text-red-500">{errors.phone.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label>Email</Label>
-              <Input type="email" {...register("email")} />
+              <Input type="email" maxLength={FIELD_MAX.email} {...register("email")} />
+              {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>City</Label>
-              <Input {...register("city")} />
+              <Input maxLength={FIELD_MAX.shortText} {...register("city")} />
+              {errors.city && <p className="text-xs text-red-500">{errors.city.message}</p>}
             </div>
 
             <div className="space-y-1.5">
@@ -144,7 +152,8 @@ export function SchoolInfoForm({ school }: { school: School }) {
 
             <div className="col-span-2 space-y-1.5">
               <Label>Address</Label>
-              <Input {...register("address")} />
+              <Input maxLength={FIELD_MAX.address} {...register("address")} />
+              {errors.address && <p className="text-xs text-red-500">{errors.address.message}</p>}
             </div>
           </div>
 

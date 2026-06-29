@@ -3,37 +3,38 @@ import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
 import { imageDataUrl } from "@/lib/validation";
+import { nameField, optionalTextField, optionalLongTextField, emailField, mobileField, aadhaarField, addressField } from "@/lib/field-validation";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
 const createSchema = z.object({
   schoolId: z.string().optional(),
   // Personal
-  firstName: z.string().min(1, "First name required"),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1, "Last name required"),
+  firstName: nameField("First name"),
+  middleName: optionalTextField("Middle name"),
+  lastName: nameField("Last name"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
   dob: z.string().min(1, "Date of birth is required"),
   bloodGroup: z.string().optional(),
   category: z.string().optional(),
   religion: z.string().optional(),
-  aadhaar: z.string().optional(),
+  aadhaar: aadhaarField(),
   photoUrl: imageDataUrl(2_000_000),
   // Contact
-  email: z.string().email().optional().or(z.literal("")),
-  mobile: z.string().optional(),
-  address: z.string().optional(),
+  email: emailField(),
+  mobile: mobileField(),
+  address: addressField(),
   // Academic
   classId: z.string().min(1, "Class is required"),
   sectionId: z.string().optional(),
-  rollNumber: z.string().optional(),
+  rollNumber: optionalTextField("Roll number"),
   admissionDate: z.string().optional(),
   house: z.string().optional(),
-  previousSchool: z.string().optional(),
+  previousSchool: optionalTextField("Previous school"),
   // Options
   transportRequired: z.boolean().default(false),
   hostelRequired: z.boolean().default(false),
-  medicalNotes: z.string().optional(),
+  medicalNotes: optionalLongTextField("Medical notes"),
   // Parent
   fatherName: z.string().optional(),
   fatherMobile: z.string().optional(),

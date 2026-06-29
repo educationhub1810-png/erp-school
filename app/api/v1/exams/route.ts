@@ -2,15 +2,19 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
+import { nameField, FIELD_MAX } from "@/lib/field-validation";
 import { z } from "zod";
 
 const createSchema = z.object({
   classId: z.string().min(1, "Class is required"),
-  name: z.string().min(1, "Exam name is required"),
+  name: nameField("Exam name", FIELD_MAX.title),
   examType: z.enum(["UNIT_TEST", "MID_TERM", "FINAL", "PRACTICAL", "INTERNAL", "EXTERNAL"]),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   isPublished: z.boolean().optional(),
+}).refine((data) => !data.startDate || !data.endDate || new Date(data.endDate) >= new Date(data.startDate), {
+  message: "End date must be on or after the start date",
+  path: ["endDate"],
 });
 
 export async function GET(req: Request) {

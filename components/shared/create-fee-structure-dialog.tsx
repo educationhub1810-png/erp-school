@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { requiredTextField, optionalLongTextField, FIELD_MAX } from "@/lib/field-validation";
 
 const FREQUENCIES: { value: string; label: string }[] = [
   { value: "ONE_TIME", label: "One Time" },
@@ -23,12 +24,12 @@ const FREQUENCIES: { value: string; label: string }[] = [
 ];
 
 const schema = z.object({
-  feeType: z.string().min(1, "Fee type is required"),
-  amount: z.number().positive("Amount must be greater than 0"),
+  feeType: requiredTextField("Fee type", FIELD_MAX.shortText),
+  amount: z.number().positive("Amount must be greater than 0").max(10_000_000, "Amount is too large"),
   classId: z.string().optional(),
   dueDate: z.string().optional(),
   frequency: z.enum(["ONE_TIME", "MONTHLY", "QUARTERLY", "ANNUALLY"]),
-  description: z.string().optional(),
+  description: optionalLongTextField("Description"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -81,14 +82,14 @@ export function CreateFeeStructureDialog({ classes }: Props) {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
           <div className="space-y-1.5">
             <Label>Fee Type *</Label>
-            <Input placeholder="Tuition Fee" {...register("feeType")} />
+            <Input placeholder="Tuition Fee" maxLength={FIELD_MAX.shortText} {...register("feeType")} />
             {errors.feeType && <p className="text-xs text-red-500">{errors.feeType.message}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Amount (₹) *</Label>
-              <Input type="number" min={0} {...register("amount", { setValueAs: (v) => v === "" || v == null ? undefined : parseFloat(v) })} />
+              <Input type="number" min={0} max={10_000_000} {...register("amount", { setValueAs: (v) => v === "" || v == null ? undefined : parseFloat(v) })} />
               {errors.amount && <p className="text-xs text-red-500">{errors.amount.message}</p>}
             </div>
             <div className="space-y-1.5">
@@ -124,7 +125,8 @@ export function CreateFeeStructureDialog({ classes }: Props) {
 
           <div className="space-y-1.5">
             <Label>Description</Label>
-            <Textarea rows={2} {...register("description")} />
+            <Textarea rows={2} maxLength={FIELD_MAX.longText} {...register("description")} />
+            {errors.description && <p className="text-xs text-red-500">{errors.description.message}</p>}
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

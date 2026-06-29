@@ -2,15 +2,16 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
+import { requiredTextField, optionalLongTextField, FIELD_MAX } from "@/lib/field-validation";
 import { z } from "zod";
 
 const createSchema = z.object({
-  feeType: z.string().min(1, "Fee type is required"),
-  amount: z.coerce.number().positive("Amount must be greater than 0"),
+  feeType: requiredTextField("Fee type", FIELD_MAX.shortText),
+  amount: z.coerce.number().positive("Amount must be greater than 0").max(10_000_000, "Amount is too large"),
   classId: z.string().optional(),
   dueDate: z.string().optional(),
   frequency: z.enum(["ONE_TIME", "MONTHLY", "QUARTERLY", "ANNUALLY"]),
-  description: z.string().optional(),
+  description: optionalLongTextField("Description"),
 });
 
 export async function POST(req: Request) {

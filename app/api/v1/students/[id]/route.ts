@@ -3,30 +3,31 @@ import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, badRequest, unauthorized, forbidden, notFound, serverError } from "@/lib/api-response";
 import { imageDataUrl } from "@/lib/validation";
+import { nameField, optionalTextField, optionalLongTextField, emailField, mobileField, aadhaarField } from "@/lib/field-validation";
 import { writeAuditLog, auditAccountStatusChange, clientIp } from "@/lib/audit";
 import { z } from "zod";
 
 const updateSchema = z.object({
-  firstName: z.string().min(1).optional(),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1).optional(),
+  firstName: nameField("First name").optional(),
+  middleName: optionalTextField("Middle name"),
+  lastName: nameField("Last name").optional(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   dob: z.string().optional(),
   bloodGroup: z.string().optional(),
   category: z.string().optional(),
   religion: z.string().optional(),
-  aadhaar: z.string().optional(),
+  aadhaar: aadhaarField(),
   photoUrl: imageDataUrl(2_000_000),
   classId: z.string().min(1).optional(),
   sectionId: z.string().optional(),
-  rollNumber: z.string().optional(),
+  rollNumber: optionalTextField("Roll number"),
   house: z.string().optional(),
-  previousSchool: z.string().optional(),
+  previousSchool: optionalTextField("Previous school"),
   transportRequired: z.boolean().optional(),
   hostelRequired: z.boolean().optional(),
-  medicalNotes: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
-  mobile: z.string().optional(),
+  medicalNotes: optionalLongTextField("Medical notes"),
+  email: emailField(),
+  mobile: mobileField(),
   isActive: z.boolean().optional(),
 });
 

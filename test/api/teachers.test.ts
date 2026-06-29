@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { POST } from "@/app/api/v1/teachers/route";
 import { PUT, DELETE } from "@/app/api/v1/teachers/[id]/route";
 import { prismaMock } from "../mocks/prisma";
 import { setSession, sessionFor } from "../mocks/auth";
@@ -11,6 +12,21 @@ const WRITE_ROLES = ["SUPER_ADMIN", "SCHOOL_ADMIN", "HR_MANAGER"] as const;
 function makeTeacherWithUser(over: Record<string, unknown> = {}) {
   return makeTeacher({ userId: "user-1", user: { isActive: true }, ...over });
 }
+
+describe("POST /api/v1/teachers", () => {
+  it("400s on a malformed mobile number", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+
+    const res = await callRoute(
+      POST,
+      buildRequest("/api/v1/teachers", {
+        method: "POST",
+        body: { name: "New Teacher", mobile: "12345" },
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+});
 
 describe("PUT /api/v1/teachers/[id]", () => {
   const validBody = { name: "Priya Updated", qualification: "M.Ed", experienceYears: 5 };
@@ -47,6 +63,17 @@ describe("PUT /api/v1/teachers/[id]", () => {
     const res = await callRoute(
       PUT,
       buildRequest("/api/v1/teachers/teacher-1", { method: "PUT", body: { email: "not-an-email" } }),
+      paramsCtx({ id: "teacher-1" }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("400s on a malformed Aadhaar number", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    prismaMock.teacher.findUnique.mockResolvedValue(makeTeacherWithUser({ schoolId: "school-1" }) as never);
+    const res = await callRoute(
+      PUT,
+      buildRequest("/api/v1/teachers/teacher-1", { method: "PUT", body: { aadhaar: "12345" } }),
       paramsCtx({ id: "teacher-1" }),
     );
     expect(res.status).toBe(400);

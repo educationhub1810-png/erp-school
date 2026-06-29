@@ -4,15 +4,16 @@ import { getUser } from "@/lib/session";
 import { ok, badRequest, unauthorized, forbidden, notFound, serverError } from "@/lib/api-response";
 import { writeAuditLog, clientIp } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
+import { optionalTextField, emailField, mobileField, addressField, FIELD_MAX } from "@/lib/field-validation";
 import { z } from "zod";
 
 const updateSchema = z.object({
-  name: z.string().min(2).optional(),
-  email: z.string().email().optional().or(z.literal("")),
-  phone: z.string().optional(),
-  principalName: z.string().optional(),
-  address: z.string().optional(),
-  city: z.string().optional(),
+  name: z.string().trim().min(2, "School name is too short").max(FIELD_MAX.name, "School name is too long").optional(),
+  email: emailField(),
+  phone: mobileField(),
+  principalName: optionalTextField("Principal name"),
+  address: addressField(),
+  city: optionalTextField("City"),
   state: z.string().optional(),
   country: z.string().optional(),
   timezone: z.string().optional(),
@@ -20,8 +21,8 @@ const updateSchema = z.object({
   language: z.string().optional(),
   isActive: z.boolean().optional(),
   logo: z.string().optional(),
-  regNumber: z.string().optional(),
-  affiliationNumber: z.string().optional(),
+  regNumber: optionalTextField("Registration number"),
+  affiliationNumber: optionalTextField("Affiliation number"),
 });
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {

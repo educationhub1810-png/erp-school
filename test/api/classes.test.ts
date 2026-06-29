@@ -67,6 +67,12 @@ describe("POST /api/v1/classes", () => {
     expect(res.status).toBe(400);
   });
 
+  it("400s on a capacity that exceeds the max", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    const res = await callRoute(POST, buildRequest("/api/v1/classes", { method: "POST", body: { name: "Nursery", capacity: 5000 } }));
+    expect(res.status).toBe(400);
+  });
+
   it("creates the class under the School Admin's own school, with default sections", async () => {
     setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
     const res = await callRoute(POST, buildRequest("/api/v1/classes", { method: "POST", body: { name: "Nursery" } }));

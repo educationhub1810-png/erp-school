@@ -2,14 +2,15 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
+import { nameField, optionalLongTextField, FIELD_MAX } from "@/lib/field-validation";
 import { z } from "zod";
 
 const createSchema = z.object({
   classId: z.string().min(1, "Class is required"),
   sectionId: z.string().optional(),
   subjectId: z.string().optional(),
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
+  title: nameField("Title", FIELD_MAX.title),
+  description: optionalLongTextField("Description"),
   dueDate: z.string().optional(),
   attachmentUrl: z.string().optional(),
 });

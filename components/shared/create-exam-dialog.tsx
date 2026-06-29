@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { nameField, FIELD_MAX } from "@/lib/field-validation";
 
 const EXAM_TYPES: { value: string; label: string }[] = [
   { value: "UNIT_TEST", label: "Unit Test" },
@@ -23,13 +24,18 @@ const EXAM_TYPES: { value: string; label: string }[] = [
   { value: "EXTERNAL", label: "External" },
 ];
 
-const schema = z.object({
-  classId: z.string().min(1, "Class is required"),
-  name: z.string().min(1, "Exam name is required"),
-  examType: z.enum(["UNIT_TEST", "MID_TERM", "FINAL", "PRACTICAL", "INTERNAL", "EXTERNAL"]),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-});
+const schema = z
+  .object({
+    classId: z.string().min(1, "Class is required"),
+    name: nameField("Exam name", FIELD_MAX.title),
+    examType: z.enum(["UNIT_TEST", "MID_TERM", "FINAL", "PRACTICAL", "INTERNAL", "EXTERNAL"]),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+  })
+  .refine((data) => !data.startDate || !data.endDate || new Date(data.endDate) >= new Date(data.startDate), {
+    message: "End date must be on or after the start date",
+    path: ["endDate"],
+  });
 
 type FormValues = z.infer<typeof schema>;
 
@@ -81,7 +87,7 @@ export function CreateExamDialog({ classes }: Props) {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
           <div className="space-y-1.5">
             <Label>Exam Name *</Label>
-            <Input placeholder="Unit Test 1" {...register("name")} />
+            <Input placeholder="Unit Test 1" maxLength={FIELD_MAX.title} {...register("name")} />
             {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
           </div>
 
@@ -119,7 +125,8 @@ export function CreateExamDialog({ classes }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>End Date</Label>
-              <DatePicker value={watch("endDate")} onChange={(v) => setValue("endDate", v)} placeholder="Select date" />
+              <DatePicker value={watch("endDate")} onChange={(v) => setValue("endDate", v, { shouldValidate: true })} placeholder="Select date" />
+              {errors.endDate && <p className="text-xs text-red-500">{errors.endDate.message}</p>}
             </div>
           </div>
 

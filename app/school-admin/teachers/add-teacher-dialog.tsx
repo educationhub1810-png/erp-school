@@ -12,20 +12,26 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserPlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  nameField, emailField, mobileField, optionalTextField,
+  moneyField, positiveIntField, requiredTextField, FIELD_MAX,
+} from "@/lib/field-validation";
+import { digitsOnlyKeyDown } from "@/lib/field-behavior";
 
 const schema = z.object({
-  name: z.string().min(1, "Name required"),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  mobile: z.string().optional(),
+  name: nameField(),
+  email: emailField(),
+  mobile: mobileField(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
-  qualification: z.string().optional(),
-  experienceYears: z.number().int().min(0).optional(),
-  specialization: z.string().optional(),
+  qualification: optionalTextField("Qualification"),
+  experienceYears: positiveIntField("Experience (years)", { max: 60 }),
+  specialization: optionalTextField("Specialization"),
   joiningDate: z.string().optional(),
-  salary: z.number().min(0).optional(),
-  employeeId: z.string().min(1, "Employee ID required"),
+  salary: moneyField("Salary"),
+  employeeId: requiredTextField("Employee ID"),
 });
 
+type FormInput = z.input<typeof schema>;
 type FormValues = z.infer<typeof schema>;
 
 export function AddTeacherDialog() {
@@ -33,7 +39,7 @@ export function AddTeacherDialog() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { joiningDate: new Date().toISOString().split("T")[0] },
   });
@@ -73,13 +79,13 @@ export function AddTeacherDialog() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="col-span-2 space-y-1.5">
               <Label>Full Name *</Label>
-              <Input placeholder="Priya Singh" {...register("name")} />
+              <Input placeholder="Priya Singh" maxLength={FIELD_MAX.name} {...register("name")} />
               {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label>Employee ID *</Label>
-              <Input placeholder="EMP001" {...register("employeeId")} />
+              <Input placeholder="EMP001" maxLength={FIELD_MAX.shortText} {...register("employeeId")} />
               {errors.employeeId && <p className="text-xs text-red-500">{errors.employeeId.message}</p>}
             </div>
 
@@ -97,33 +103,38 @@ export function AddTeacherDialog() {
 
             <div className="space-y-1.5">
               <Label>Email</Label>
-              <Input type="email" placeholder="teacher@school.com" {...register("email")} />
+              <Input type="email" placeholder="teacher@school.com" maxLength={FIELD_MAX.email} {...register("email")} />
               {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label>Mobile</Label>
-              <Input type="tel" placeholder="9876543210" {...register("mobile")} />
+              <Input type="tel" inputMode="numeric" placeholder="9876543210" maxLength={FIELD_MAX.mobile} onKeyDown={digitsOnlyKeyDown} {...register("mobile")} />
+              {errors.mobile && <p className="text-xs text-red-500">{errors.mobile.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label>Qualification</Label>
-              <Input placeholder="M.Sc Mathematics" {...register("qualification")} />
+              <Input placeholder="M.Sc Mathematics" maxLength={FIELD_MAX.shortText} {...register("qualification")} />
+              {errors.qualification && <p className="text-xs text-red-500">{errors.qualification.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label>Specialization</Label>
-              <Input placeholder="Mathematics" {...register("specialization")} />
+              <Input placeholder="Mathematics" maxLength={FIELD_MAX.shortText} {...register("specialization")} />
+              {errors.specialization && <p className="text-xs text-red-500">{errors.specialization.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label>Experience (years)</Label>
-              <Input type="number" min={0} {...register("experienceYears", { setValueAs: (v) => v === "" || v == null ? undefined : parseInt(v, 10) })} />
+              <Input type="number" min={0} {...register("experienceYears")} />
+              {errors.experienceYears && <p className="text-xs text-red-500">{errors.experienceYears.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label>Monthly Salary (₹)</Label>
-              <Input type="number" min={0} placeholder="45000" {...register("salary", { setValueAs: (v) => v === "" || v == null ? undefined : parseFloat(v) })} />
+              <Input type="number" min={0} placeholder="45000" {...register("salary")} />
+              {errors.salary && <p className="text-xs text-red-500">{errors.salary.message}</p>}
             </div>
 
             <div className="space-y-1.5">

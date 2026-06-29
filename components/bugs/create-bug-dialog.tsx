@@ -13,14 +13,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Bug, Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { BUG_PRIORITY_LABELS, BUG_PRIORITIES, BUG_SCREENSHOT_MAX_BYTES } from "@/lib/bug-config";
+import { requiredTextField } from "@/lib/field-validation";
 import type { BugTicketView } from "./types";
+
+const BUG_TEXT_MAX = 2000;
 
 const schema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title is too long"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
-  description: z.string().min(1, "Description is required"),
-  whatNotWorking: z.string().min(1, "Please describe what is not working"),
-  whatExpected: z.string().min(1, "Please describe what you expected"),
+  description: requiredTextField("Description", BUG_TEXT_MAX),
+  whatNotWorking: requiredTextField("What is not working", BUG_TEXT_MAX),
+  whatExpected: requiredTextField("What is expected", BUG_TEXT_MAX),
   screenshotUrl: z.string().optional(),
 });
 
@@ -119,19 +122,19 @@ export function CreateBugDialog({ onCreated }: Props) {
 
           <div className="space-y-1.5">
             <Label>Description *</Label>
-            <Textarea rows={2} placeholder="Briefly describe the bug" {...register("description")} />
+            <Textarea rows={2} placeholder="Briefly describe the bug" maxLength={BUG_TEXT_MAX} {...register("description")} />
             {errors.description && <p className="text-xs text-red-500">{errors.description.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label>What is not working? *</Label>
-            <Textarea rows={2} placeholder="Describe the current (incorrect) behavior" {...register("whatNotWorking")} />
+            <Textarea rows={2} placeholder="Describe the current (incorrect) behavior" maxLength={BUG_TEXT_MAX} {...register("whatNotWorking")} />
             {errors.whatNotWorking && <p className="text-xs text-red-500">{errors.whatNotWorking.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label>What is expected? *</Label>
-            <Textarea rows={2} placeholder="Describe what should happen instead" {...register("whatExpected")} />
+            <Textarea rows={2} placeholder="Describe what should happen instead" maxLength={BUG_TEXT_MAX} {...register("whatExpected")} />
             {errors.whatExpected && <p className="text-xs text-red-500">{errors.whatExpected.message}</p>}
           </div>
 

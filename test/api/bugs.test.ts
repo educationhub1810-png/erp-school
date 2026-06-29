@@ -56,6 +56,13 @@ describe("POST /api/v1/bugs", () => {
     expect(res.status).toBe(400);
   });
 
+  it("400s when a narrative field is over the max length", async () => {
+    setSession(sessionFor("PRINCIPAL", { schoolId: "school-1" }));
+    const res = await callRoute(POST, buildRequest("/api/v1/bugs", { method: "POST", body: { ...validBody, description: "a".repeat(2001) } }));
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/description is too long/i);
+  });
+
   it("creates a ticket and returns the list-view shape without the screenshot blob", async () => {
     setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
     const res = await callRoute(POST, buildRequest("/api/v1/bugs", { method: "POST", body: validBody }));

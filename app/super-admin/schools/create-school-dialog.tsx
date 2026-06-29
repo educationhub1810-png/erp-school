@@ -13,15 +13,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { Plus, Loader2, AlertCircle, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
+import { nameField, emailField, mobileField, optionalTextField, addressField, FIELD_MAX } from "@/lib/field-validation";
+import { digitsOnlyKeyDown } from "@/lib/field-behavior";
 
 const schema = z.object({
-  name: z.string().min(2, "School name is required"),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  phone: z.string().optional(),
-  principalName: z.string().optional(),
+  name: nameField("School name"),
+  email: emailField(),
+  phone: mobileField(),
+  principalName: optionalTextField("Principal name"),
   establishedDate: z.string().optional(),
-  address: z.string().optional(),
-  city: z.string().optional(),
+  address: addressField(),
+  city: optionalTextField("City"),
   state: z.string().optional(),
   country: z.string().optional(),
   timezone: z.string().optional(),
@@ -113,7 +115,7 @@ export function CreateSchoolDialog() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="col-span-3 space-y-1.5">
               <Label>School Name *</Label>
-              <Input placeholder="Delhi Public School" {...register("name")} />
+              <Input placeholder="Delhi Public School" maxLength={FIELD_MAX.name} {...register("name")} />
               {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
             </div>
 
@@ -124,7 +126,8 @@ export function CreateSchoolDialog() {
 
             <div className="space-y-1.5">
               <Label>Principal Name</Label>
-              <Input placeholder="Dr. Ramesh Sharma" {...register("principalName")} />
+              <Input placeholder="Dr. Ramesh Sharma" maxLength={FIELD_MAX.shortText} {...register("principalName")} />
+              {errors.principalName && <p className="text-xs text-red-500">{errors.principalName.message}</p>}
             </div>
 
             <div className="space-y-1.5">
@@ -139,23 +142,26 @@ export function CreateSchoolDialog() {
 
             <div className="space-y-1.5">
               <Label>Email</Label>
-              <Input type="email" placeholder="admin@school.com" {...register("email")} />
+              <Input type="email" placeholder="admin@school.com" maxLength={FIELD_MAX.email} {...register("email")} />
               {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label>Phone</Label>
-              <Input type="tel" placeholder="9876543210" {...register("phone")} />
+              <Input type="tel" inputMode="numeric" placeholder="9876543210" maxLength={FIELD_MAX.mobile} onKeyDown={digitsOnlyKeyDown} {...register("phone")} />
+              {errors.phone && <p className="text-xs text-red-500">{errors.phone.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label>City</Label>
-              <Input placeholder="New Delhi" {...register("city")} />
+              <Input placeholder="New Delhi" maxLength={FIELD_MAX.shortText} {...register("city")} />
+              {errors.city && <p className="text-xs text-red-500">{errors.city.message}</p>}
             </div>
 
             <div className="col-span-3 space-y-1.5">
               <Label>Address</Label>
-              <Input placeholder="Building, Street, Area" {...register("address")} />
+              <Input placeholder="Building, Street, Area" maxLength={FIELD_MAX.address} {...register("address")} />
+              {errors.address && <p className="text-xs text-red-500">{errors.address.message}</p>}
             </div>
 
             <div className="space-y-1.5">

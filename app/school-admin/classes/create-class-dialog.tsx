@@ -11,12 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { nameField, positiveIntField, FIELD_MAX } from "@/lib/field-validation";
 
 const schema = z.object({
-  name: z.string().min(1, "Class name is required"),
-  capacity: z.string().optional(),
+  name: nameField("Class name"),
+  capacity: positiveIntField("Capacity", { required: false, max: 500 }),
 });
 
+type FormInput = z.input<typeof schema>;
 type FormValues = z.infer<typeof schema>;
 
 export function CreateClassDialog() {
@@ -25,7 +27,7 @@ export function CreateClassDialog() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(schema),
   });
 
@@ -36,7 +38,7 @@ export function CreateClassDialog() {
       const res = await fetch("/api/v1/classes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: data.name, capacity: data.capacity || undefined }),
+        body: JSON.stringify({ name: data.name, capacity: data.capacity ?? undefined }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -72,12 +74,13 @@ export function CreateClassDialog() {
           )}
           <div className="space-y-1.5">
             <Label>Class Name *</Label>
-            <Input placeholder="Nursery, Jr. KG, Class 1..." {...register("name")} />
+            <Input placeholder="Nursery, Jr. KG, Class 1..." maxLength={FIELD_MAX.name} {...register("name")} />
             {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
           </div>
           <div className="space-y-1.5">
             <Label>Capacity</Label>
             <Input type="number" placeholder="40" {...register("capacity")} />
+            {errors.capacity && <p className="text-xs text-red-500">{errors.capacity.message}</p>}
           </div>
           <p className="text-xs text-gray-500">Sections A–G are added automatically.</p>
           <div className="flex justify-end gap-2 pt-2">

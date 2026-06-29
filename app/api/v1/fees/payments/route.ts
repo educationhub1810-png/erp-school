@@ -2,17 +2,18 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { created, badRequest, unauthorized, forbidden, serverError, duplicateValue } from "@/lib/api-response";
+import { optionalTextField, optionalLongTextField } from "@/lib/field-validation";
 import { z } from "zod";
 
 const createSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
   feeStructureId: z.string().min(1, "Fee structure is required"),
-  amountPaid: z.coerce.number().positive("Amount must be greater than 0"),
+  amountPaid: z.coerce.number().positive("Amount must be greater than 0").max(10_000_000, "Amount is too large"),
   paymentDate: z.string().optional(),
   paymentMode: z.enum(["CASH", "CHEQUE", "ONLINE", "NEFT", "UPI", "CARD"]),
-  transactionId: z.string().optional(),
+  transactionId: optionalTextField("Transaction ID"),
   status: z.enum(["PENDING", "PAID", "PARTIAL", "OVERDUE", "CANCELLED"]),
-  remarks: z.string().optional(),
+  remarks: optionalLongTextField("Remarks"),
 });
 
 function generateReceiptNumber(schoolCode: string): string {

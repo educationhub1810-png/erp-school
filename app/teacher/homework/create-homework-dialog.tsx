@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { Plus, Loader2, Upload, X, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { nameField, optionalLongTextField, FIELD_MAX } from "@/lib/field-validation";
 
 const ATTACHMENT_MAX_BYTES = 5 * 1024 * 1024;
 const ATTACHMENT_ACCEPT = "image/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx";
@@ -22,8 +23,8 @@ const schema = z.object({
   classId: z.string().min(1, "Class is required"),
   sectionId: z.string().optional(),
   subjectId: z.string().optional(),
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
+  title: nameField("Title", FIELD_MAX.title),
+  description: optionalLongTextField("Description"),
   dueDate: z.string().optional(),
   attachmentUrl: z.string().optional(),
 });
@@ -107,7 +108,7 @@ export function CreateHomeworkDialog({ classes, subjects }: Props) {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
           <div className="space-y-1.5">
             <Label>Title *</Label>
-            <Input placeholder="Chapter 4 worksheet" {...register("title")} />
+            <Input placeholder="Chapter 4 worksheet" maxLength={FIELD_MAX.title} {...register("title")} />
             {errors.title && <p className="text-xs text-red-500">{errors.title.message}</p>}
           </div>
 
@@ -177,7 +178,8 @@ export function CreateHomeworkDialog({ classes, subjects }: Props) {
 
           <div className="space-y-1.5">
             <Label>Description</Label>
-            <Textarea rows={3} placeholder="Instructions for students" {...register("description")} />
+            <Textarea rows={3} placeholder="Instructions for students" maxLength={FIELD_MAX.longText} {...register("description")} />
+            {errors.description && <p className="text-xs text-red-500">{errors.description.message}</p>}
           </div>
 
           <div className="space-y-1.5">

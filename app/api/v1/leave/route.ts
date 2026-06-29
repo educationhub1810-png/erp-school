@@ -3,13 +3,14 @@ import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { daysBetweenInclusive, LEAVE_TYPES, LEAVE_APPLICANT_ROLE_FOR_APPROVER } from "@/lib/leave";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
+import { FIELD_MAX } from "@/lib/field-validation";
 import { z } from "zod";
 
 const createSchema = z.object({
   fromDate: z.string().min(1, "From date is required"),
   toDate: z.string().min(1, "To date is required"),
   leaveType: z.enum(LEAVE_TYPES as unknown as [string, ...string[]]).default("CASUAL"),
-  reason: z.string().optional(),
+  reason: z.string().trim().max(FIELD_MAX.longText, "Reason is too long").optional(),
 });
 
 export async function GET(req: Request) {
