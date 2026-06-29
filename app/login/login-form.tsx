@@ -204,7 +204,11 @@ export function LoginForm() {
       }),
     });
     const json = await res.json().catch(() => null);
-    return { status: res.status, requires2fa: Boolean(json?.data?.requires2fa) };
+    return {
+      status: res.status,
+      requires2fa: Boolean(json?.data?.requires2fa),
+      error: (json as { error?: string } | null)?.error,
+    };
   };
 
   const onSubmit = async (data: FormValues) => {
@@ -213,7 +217,7 @@ export function LoginForm() {
     try {
       // Which roles need 2FA is configured by Super Admin (DB-backed), so the
       // server decides: ask it first for every login.
-      const { status, requires2fa } = await requestOtp(data);
+      const { status, requires2fa, error: otpError } = await requestOtp(data);
       // 429 = a code is already live (resend throttle); 200+requires2fa = a
       // fresh code was emailed. Either way, move to the code-entry step.
       if (status === 429 || requires2fa) {
@@ -221,6 +225,13 @@ export function LoginForm() {
         setOtp("");
         setOtpStep(true);
         setResendIn(RESEND_COOLDOWN_SECONDS);
+        return;
+      }
+      // The credentials were accepted but the code couldn't be emailed (e.g.
+      // 502 = mail misconfigured). Show that plainly instead of a doomed sign-in
+      // that would look like a wrong password.
+      if (status >= 500) {
+        setError(otpError || "We couldn't send your login code. Please contact support.");
         return;
       }
       // requires2fa=false means either no 2FA for this role, or a wrong password

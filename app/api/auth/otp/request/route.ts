@@ -58,6 +58,24 @@ export async function POST(req: Request) {
   const code = generateOtp();
   const codeHash = await hashOtp(code);
 
+  // Send the code BEFORE persisting it: if email is misconfigured we don't want
+  // to leave a live code the user can never receive, and we want to surface a
+  // clear error instead of a doomed login. 502 = the credentials were fine but
+  // delivery failed.
+  try {
+    await sendOtpEmail(candidate.email, code);
+  } catch (e) {
+    console.error("[otp] failed to send login code", e);
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          "We couldn't send your login code. Email is not configured correctly — please contact support.",
+      },
+      { status: 502 },
+    );
+  }
+
   // Drop any earlier un-consumed codes so only the newest is live.
   await prisma.loginOtp.deleteMany({ where: { userId: candidate.id, consumedAt: null } });
   await prisma.loginOtp.create({
@@ -67,8 +85,6 @@ export async function POST(req: Request) {
       expiresAt: new Date(Date.now() + OTP_TTL_MS),
     },
   });
-
-  await sendOtpEmail(candidate.email, code);
 
   await writeAuditLog({
     action: "OTP_SENT",
