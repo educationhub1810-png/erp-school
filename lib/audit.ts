@@ -13,6 +13,7 @@ export type AuditAction =
   | "ACCOUNT_ACTIVATE"
   | "ACCOUNT_DEACTIVATE"
   | "USER_CREATE"
+  | "USER_UPDATE"
   | "USER_DELETE"
   | "USER_PASSWORD_RESET"
   | "SCHOOL_CREATE"

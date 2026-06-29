@@ -23,6 +23,7 @@ export const AUDIT_ACTION_META: Record<string, AuditActionMeta> = {
   ACCOUNT_ACTIVATE: { label: "Account enabled", category: "SECURITY", badge: "bg-green-100 text-green-700" },
   ACCOUNT_DEACTIVATE: { label: "Account disabled", category: "SECURITY", badge: "bg-red-100 text-red-700" },
   USER_CREATE: { label: "User created", category: "SECURITY", badge: "bg-blue-100 text-blue-700" },
+  USER_UPDATE: { label: "User updated", category: "SECURITY", badge: "bg-amber-100 text-amber-700" },
   USER_PASSWORD_RESET: { label: "Password reset", category: "SECURITY", badge: "bg-amber-100 text-amber-700" },
   SCHOOL_CREATE: { label: "School created", category: "SECURITY", badge: "bg-blue-100 text-blue-700" },
   SCHOOL_ACTIVATE: { label: "School activated", category: "SECURITY", badge: "bg-green-100 text-green-700" },
