@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateSchoolDialog } from "./create-school-dialog";
 import { SchoolToggle } from "./school-toggle";
+import { SchoolQuickActions } from "./school-quick-actions";
 import { Pagination } from "@/components/shared/pagination";
 import { School, Users, GraduationCap, MapPin, Phone, Mail } from "lucide-react";
 
@@ -89,13 +90,16 @@ export default async function SchoolsPage({ searchParams }: Props) {
                   )}
                 </div>
 
-                <div className="flex items-center gap-4 pt-2 border-t text-xs text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <GraduationCap className="w-3.5 h-3.5" /> {school._count.students} students
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Users className="w-3.5 h-3.5" /> {school._count.users} users
-                  </span>
+                <div className="flex items-center justify-between gap-4 pt-2 border-t text-xs text-gray-500">
+                  <div className="flex items-center gap-4">
+                    <span className="flex items-center gap-1">
+                      <GraduationCap className="w-3.5 h-3.5" /> {school._count.students} students
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Users className="w-3.5 h-3.5" /> {school._count.users} users
+                    </span>
+                  </div>
+                  <SchoolQuickActions school={school} />
                 </div>
 
                 <div className="flex items-center justify-between pt-1">

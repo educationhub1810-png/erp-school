@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -45,9 +45,13 @@ interface School {
 
 interface Props {
   schools: School[];
+  /** Pre-select a school (e.g. when triggered from that school's row) — the dropdown still shows, just defaulted. */
+  defaultSchoolId?: string;
+  /** Override the trigger button's contents; the underlying Button/DialogTrigger stay the same. */
+  triggerContent?: ReactNode;
 }
 
-export function CreateTeacherDialog({ schools }: Props) {
+export function CreateTeacherDialog({ schools, defaultSchoolId, triggerContent }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -58,7 +62,7 @@ export function CreateTeacherDialog({ schools }: Props) {
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { schoolId: "" },
+    defaultValues: { schoolId: defaultSchoolId ?? "" },
   });
 
   const selectedSchoolId = watch("schoolId");
@@ -108,8 +112,8 @@ export function CreateTeacherDialog({ schools }: Props) {
         if (!v) reset();
       }}
     >
-      <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700" />}>
-        <UserPlus className="w-4 h-4 mr-2" /> Add Teacher
+      <DialogTrigger render={<Button variant={triggerContent ? "outline" : "default"} size={triggerContent ? "icon-sm" : "default"} className={triggerContent ? "" : "bg-indigo-600 hover:bg-indigo-700"} />}>
+        {triggerContent ?? (<><UserPlus className="w-4 h-4 mr-2" /> Add Teacher</>)}
       </DialogTrigger>
 
       <DialogContent className="max-w-3xl sm:max-w-3xl max-h-[90vh] overflow-y-auto">
