@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -54,12 +54,16 @@ interface Props {
   role: StaffRole;
   roleLabel: string;
   schools: School[];
+  /** Pre-select a school (e.g. when triggered from that school's row) — the dropdown still shows, just defaulted. */
+  defaultSchoolId?: string;
+  /** Override the triggerContent button's contents; the underlying Button/DialogTrigger stay the same. */
+  triggerContent?: ReactNode;
 }
 
 const CODE_LABEL: Partial<Record<StaffRole, string>> = { PRINCIPAL: "Principal Code" };
 const CODE_PREFIX: Partial<Record<StaffRole, string>> = { PRINCIPAL: "PRN" };
 
-export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
+export function CreateStaffDialog({ role, roleLabel, schools, defaultSchoolId, triggerContent }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -84,7 +88,7 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { schoolId: "", name: "" },
+    defaultValues: { schoolId: defaultSchoolId ?? "", name: "" },
   });
 
   const selectedSchoolId = watch("schoolId");
@@ -112,6 +116,13 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 1500);
   };
+
+  // A pre-selected school (e.g. from that school's row) should auto-fill the
+  // Principal's name immediately, same as if the admin had just picked it.
+  useEffect(() => {
+    if (defaultSchoolId) handleSchoolChange(defaultSchoolId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onSubmit = async (data: FormValues) => {
     setLoading(true);
@@ -152,8 +163,8 @@ export function CreateStaffDialog({ role, roleLabel, schools }: Props) {
         if (!v) reset();
       }}
     >
-      <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700" />}>
-        <UserPlus className="w-4 h-4 mr-2" /> Add {roleLabel}
+      <DialogTrigger render={<Button variant={triggerContent ? "outline" : "default"} size={triggerContent ? "icon-sm" : "default"} className={triggerContent ? "" : "bg-indigo-600 hover:bg-indigo-700"} />}>
+        {triggerContent ?? (<><UserPlus className="w-4 h-4 mr-2" /> Add {roleLabel}</>)}
       </DialogTrigger>
 
       <DialogContent className="max-w-3xl sm:max-w-3xl max-h-[90vh] overflow-y-auto">

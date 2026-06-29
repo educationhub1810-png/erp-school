@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ChangeEvent, type KeyboardEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -81,9 +81,13 @@ interface Class {
 
 interface Props {
   schools: School[];
+  /** Pre-select a school (e.g. when triggered from that school's row) — the dropdown still shows, just defaulted. */
+  defaultSchoolId?: string;
+  /** Override the trigger button's contents; the underlying Button/DialogTrigger stay the same. */
+  triggerContent?: ReactNode;
 }
 
-export function CreateStudentDialog({ schools }: Props) {
+export function CreateStudentDialog({ schools, defaultSchoolId, triggerContent }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
@@ -97,7 +101,7 @@ export function CreateStudentDialog({ schools }: Props) {
   const { register, handleSubmit, trigger, watch, setValue, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      schoolId: "",
+      schoolId: defaultSchoolId ?? "",
       classId: "",
       sectionId: "",
       gender: "MALE",
@@ -201,8 +205,8 @@ export function CreateStudentDialog({ schools }: Props) {
         if (!v) { reset(); setStep(0); setClasses([]); }
       }}
     >
-      <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700" />}>
-        <UserPlus className="w-4 h-4 mr-2" /> Add Student
+      <DialogTrigger render={<Button variant={triggerContent ? "outline" : "default"} size={triggerContent ? "icon-sm" : "default"} className={triggerContent ? "" : "bg-indigo-600 hover:bg-indigo-700"} />}>
+        {triggerContent ?? (<><UserPlus className="w-4 h-4 mr-2" /> Add Student</>)}
       </DialogTrigger>
 
       <DialogContent className="max-w-4xl sm:max-w-4xl max-h-[90vh] flex flex-col">
