@@ -13,6 +13,7 @@ import { School as SchoolIcon } from "lucide-react";
 import { UserFilters } from "./user-filters";
 import { DeleteUserAction } from "@/components/shared/delete-user-action";
 import { ResetPasswordAction } from "@/components/shared/reset-password-action";
+import { EditUserAction } from "@/components/shared/edit-user-action";
 
 // Sentinel school value for the "Super Admins" view — these accounts belong to
 // no school. Kept in sync with the same constant in user-filters.tsx.
@@ -178,6 +179,12 @@ export default async function SuperAdminUsersPage({ searchParams }: Props) {
                       </td>
                       <td className="px-6 py-3">
                         <div className="flex justify-end items-center gap-1">
+                          <EditUserAction
+                            userId={user.id}
+                            name={user.name}
+                            email={user.email}
+                            mobile={user.mobile}
+                          />
                           <ResetPasswordAction userId={user.id} name={user.name} />
                           <DeleteUserAction
                             userId={user.id}
