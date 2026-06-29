@@ -15,6 +15,8 @@ import { UserPlus, Loader2, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { ROLE_LABELS } from "@/lib/roles";
 import type { AppRole } from "@/lib/roles";
+import { nameField, emailField, mobileField, FIELD_MAX } from "@/lib/field-validation";
+import { digitsOnlyKeyDown } from "@/lib/field-behavior";
 
 const CREATABLE_ROLES = [
   "PRINCIPAL", "TEACHER", "ACCOUNTANT", "LIBRARIAN",
@@ -22,11 +24,11 @@ const CREATABLE_ROLES = [
 ] as const;
 
 const schema = z.object({
-  name: z.string().min(1, "Required"),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  mobile: z.string().optional(),
+  name: nameField(),
+  email: emailField(),
+  mobile: mobileField(),
   role: z.enum(CREATABLE_ROLES),
-  password: z.string().min(6).optional().or(z.literal("")),
+  password: z.string().min(6).max(72).optional().or(z.literal("")),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -112,7 +114,7 @@ export function CreateUserDialog() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
             <div className="space-y-1.5">
               <Label>Full Name *</Label>
-              <Input placeholder="John Doe" {...register("name")} />
+              <Input placeholder="John Doe" maxLength={FIELD_MAX.name} {...register("name")} />
               {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
             </div>
 
@@ -131,18 +133,20 @@ export function CreateUserDialog() {
 
             <div className="space-y-1.5">
               <Label>Email</Label>
-              <Input type="email" placeholder="user@school.com" {...register("email")} />
+              <Input type="email" placeholder="user@school.com" maxLength={FIELD_MAX.email} {...register("email")} />
               {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label>Mobile</Label>
-              <Input type="tel" placeholder="9876543210" {...register("mobile")} />
+              <Input type="tel" inputMode="numeric" placeholder="9876543210" maxLength={FIELD_MAX.mobile} onKeyDown={digitsOnlyKeyDown} {...register("mobile")} />
+              {errors.mobile && <p className="text-xs text-red-500">{errors.mobile.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label>Password <span className="text-gray-400 text-xs font-normal">(leave blank to auto-generate)</span></Label>
-              <Input type="password" placeholder="Min 6 characters" {...register("password")} />
+              <Input type="password" placeholder="Min 6 characters" maxLength={72} {...register("password")} />
+              {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
             </div>
 
             <div className="flex justify-end gap-2 pt-2">

@@ -12,13 +12,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { nameField, optionalTextField, FIELD_MAX } from "@/lib/field-validation";
 
 const schema = z.object({
   classId: z.string().min(1, "Class is required"),
-  name: z.string().min(1, "Subject name is required"),
-  code: z.string().optional(),
-  totalMarks: z.number().int().min(1).optional(),
-  passMarks: z.number().int().min(0).optional(),
+  name: nameField("Subject name"),
+  code: optionalTextField("Subject code", 20),
+  totalMarks: z.number().int().min(1).max(1000, "Total marks is too large").optional(),
+  passMarks: z.number().int().min(0).max(1000, "Pass marks is too large").optional(),
   teacherId: z.string().optional(),
 });
 
@@ -77,7 +78,7 @@ export function CreateSubjectDialog({ classes, teachers }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="col-span-2 space-y-1.5">
               <Label>Subject Name *</Label>
-              <Input placeholder="Mathematics" {...register("name")} />
+              <Input placeholder="Mathematics" maxLength={FIELD_MAX.name} {...register("name")} />
               {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
             </div>
 
@@ -98,17 +99,20 @@ export function CreateSubjectDialog({ classes, teachers }: Props) {
 
             <div className="space-y-1.5">
               <Label>Subject Code</Label>
-              <Input placeholder="MATH10" {...register("code")} />
+              <Input placeholder="MATH10" maxLength={20} {...register("code")} />
+              {errors.code && <p className="text-xs text-red-500">{errors.code.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label>Total Marks</Label>
-              <Input type="number" min={1} {...register("totalMarks", { setValueAs: (v) => v === "" || v == null ? undefined : parseInt(v, 10) })} />
+              <Input type="number" min={1} max={1000} {...register("totalMarks", { setValueAs: (v) => v === "" || v == null ? undefined : parseInt(v, 10) })} />
+              {errors.totalMarks && <p className="text-xs text-red-500">{errors.totalMarks.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label>Pass Marks</Label>
-              <Input type="number" min={0} {...register("passMarks", { setValueAs: (v) => v === "" || v == null ? undefined : parseInt(v, 10) })} />
+              <Input type="number" min={0} max={1000} {...register("passMarks", { setValueAs: (v) => v === "" || v == null ? undefined : parseInt(v, 10) })} />
+              {errors.passMarks && <p className="text-xs text-red-500">{errors.passMarks.message}</p>}
             </div>
 
             <div className="col-span-2 space-y-1.5">

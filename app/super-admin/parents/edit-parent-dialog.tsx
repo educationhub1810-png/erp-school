@@ -13,21 +13,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { nameField, optionalTextField, emailField, mobileField, aadhaarField, panField, addressField, FIELD_MAX } from "@/lib/field-validation";
+import { digitsOnlyKeyDown } from "@/lib/field-behavior";
 
 const schema = z.object({
   parentType: z.enum(["FATHER", "MOTHER", "GUARDIAN"]),
-  firstName: z.string().min(1, "First name is required"),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1, "Last name is required"),
+  firstName: nameField("First name"),
+  middleName: optionalTextField("Middle name"),
+  lastName: nameField("Last name"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
   dob: z.string().optional(),
   maritalStatus: z.enum(["SINGLE", "MARRIED", "DIVORCED", "WIDOWED"]).optional(),
-  nationality: z.string().optional(),
-  aadhaar: z.string().optional(),
-  pan: z.string().optional(),
-  address: z.string().optional(),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  mobile: z.string().optional(),
+  nationality: optionalTextField("Nationality"),
+  aadhaar: aadhaarField(),
+  pan: panField(),
+  address: addressField(),
+  email: emailField(),
+  mobile: mobileField(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -152,16 +154,17 @@ export function EditParentDialog({ parent, open, onOpenChange }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>First Name *</Label>
-              <Input {...register("firstName")} />
+              <Input maxLength={FIELD_MAX.name} {...register("firstName")} />
               {errors.firstName && <p className="text-xs text-red-500">{errors.firstName.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Middle Name</Label>
-              <Input {...register("middleName")} />
+              <Input maxLength={FIELD_MAX.shortText} {...register("middleName")} />
+              {errors.middleName && <p className="text-xs text-red-500">{errors.middleName.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Last Name *</Label>
-              <Input {...register("lastName")} />
+              <Input maxLength={FIELD_MAX.name} {...register("lastName")} />
               {errors.lastName && <p className="text-xs text-red-500">{errors.lastName.message}</p>}
             </div>
           </div>
@@ -210,32 +213,37 @@ export function EditParentDialog({ parent, open, onOpenChange }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Nationality</Label>
-              <Input {...register("nationality")} placeholder="Indian" />
+              <Input maxLength={FIELD_MAX.shortText} {...register("nationality")} placeholder="Indian" />
+              {errors.nationality && <p className="text-xs text-red-500">{errors.nationality.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Aadhaar Number</Label>
-              <Input {...register("aadhaar")} placeholder="XXXX XXXX XXXX" />
+              <Input inputMode="numeric" maxLength={FIELD_MAX.aadhaar} onKeyDown={digitsOnlyKeyDown} {...register("aadhaar")} placeholder="XXXX XXXX XXXX" />
+              {errors.aadhaar && <p className="text-xs text-red-500">{errors.aadhaar.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>PAN Number</Label>
-              <Input {...register("pan")} placeholder="ABCDE1234F" />
+              <Input maxLength={FIELD_MAX.pan} {...register("pan")} placeholder="ABCDE1234F" />
+              {errors.pan && <p className="text-xs text-red-500">{errors.pan.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
             <Label>Address</Label>
-            <Input {...register("address")} />
+            <Input maxLength={FIELD_MAX.address} {...register("address")} />
+            {errors.address && <p className="text-xs text-red-500">{errors.address.message}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Email</Label>
-              <Input type="email" {...register("email")} />
+              <Input type="email" maxLength={FIELD_MAX.email} {...register("email")} />
               {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Mobile</Label>
-              <Input type="tel" {...register("mobile")} />
+              <Input type="tel" inputMode="numeric" maxLength={FIELD_MAX.mobile} onKeyDown={digitsOnlyKeyDown} {...register("mobile")} />
+              {errors.mobile && <p className="text-xs text-red-500">{errors.mobile.message}</p>}
             </div>
           </div>
 

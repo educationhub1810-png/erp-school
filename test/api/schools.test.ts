@@ -38,6 +38,15 @@ describe("POST /api/v1/schools", () => {
     expect(res.status).toBe(400);
   });
 
+  it("400s on an invalid phone number", async () => {
+    setSession(sessionFor("SUPER_ADMIN"));
+    const res = await callRoute(
+      POST,
+      buildRequest("/api/v1/schools", { method: "POST", body: { name: "Greenwood High", phone: "123" } }),
+    );
+    expect(res.status).toBe(400);
+  });
+
   it("creates the school and seeds it with the 15 default classes", async () => {
     setSession(sessionFor("SUPER_ADMIN"));
     const res = await callRoute(POST, buildRequest("/api/v1/schools", { method: "POST", body: validBody }));

@@ -3,16 +3,17 @@ import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
 import { writeAuditLog, clientIp } from "@/lib/audit";
+import { nameField, emailField, mobileField } from "@/lib/field-validation";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
 const createSchema = z.object({
   schoolId: z.string().optional(),
-  name: z.string().min(1, "Name required"),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  mobile: z.string().optional(),
+  name: nameField(),
+  email: emailField(),
+  mobile: mobileField(),
   role: z.enum(["PRINCIPAL", "TEACHER", "STUDENT", "PARENT", "ACCOUNTANT", "LIBRARIAN", "TRANSPORT_MANAGER", "HR_MANAGER", "WARDEN_MANAGER", "MESS_MANAGER"]),
-  password: z.string().min(6, "Min 6 characters").optional(),
+  password: z.string().min(6, "Min 6 characters").max(72, "Password is too long").optional(),
 });
 
 export async function GET(req: Request) {

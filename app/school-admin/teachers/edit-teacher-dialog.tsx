@@ -12,23 +12,29 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  nameField, emailField, mobileField, aadhaarField, panField, ifscField,
+  accountNumberField, moneyField, positiveIntField, optionalTextField, FIELD_MAX,
+} from "@/lib/field-validation";
+import { digitsOnlyKeyDown } from "@/lib/field-behavior";
 
 const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  mobile: z.string().optional(),
+  name: nameField(),
+  email: emailField(),
+  mobile: mobileField(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
-  qualification: z.string().optional(),
-  experienceYears: z.string().optional(),
-  specialization: z.string().optional(),
-  salary: z.string().optional(),
-  pan: z.string().optional(),
-  aadhaar: z.string().optional(),
-  bankName: z.string().optional(),
-  accountNumber: z.string().optional(),
-  ifscCode: z.string().optional(),
+  qualification: optionalTextField("Qualification"),
+  experienceYears: positiveIntField("Experience (years)", { max: 60 }),
+  specialization: optionalTextField("Specialization"),
+  salary: moneyField("Salary"),
+  pan: panField(),
+  aadhaar: aadhaarField(),
+  bankName: optionalTextField("Bank name"),
+  accountNumber: accountNumberField(),
+  ifscCode: ifscField(),
 });
 
+type FormInput = z.input<typeof schema>;
 type FormValues = z.infer<typeof schema>;
 
 export interface EditableTeacher {
@@ -56,7 +62,7 @@ export function EditTeacherDialog({ teacher, open, onOpenChange }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(schema),
   });
 
@@ -85,11 +91,7 @@ export function EditTeacherDialog({ teacher, open, onOpenChange }: Props) {
       const res = await fetch(`/api/v1/teachers/${teacher.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          experienceYears: data.experienceYears ? Number(data.experienceYears) : undefined,
-          salary: data.salary ? Number(data.salary) : undefined,
-        }),
+        body: JSON.stringify(data),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -121,7 +123,7 @@ export function EditTeacherDialog({ teacher, open, onOpenChange }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Full Name *</Label>
-              <Input {...register("name")} />
+              <Input maxLength={FIELD_MAX.name} {...register("name")} />
               {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
             </div>
             <div className="space-y-1.5">
@@ -140,27 +142,31 @@ export function EditTeacherDialog({ teacher, open, onOpenChange }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Email</Label>
-              <Input type="email" {...register("email")} />
+              <Input type="email" maxLength={FIELD_MAX.email} {...register("email")} />
               {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Mobile</Label>
-              <Input type="tel" {...register("mobile")} />
+              <Input type="tel" inputMode="numeric" maxLength={FIELD_MAX.mobile} onKeyDown={digitsOnlyKeyDown} {...register("mobile")} />
+              {errors.mobile && <p className="text-xs text-red-500">{errors.mobile.message}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Qualification</Label>
-              <Input {...register("qualification")} />
+              <Input maxLength={FIELD_MAX.shortText} {...register("qualification")} />
+              {errors.qualification && <p className="text-xs text-red-500">{errors.qualification.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Specialization</Label>
-              <Input {...register("specialization")} />
+              <Input maxLength={FIELD_MAX.shortText} {...register("specialization")} />
+              {errors.specialization && <p className="text-xs text-red-500">{errors.specialization.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Experience (years)</Label>
               <Input type="number" min={0} {...register("experienceYears")} />
+              {errors.experienceYears && <p className="text-xs text-red-500">{errors.experienceYears.message}</p>}
             </div>
           </div>
 
@@ -169,28 +175,34 @@ export function EditTeacherDialog({ teacher, open, onOpenChange }: Props) {
             <div className="space-y-1.5">
               <Label>Salary</Label>
               <Input type="number" min={0} {...register("salary")} />
+              {errors.salary && <p className="text-xs text-red-500">{errors.salary.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>PAN</Label>
-              <Input {...register("pan")} />
+              <Input maxLength={FIELD_MAX.pan} {...register("pan")} />
+              {errors.pan && <p className="text-xs text-red-500">{errors.pan.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Aadhaar No.</Label>
-              <Input {...register("aadhaar")} />
+              <Input inputMode="numeric" maxLength={FIELD_MAX.aadhaar} onKeyDown={digitsOnlyKeyDown} {...register("aadhaar")} />
+              {errors.aadhaar && <p className="text-xs text-red-500">{errors.aadhaar.message}</p>}
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Bank Name</Label>
-              <Input {...register("bankName")} />
+              <Input maxLength={FIELD_MAX.shortText} {...register("bankName")} />
+              {errors.bankName && <p className="text-xs text-red-500">{errors.bankName.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Account Number</Label>
-              <Input {...register("accountNumber")} />
+              <Input inputMode="numeric" maxLength={FIELD_MAX.accountNumber} onKeyDown={digitsOnlyKeyDown} {...register("accountNumber")} />
+              {errors.accountNumber && <p className="text-xs text-red-500">{errors.accountNumber.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>IFSC Code</Label>
-              <Input {...register("ifscCode")} />
+              <Input maxLength={FIELD_MAX.ifsc} {...register("ifscCode")} />
+              {errors.ifscCode && <p className="text-xs text-red-500">{errors.ifscCode.message}</p>}
             </div>
           </div>
 

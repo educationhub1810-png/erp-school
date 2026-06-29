@@ -4,24 +4,28 @@ import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError, duplicateValue } from "@/lib/api-response";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import {
+  nameField, emailField, mobileField, aadhaarField, panField, ifscField,
+  accountNumberField, moneyField, positiveIntField, optionalTextField,
+} from "@/lib/field-validation";
 
 const createSchema = z.object({
   schoolId: z.string().optional(),
-  name: z.string().min(1, "Name required"),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  mobile: z.string().optional(),
+  name: nameField(),
+  email: emailField(),
+  mobile: mobileField(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   dob: z.string().optional(),
-  qualification: z.string().optional(),
-  experienceYears: z.number().int().optional(),
-  specialization: z.string().optional(),
+  qualification: optionalTextField("Qualification"),
+  experienceYears: positiveIntField("Experience (years)", { max: 60 }),
+  specialization: optionalTextField("Specialization"),
   joiningDate: z.string().optional(),
-  salary: z.number().optional(),
-  pan: z.string().optional(),
-  aadhaar: z.string().optional(),
-  bankName: z.string().optional(),
-  accountNumber: z.string().optional(),
-  ifscCode: z.string().optional(),
+  salary: moneyField("Salary"),
+  pan: panField(),
+  aadhaar: aadhaarField(),
+  bankName: optionalTextField("Bank name"),
+  accountNumber: accountNumberField(),
+  ifscCode: ifscField(),
 });
 
 export async function GET(req: Request) {

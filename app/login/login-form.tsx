@@ -302,6 +302,7 @@ export function LoginForm() {
                     id="username"
                     type="text"
                     placeholder={`Enter ${usernameLabel.toLowerCase()}`}
+                    maxLength={254}
                     {...register("username")}
                     autoComplete="username"
                     className="pl-10"
@@ -327,6 +328,7 @@ export function LoginForm() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder={usesDobPassword ? "e.g. 15082005" : "Enter your password"}
+                    maxLength={72}
                     {...register("password")}
                     autoComplete="current-password"
                     className="pl-10 pr-10"

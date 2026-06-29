@@ -6,31 +6,35 @@ import { formatDobAsPassword } from "@/lib/utils";
 import { DOB_PASSWORD_STAFF_ROLES } from "@/lib/roles";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import {
+  nameField, emailField, mobileField, aadhaarField, panField, ifscField,
+  accountNumberField, moneyField, positiveIntField, optionalTextField,
+} from "@/lib/field-validation";
 
 const STAFF_ROLES = ["PRINCIPAL", "ACCOUNTANT", "LIBRARIAN", "TRANSPORT_MANAGER", "HR_MANAGER", "WARDEN_MANAGER", "MESS_MANAGER"] as const;
 
 const createSchema = z.object({
   schoolId: z.string().optional(),
   role: z.enum(STAFF_ROLES),
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  mobile: z.string().optional(),
-  employeeId: z.string().optional(),
-  department: z.string().optional(),
-  designation: z.string().optional(),
+  name: nameField(),
+  email: emailField(),
+  mobile: mobileField(),
+  employeeId: optionalTextField("Employee ID"),
+  department: optionalTextField("Department"),
+  designation: optionalTextField("Designation"),
   dob: z.string().optional(),
   joiningDate: z.string().optional(),
-  salary: z.coerce.number().optional(),
-  pan: z.string().optional(),
-  aadhaar: z.string().optional(),
-  bankName: z.string().optional(),
-  accountNumber: z.string().optional(),
-  ifscCode: z.string().optional(),
-  qualification: z.string().optional(),
-  experienceYears: z.coerce.number().int().optional(),
-  licenseNumber: z.string().optional(),
-  vehicleNumber: z.string().optional(),
-  assignedBlock: z.string().optional(),
+  salary: moneyField("Salary"),
+  pan: panField(),
+  aadhaar: aadhaarField(),
+  bankName: optionalTextField("Bank name"),
+  accountNumber: accountNumberField(),
+  ifscCode: ifscField(),
+  qualification: optionalTextField("Qualification"),
+  experienceYears: positiveIntField("Experience (years)", { max: 60 }),
+  licenseNumber: optionalTextField("License number"),
+  vehicleNumber: optionalTextField("Vehicle number"),
+  assignedBlock: optionalTextField("Assigned block"),
 });
 
 export async function GET(req: Request) {

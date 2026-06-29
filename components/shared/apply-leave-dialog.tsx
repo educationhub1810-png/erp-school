@@ -14,13 +14,14 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { LEAVE_TYPES, LEAVE_TYPE_LABELS, daysBetweenInclusive } from "@/lib/leave";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { FIELD_MAX } from "@/lib/field-validation";
 
 const schema = z
   .object({
     fromDate: z.string().min(1, "From date is required"),
     toDate: z.string().min(1, "To date is required"),
     leaveType: z.enum(LEAVE_TYPES as unknown as [string, ...string[]]),
-    reason: z.string().min(5, "Please provide a reason"),
+    reason: z.string().trim().min(5, "Please provide a reason").max(FIELD_MAX.longText, "Reason is too long"),
   })
   .refine((data) => new Date(data.toDate) >= new Date(data.fromDate), {
     message: "To date must be on or after the from date",
@@ -103,7 +104,7 @@ export function ApplyLeaveDialog() {
 
           <div className="space-y-1.5">
             <Label>Reason *</Label>
-            <Textarea rows={3} placeholder="Describe the reason for leave..." {...register("reason")} />
+            <Textarea rows={3} placeholder="Describe the reason for leave..." maxLength={FIELD_MAX.longText} {...register("reason")} />
             {errors.reason && <p className="text-xs text-red-500">{errors.reason.message}</p>}
           </div>
 

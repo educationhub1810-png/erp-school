@@ -24,6 +24,19 @@ describe("POST /api/v1/staff", () => {
     expect(res.status).toBe(400);
   });
 
+  it("400s on a malformed mobile number", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+
+    const res = await callRoute(
+      POST,
+      buildRequest("/api/v1/staff", {
+        method: "POST",
+        body: { role: "ACCOUNTANT", name: "New Accountant", employeeId: "ACC100", mobile: "12345" },
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
   it("hashes the Principal's date of birth (DDMMYYYY) as their login password", async () => {
     setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
     prismaMock.school.findUnique.mockResolvedValue({ name: "Delhi Public School" } as never);
@@ -113,6 +126,17 @@ describe("PUT /api/v1/staff/[id]", () => {
     const res = await callRoute(
       PUT,
       buildRequest("/api/v1/staff/staff-1", { method: "PUT", body: { email: "not-an-email" } }),
+      paramsCtx({ id: "staff-1" }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("400s on a malformed Aadhaar number", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    prismaMock.staff.findUnique.mockResolvedValue(makeStaff({ schoolId: "school-1" }) as never);
+    const res = await callRoute(
+      PUT,
+      buildRequest("/api/v1/staff/staff-1", { method: "PUT", body: { aadhaar: "12345" } }),
       paramsCtx({ id: "staff-1" }),
     );
     expect(res.status).toBe(400);

@@ -3,22 +3,23 @@ import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, badRequest, unauthorized, forbidden, notFound, serverError } from "@/lib/api-response";
 import { writeAuditLog, auditAccountStatusChange, clientIp } from "@/lib/audit";
+import { nameField, optionalTextField, emailField, mobileField, aadhaarField, panField, addressField } from "@/lib/field-validation";
 import { z } from "zod";
 
 const updateSchema = z.object({
   parentType: z.enum(["FATHER", "MOTHER", "GUARDIAN"]).optional(),
-  firstName: z.string().min(1).optional(),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1).optional(),
+  firstName: nameField("First name").optional(),
+  middleName: optionalTextField("Middle name"),
+  lastName: nameField("Last name").optional(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   dob: z.string().optional(),
   maritalStatus: z.enum(["SINGLE", "MARRIED", "DIVORCED", "WIDOWED"]).optional(),
-  nationality: z.string().optional(),
-  aadhaar: z.string().optional(),
-  pan: z.string().optional(),
-  address: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
-  mobile: z.string().optional(),
+  nationality: optionalTextField("Nationality"),
+  aadhaar: aadhaarField(),
+  pan: panField(),
+  address: addressField(),
+  email: emailField(),
+  mobile: mobileField(),
   isActive: z.boolean().optional(),
 });
 

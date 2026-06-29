@@ -5,15 +5,17 @@ import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@
 import { BUG_SCREENSHOT_MAX_CHARS } from "@/lib/bug-config";
 import { getBugTicketsForUser } from "@/lib/bug-tickets";
 import { imageDataUrl } from "@/lib/validation";
+import { requiredTextField } from "@/lib/field-validation";
 import { z } from "zod";
 
 const BOARD_ROLES = ["SUPER_ADMIN", "SCHOOL_ADMIN", "PRINCIPAL"] as const;
+const BUG_TEXT_MAX = 2000;
 
 const createSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title is too long"),
-  description: z.string().min(1, "Description is required"),
-  whatNotWorking: z.string().min(1, "Please describe what is not working"),
-  whatExpected: z.string().min(1, "Please describe what you expected"),
+  description: requiredTextField("Description", BUG_TEXT_MAX),
+  whatNotWorking: requiredTextField("What is not working", BUG_TEXT_MAX),
+  whatExpected: requiredTextField("What is expected", BUG_TEXT_MAX),
   priority: z.enum(["LOW", "MEDIUM", "HIGH"]).optional(),
   screenshotUrl: imageDataUrl(BUG_SCREENSHOT_MAX_CHARS),
 });

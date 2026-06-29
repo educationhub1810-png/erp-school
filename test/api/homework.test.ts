@@ -73,6 +73,13 @@ describe("POST /api/v1/homework", () => {
     expect(res.body.error).toMatch(/title is required/i);
   });
 
+  it("400s when the title is over the max length", async () => {
+    setSession(sessionFor("TEACHER", { schoolId: "school-1" }));
+    const res = await callRoute(POST, buildRequest("/api/v1/homework", { method: "POST", body: { ...validBody, title: "a".repeat(201) } }));
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/title is too long/i);
+  });
+
   it("rejects a class that does not belong to the school", async () => {
     setSession(sessionFor("TEACHER", { schoolId: "school-1" }));
     prismaMock.class.findFirst.mockResolvedValue(null as never);

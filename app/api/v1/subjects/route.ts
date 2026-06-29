@@ -2,14 +2,15 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError, duplicateValue } from "@/lib/api-response";
+import { nameField, optionalTextField } from "@/lib/field-validation";
 import { z } from "zod";
 
 const createSchema = z.object({
   classId: z.string().min(1, "Class is required"),
-  name: z.string().min(1, "Subject name is required"),
-  code: z.string().optional(),
-  totalMarks: z.coerce.number().int().optional(),
-  passMarks: z.coerce.number().int().optional(),
+  name: nameField("Subject name"),
+  code: optionalTextField("Subject code", 20),
+  totalMarks: z.coerce.number().int().min(1).max(1000, "Total marks is too large").optional(),
+  passMarks: z.coerce.number().int().min(0).max(1000, "Pass marks is too large").optional(),
   teacherId: z.string().optional(),
 });
 

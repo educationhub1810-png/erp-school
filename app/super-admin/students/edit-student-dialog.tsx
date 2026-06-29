@@ -16,29 +16,31 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { getStudentAvatarSrc } from "@/lib/student-avatar";
+import { nameField, optionalTextField, optionalLongTextField, emailField, mobileField, FIELD_MAX } from "@/lib/field-validation";
+import { digitsOnlyKeyDown } from "@/lib/field-behavior";
 
 const MAX_PHOTO_BYTES = 1_500_000;
 
 const schema = z.object({
-  firstName: z.string().min(1, "Required"),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1, "Required"),
+  firstName: nameField("First name"),
+  middleName: optionalTextField("Middle name"),
+  lastName: nameField("Last name"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
   dob: z.string().min(1, "Date of birth is required"),
   bloodGroup: z.string().optional(),
   category: z.string().optional(),
   religion: z.string().optional(),
   photoUrl: z.string().optional(),
-  rollNumber: z.string().optional(),
+  rollNumber: optionalTextField("Roll number"),
   classId: z.string().min(1, "Class is required"),
   sectionId: z.string().optional(),
   house: z.string().optional(),
-  previousSchool: z.string().optional(),
+  previousSchool: optionalTextField("Previous school"),
   transportRequired: z.boolean(),
   hostelRequired: z.boolean(),
-  medicalNotes: z.string().optional(),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  mobile: z.string().optional(),
+  medicalNotes: optionalLongTextField("Medical notes"),
+  email: emailField(),
+  mobile: mobileField(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -212,16 +214,17 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>First Name *</Label>
-              <Input {...register("firstName")} />
+              <Input maxLength={FIELD_MAX.name} {...register("firstName")} />
               {errors.firstName && <p className="text-xs text-red-500">{errors.firstName.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Middle Name</Label>
-              <Input {...register("middleName")} />
+              <Input maxLength={FIELD_MAX.name} {...register("middleName")} />
+              {errors.middleName && <p className="text-xs text-red-500">{errors.middleName.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Last Name *</Label>
-              <Input {...register("lastName")} />
+              <Input maxLength={FIELD_MAX.name} {...register("lastName")} />
               {errors.lastName && <p className="text-xs text-red-500">{errors.lastName.message}</p>}
             </div>
           </div>
@@ -280,7 +283,8 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>Roll Number</Label>
-              <Input {...register("rollNumber")} />
+              <Input maxLength={FIELD_MAX.shortText} {...register("rollNumber")} />
+              {errors.rollNumber && <p className="text-xs text-red-500">{errors.rollNumber.message}</p>}
             </div>
           </div>
 
@@ -333,19 +337,21 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>Previous School</Label>
-              <Input {...register("previousSchool")} />
+              <Input maxLength={FIELD_MAX.shortText} {...register("previousSchool")} />
+              {errors.previousSchool && <p className="text-xs text-red-500">{errors.previousSchool.message}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Email</Label>
-              <Input type="email" {...register("email")} />
+              <Input type="email" maxLength={FIELD_MAX.email} {...register("email")} />
               {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Mobile</Label>
-              <Input type="tel" {...register("mobile")} />
+              <Input type="tel" inputMode="numeric" maxLength={FIELD_MAX.mobile} onKeyDown={digitsOnlyKeyDown} {...register("mobile")} />
+              {errors.mobile && <p className="text-xs text-red-500">{errors.mobile.message}</p>}
             </div>
           </div>
 
@@ -362,7 +368,8 @@ export function EditStudentDialog({ student, open, onOpenChange }: Props) {
 
           <div className="space-y-1.5">
             <Label>Medical Notes</Label>
-            <Textarea rows={2} {...register("medicalNotes")} />
+            <Textarea rows={2} maxLength={FIELD_MAX.longText} {...register("medicalNotes")} />
+            {errors.medicalNotes && <p className="text-xs text-red-500">{errors.medicalNotes.message}</p>}
           </div>
 
           <DialogFooter>

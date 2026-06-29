@@ -51,6 +51,22 @@ describe("CreateClassDialog", () => {
     expect(body.name).toBe("Nursery");
   });
 
+  it("shows a validation error when capacity exceeds the max", async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, data: { id: "class-new", name: "Nursery" } }),
+    });
+    const user = userEvent.setup();
+    render(<CreateClassDialog />);
+    await user.click(screen.getByRole("button", { name: /add class/i }));
+    await user.type(screen.getByPlaceholderText(/nursery, jr\. kg/i), "Nursery");
+    await user.type(screen.getByPlaceholderText("40"), "5000");
+    await user.click(submitButton());
+
+    expect(await screen.findByText(/capacity is too large/i)).toBeInTheDocument();
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
   it("shows the server's error message on failure", async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: false,

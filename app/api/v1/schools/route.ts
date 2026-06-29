@@ -4,16 +4,17 @@ import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@
 import { writeAuditLog, clientIp } from "@/lib/audit";
 import { seedDefaultClasses } from "@/lib/default-classes";
 import { revalidatePath } from "next/cache";
+import { optionalTextField, emailField, mobileField, addressField, FIELD_MAX } from "@/lib/field-validation";
 import { z } from "zod";
 
 const createSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email().optional().or(z.literal("")),
-  phone: z.string().optional(),
-  principalName: z.string().optional(),
+  name: z.string().trim().min(2, "School name is too short").max(FIELD_MAX.name, "School name is too long"),
+  email: emailField(),
+  phone: mobileField(),
+  principalName: optionalTextField("Principal name"),
   establishedDate: z.string().optional().or(z.literal("")),
-  address: z.string().optional(),
-  city: z.string().optional(),
+  address: addressField(),
+  city: optionalTextField("City"),
   state: z.string().optional(),
   country: z.string().default("India"),
   timezone: z.string().default("Asia/Kolkata"),

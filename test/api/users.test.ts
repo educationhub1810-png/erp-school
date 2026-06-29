@@ -64,6 +64,15 @@ describe("POST /api/v1/users", () => {
     expect(res.status).toBe(400);
   });
 
+  it("400s on an invalid mobile number", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    const res = await callRoute(
+      POST,
+      buildRequest("/api/v1/users", { method: "POST", body: { name: "New Accountant", role: "ACCOUNTANT", mobile: "12345" } }),
+    );
+    expect(res.status).toBe(400);
+  });
+
   it("creates the user under the School Admin's own school for non-admin roles", async () => {
     setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
     prismaMock.user.findUnique.mockResolvedValue(null as never);

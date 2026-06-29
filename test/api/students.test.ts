@@ -97,6 +97,18 @@ describe("POST /api/v1/students", () => {
     expect(res.status).toBe(400);
   });
 
+  it("400s on a malformed mobile number", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    const res = await callRoute(POST, buildRequest("/api/v1/students", { method: "POST", body: { ...validBody, mobile: "12345" } }));
+    expect(res.status).toBe(400);
+  });
+
+  it("400s on a malformed Aadhaar number", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    const res = await callRoute(POST, buildRequest("/api/v1/students", { method: "POST", body: { ...validBody, aadhaar: "123" } }));
+    expect(res.status).toBe(400);
+  });
+
   it("rejects a class that does not belong to the chosen school", async () => {
     setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
     prismaMock.class.findFirst.mockResolvedValue(null as never);
@@ -167,6 +179,17 @@ describe("PUT /api/v1/students/[id]", () => {
       paramsCtx({ id: "x" }),
     );
     expect(res.status).toBe(403);
+  });
+
+  it("400s on a malformed mobile number", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    prismaMock.student.findUnique.mockResolvedValue(makeStudent({ schoolId: "school-1" }) as never);
+    const res = await callRoute(
+      PUT,
+      buildRequest("/api/v1/students/student-1", { method: "PUT", body: { mobile: "12345" } }),
+      paramsCtx({ id: "student-1" }),
+    );
+    expect(res.status).toBe(400);
   });
 });
 

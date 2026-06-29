@@ -13,27 +13,34 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ROLE_FIELDS, type StaffRole } from "@/app/super-admin/_staff/role-fields";
+import {
+  nameField, emailField, mobileField, aadhaarField, panField, ifscField,
+  accountNumberField, moneyField, positiveIntField, optionalTextField,
+  FIELD_MAX,
+} from "@/lib/field-validation";
+import { digitsOnlyKeyDown } from "@/lib/field-behavior";
 
 const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  mobile: z.string().optional(),
-  department: z.string().optional(),
-  designation: z.string().optional(),
+  name: nameField(),
+  email: emailField(),
+  mobile: mobileField(),
+  department: optionalTextField("Department"),
+  designation: optionalTextField("Designation"),
   joiningDate: z.string().optional(),
-  salary: z.string().optional(),
-  pan: z.string().optional(),
-  aadhaar: z.string().optional(),
-  bankName: z.string().optional(),
-  accountNumber: z.string().optional(),
-  ifscCode: z.string().optional(),
-  qualification: z.string().optional(),
-  experienceYears: z.string().optional(),
-  licenseNumber: z.string().optional(),
-  vehicleNumber: z.string().optional(),
-  assignedBlock: z.string().optional(),
+  salary: moneyField("Salary"),
+  pan: panField(),
+  aadhaar: aadhaarField(),
+  bankName: optionalTextField("Bank name"),
+  accountNumber: accountNumberField(),
+  ifscCode: ifscField(),
+  qualification: optionalTextField("Qualification"),
+  experienceYears: positiveIntField("Experience (years)", { max: 60 }),
+  licenseNumber: optionalTextField("License number"),
+  vehicleNumber: optionalTextField("Vehicle number"),
+  assignedBlock: optionalTextField("Assigned block"),
 });
 
+type FormInput = z.input<typeof schema>;
 type FormValues = z.infer<typeof schema>;
 
 export interface EditableStaff {
@@ -68,7 +75,7 @@ export function EditStaffDialog({ role, roleLabel, staff, open, onOpenChange }: 
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(schema),
   });
 
@@ -81,14 +88,14 @@ export function EditStaffDialog({ role, roleLabel, staff, open, onOpenChange }: 
       department: staff.department || "",
       designation: staff.designation || "",
       joiningDate: staff.joiningDate ? new Date(staff.joiningDate).toISOString().split("T")[0] : "",
-      salary: staff.salary != null ? String(staff.salary) : "",
+      salary: staff.salary ?? undefined,
       pan: staff.pan || "",
       aadhaar: staff.aadhaar || "",
       bankName: staff.bankName || "",
       accountNumber: staff.accountNumber || "",
       ifscCode: staff.ifscCode || "",
       qualification: staff.qualification || "",
-      experienceYears: staff.experienceYears != null ? String(staff.experienceYears) : "",
+      experienceYears: staff.experienceYears ?? undefined,
       licenseNumber: staff.licenseNumber || "",
       vehicleNumber: staff.vehicleNumber || "",
       assignedBlock: staff.assignedBlock || "",
@@ -101,11 +108,7 @@ export function EditStaffDialog({ role, roleLabel, staff, open, onOpenChange }: 
       const res = await fetch(`/api/v1/staff/${staff.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          salary: data.salary ? Number(data.salary) : undefined,
-          experienceYears: data.experienceYears ? Number(data.experienceYears) : undefined,
-        }),
+        body: JSON.stringify(data),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -140,19 +143,20 @@ export function EditStaffDialog({ role, roleLabel, staff, open, onOpenChange }: 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Full Name *</Label>
-              <Input {...register("name")} />
+              <Input maxLength={FIELD_MAX.name} {...register("name")} />
               {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Email</Label>
-              <Input type="email" {...register("email")} />
+              <Input type="email" maxLength={FIELD_MAX.email} {...register("email")} />
               {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
             <Label>Mobile</Label>
-            <Input type="tel" {...register("mobile")} />
+            <Input type="tel" inputMode="numeric" maxLength={FIELD_MAX.mobile} onKeyDown={digitsOnlyKeyDown} {...register("mobile")} />
+            {errors.mobile && <p className="text-xs text-red-500">{errors.mobile.message}</p>}
           </div>
 
           <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{roleLabel} Details</p>
@@ -160,7 +164,13 @@ export function EditStaffDialog({ role, roleLabel, staff, open, onOpenChange }: 
             {ROLE_FIELDS[role].map((field) => (
               <div key={field.key} className="space-y-1.5">
                 <Label>{field.label}</Label>
-                <Input type={field.type === "number" ? "number" : "text"} placeholder={field.placeholder} {...register(field.key)} />
+                <Input
+                  type={field.type === "number" ? "number" : "text"}
+                  placeholder={field.placeholder}
+                  maxLength={field.type === "number" ? undefined : FIELD_MAX.shortText}
+                  {...register(field.key)}
+                />
+                {errors[field.key] && <p className="text-xs text-red-500">{errors[field.key]?.message}</p>}
               </div>
             ))}
             <div className="space-y-1.5">
@@ -170,6 +180,7 @@ export function EditStaffDialog({ role, roleLabel, staff, open, onOpenChange }: 
             <div className="space-y-1.5">
               <Label>Salary</Label>
               <Input type="number" {...register("salary")} />
+              {errors.salary && <p className="text-xs text-red-500">{errors.salary.message}</p>}
             </div>
           </div>
 
@@ -177,26 +188,30 @@ export function EditStaffDialog({ role, roleLabel, staff, open, onOpenChange }: 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>PAN</Label>
-              <Input {...register("pan")} />
+              <Input maxLength={FIELD_MAX.pan} {...register("pan")} />
+              {errors.pan && <p className="text-xs text-red-500">{errors.pan.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Aadhaar No.</Label>
-              <Input {...register("aadhaar")} />
+              <Input inputMode="numeric" maxLength={FIELD_MAX.aadhaar} onKeyDown={digitsOnlyKeyDown} {...register("aadhaar")} />
+              {errors.aadhaar && <p className="text-xs text-red-500">{errors.aadhaar.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Bank Name</Label>
-              <Input {...register("bankName")} />
+              <Input maxLength={FIELD_MAX.shortText} {...register("bankName")} />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Account Number</Label>
-              <Input {...register("accountNumber")} />
+              <Input inputMode="numeric" maxLength={FIELD_MAX.accountNumber} onKeyDown={digitsOnlyKeyDown} {...register("accountNumber")} />
+              {errors.accountNumber && <p className="text-xs text-red-500">{errors.accountNumber.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>IFSC Code</Label>
-              <Input {...register("ifscCode")} />
+              <Input maxLength={FIELD_MAX.ifsc} {...register("ifscCode")} />
+              {errors.ifscCode && <p className="text-xs text-red-500">{errors.ifscCode.message}</p>}
             </div>
           </div>
 

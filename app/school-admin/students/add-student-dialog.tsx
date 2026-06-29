@@ -16,32 +16,34 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { UserPlus, Loader2, ChevronRight, ChevronLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { nameField, optionalTextField, optionalLongTextField, emailField, mobileField, aadhaarField, addressField, FIELD_MAX } from "@/lib/field-validation";
+import { digitsOnlyKeyDown } from "@/lib/field-behavior";
 
 const schema = z.object({
   // Step 1: Personal
-  firstName: z.string().min(1, "Required"),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1, "Required"),
+  firstName: nameField("First name"),
+  middleName: optionalTextField("Middle name"),
+  lastName: nameField("Last name"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
   dob: z.string().min(1, "Date of birth is required"),
   bloodGroup: z.string().optional(),
   category: z.string().optional(),
   religion: z.string().optional(),
-  aadhaar: z.string().optional(),
+  aadhaar: aadhaarField(),
   // Step 2: Academic
-  rollNumber: z.string().optional(),
+  rollNumber: optionalTextField("Roll number"),
   classId: z.string().min(1, "Class is required"),
   sectionId: z.string().optional(),
   admissionDate: z.string().optional(),
   house: z.string().optional(),
-  previousSchool: z.string().optional(),
+  previousSchool: optionalTextField("Previous school"),
   transportRequired: z.boolean(),
   hostelRequired: z.boolean(),
-  medicalNotes: z.string().optional(),
+  medicalNotes: optionalLongTextField("Medical notes"),
   // Step 3: Contact
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  mobile: z.string().optional(),
-  address: z.string().optional(),
+  email: emailField(),
+  mobile: mobileField(),
+  address: addressField(),
   // Step 4: Parent
   fatherName: z.string().optional(),
   fatherMobile: z.string().optional(),
@@ -167,16 +169,17 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label>First Name *</Label>
-                    <Input {...register("firstName")} />
+                    <Input maxLength={FIELD_MAX.name} {...register("firstName")} />
                     {errors.firstName && <p className="text-xs text-red-500">{errors.firstName.message}</p>}
                   </div>
                   <div className="space-y-1.5">
                     <Label>Middle Name</Label>
-                    <Input {...register("middleName")} />
+                    <Input maxLength={FIELD_MAX.name} {...register("middleName")} />
+                    {errors.middleName && <p className="text-xs text-red-500">{errors.middleName.message}</p>}
                   </div>
                   <div className="space-y-1.5">
                     <Label>Last Name *</Label>
-                    <Input {...register("lastName")} />
+                    <Input maxLength={FIELD_MAX.name} {...register("lastName")} />
                     {errors.lastName && <p className="text-xs text-red-500">{errors.lastName.message}</p>}
                   </div>
                 </div>
@@ -235,7 +238,8 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
                   </div>
                   <div className="space-y-1.5">
                     <Label>Aadhaar No.</Label>
-                    <Input placeholder="XXXX XXXX XXXX" {...register("aadhaar")} />
+                    <Input placeholder="XXXX XXXX XXXX" inputMode="numeric" maxLength={FIELD_MAX.aadhaar} onKeyDown={digitsOnlyKeyDown} {...register("aadhaar")} />
+                    {errors.aadhaar && <p className="text-xs text-red-500">{errors.aadhaar.message}</p>}
                   </div>
                 </div>
               </>
@@ -251,7 +255,8 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
                   </div>
                   <div className="space-y-1.5">
                     <Label>Roll Number</Label>
-                    <Input placeholder="01" {...register("rollNumber")} />
+                    <Input placeholder="01" maxLength={FIELD_MAX.shortText} {...register("rollNumber")} />
+                    {errors.rollNumber && <p className="text-xs text-red-500">{errors.rollNumber.message}</p>}
                   </div>
                 </div>
 
@@ -293,7 +298,8 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
                   </div>
                   <div className="space-y-1.5">
                     <Label>Previous School</Label>
-                    <Input {...register("previousSchool")} />
+                    <Input maxLength={FIELD_MAX.shortText} {...register("previousSchool")} />
+                    {errors.previousSchool && <p className="text-xs text-red-500">{errors.previousSchool.message}</p>}
                   </div>
                 </div>
 
@@ -310,7 +316,8 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
 
                 <div className="space-y-1.5">
                   <Label>Medical Notes</Label>
-                  <Textarea rows={2} placeholder="Any medical conditions or allergies..." {...register("medicalNotes")} />
+                  <Textarea rows={2} placeholder="Any medical conditions or allergies..." maxLength={FIELD_MAX.longText} {...register("medicalNotes")} />
+                  {errors.medicalNotes && <p className="text-xs text-red-500">{errors.medicalNotes.message}</p>}
                 </div>
               </>
             )}
@@ -321,17 +328,19 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Email</Label>
-                    <Input type="email" placeholder="student@email.com" {...register("email")} />
+                    <Input type="email" placeholder="student@email.com" maxLength={FIELD_MAX.email} {...register("email")} />
                     {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
                   </div>
                   <div className="space-y-1.5">
                     <Label>Mobile</Label>
-                    <Input type="tel" placeholder="9876543210" {...register("mobile")} />
+                    <Input type="tel" inputMode="numeric" placeholder="9876543210" maxLength={FIELD_MAX.mobile} onKeyDown={digitsOnlyKeyDown} {...register("mobile")} />
+                    {errors.mobile && <p className="text-xs text-red-500">{errors.mobile.message}</p>}
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label>Address</Label>
-                  <Textarea rows={3} placeholder="Full address..." {...register("address")} />
+                  <Textarea rows={3} placeholder="Full address..." maxLength={FIELD_MAX.address} {...register("address")} />
+                  {errors.address && <p className="text-xs text-red-500">{errors.address.message}</p>}
                 </div>
                 <div className="p-3 bg-blue-50 rounded-lg">
                   <p className="text-xs text-blue-700">

@@ -4,12 +4,13 @@ import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
 import { sortClassesByGrade } from "@/lib/class-order";
 import { ensureClassSections, DEFAULT_SECTIONS } from "@/lib/ensure-class-sections";
+import { nameField, positiveIntField } from "@/lib/field-validation";
 import { z } from "zod";
 
 const createSchema = z.object({
   schoolId: z.string().optional(),
-  name: z.string().min(1, "Class name is required"),
-  capacity: z.coerce.number().int().positive().optional(),
+  name: nameField("Class name"),
+  capacity: positiveIntField("Capacity", { required: false, max: 500 }),
 });
 
 export async function GET(req: Request) {

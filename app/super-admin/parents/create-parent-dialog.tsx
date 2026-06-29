@@ -16,20 +16,22 @@ import { UserPlus, Loader2, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorDialog } from "@/components/shared/error-dialog";
 import { formatDobAsPassword } from "@/lib/utils";
+import { optionalTextField, emailField, mobileField, aadhaarField, panField, addressField, FIELD_MAX } from "@/lib/field-validation";
+import { digitsOnlyKeyDown } from "@/lib/field-behavior";
 
 const personSchema = z.object({
-  firstName: z.string().optional(),
-  middleName: z.string().optional(),
-  lastName: z.string().optional(),
+  firstName: z.string().trim().max(FIELD_MAX.name, "First name is too long").optional(),
+  middleName: optionalTextField("Middle name"),
+  lastName: z.string().trim().max(FIELD_MAX.name, "Last name is too long").optional(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   dob: z.string().optional(),
   maritalStatus: z.enum(["SINGLE", "MARRIED", "DIVORCED", "WIDOWED"]).optional(),
-  nationality: z.string().optional(),
-  aadhaar: z.string().optional(),
-  pan: z.string().optional(),
-  address: z.string().optional(),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  mobile: z.string().optional(),
+  nationality: optionalTextField("Nationality"),
+  aadhaar: aadhaarField(),
+  pan: panField(),
+  address: addressField(),
+  email: emailField(),
+  mobile: mobileField(),
 });
 
 const ROLES = ["father", "mother", "guardian"] as const;
@@ -194,16 +196,16 @@ export function CreateParentDialog({ schools }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>First Name *</Label>
-              <Input {...register(`${role}.firstName`)} />
+              <Input maxLength={FIELD_MAX.name} {...register(`${role}.firstName`)} />
               {errors[role]?.firstName && <p className="text-xs text-red-500">{errors[role]?.firstName?.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Middle Name</Label>
-              <Input {...register(`${role}.middleName`)} />
+              <Input maxLength={FIELD_MAX.shortText} {...register(`${role}.middleName`)} />
             </div>
             <div className="space-y-1.5">
               <Label>Last Name *</Label>
-              <Input {...register(`${role}.lastName`)} />
+              <Input maxLength={FIELD_MAX.name} {...register(`${role}.lastName`)} />
               {errors[role]?.lastName && <p className="text-xs text-red-500">{errors[role]?.lastName?.message}</p>}
             </div>
           </div>
@@ -259,32 +261,36 @@ export function CreateParentDialog({ schools }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Nationality</Label>
-              <Input {...register(`${role}.nationality`)} placeholder="Indian" />
+              <Input maxLength={FIELD_MAX.shortText} {...register(`${role}.nationality`)} placeholder="Indian" />
             </div>
             <div className="space-y-1.5">
               <Label>Aadhaar Number</Label>
-              <Input {...register(`${role}.aadhaar`)} placeholder="XXXX XXXX XXXX" />
+              <Input inputMode="numeric" maxLength={FIELD_MAX.aadhaar} onKeyDown={digitsOnlyKeyDown} {...register(`${role}.aadhaar`)} placeholder="XXXX XXXX XXXX" />
+              {errors[role]?.aadhaar && <p className="text-xs text-red-500">{errors[role]?.aadhaar?.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>PAN Number</Label>
-              <Input {...register(`${role}.pan`)} placeholder="ABCDE1234F" />
+              <Input maxLength={FIELD_MAX.pan} {...register(`${role}.pan`)} placeholder="ABCDE1234F" />
+              {errors[role]?.pan && <p className="text-xs text-red-500">{errors[role]?.pan?.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
             <Label>Address</Label>
-            <Input {...register(`${role}.address`)} />
+            <Input maxLength={FIELD_MAX.address} {...register(`${role}.address`)} />
+            {errors[role]?.address && <p className="text-xs text-red-500">{errors[role]?.address?.message}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Email</Label>
-              <Input type="email" placeholder={`${ROLE_LABEL[role].toLowerCase()}@email.com`} {...register(`${role}.email`)} />
+              <Input type="email" placeholder={`${ROLE_LABEL[role].toLowerCase()}@email.com`} maxLength={FIELD_MAX.email} {...register(`${role}.email`)} />
               {errors[role]?.email && <p className="text-xs text-red-500">{errors[role]?.email?.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Mobile</Label>
-              <Input type="tel" placeholder="9876543210" {...register(`${role}.mobile`)} />
+              <Input type="tel" inputMode="numeric" placeholder="9876543210" maxLength={FIELD_MAX.mobile} onKeyDown={digitsOnlyKeyDown} {...register(`${role}.mobile`)} />
+              {errors[role]?.mobile && <p className="text-xs text-red-500">{errors[role]?.mobile?.message}</p>}
             </div>
           </div>
         </CardContent>

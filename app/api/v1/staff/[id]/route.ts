@@ -4,26 +4,30 @@ import { getUser } from "@/lib/session";
 import { ok, badRequest, unauthorized, forbidden, notFound, serverError } from "@/lib/api-response";
 import { writeAuditLog, auditAccountStatusChange, clientIp } from "@/lib/audit";
 import { z } from "zod";
+import {
+  nameField, emailField, mobileField, aadhaarField, panField, ifscField,
+  accountNumberField, moneyField, positiveIntField, optionalTextField,
+} from "@/lib/field-validation";
 
 const updateSchema = z.object({
-  name: z.string().min(1).optional(),
-  email: z.string().email().optional().or(z.literal("")),
-  mobile: z.string().optional(),
-  department: z.string().optional(),
-  designation: z.string().optional(),
+  name: nameField().optional(),
+  email: emailField(),
+  mobile: mobileField(),
+  department: optionalTextField("Department"),
+  designation: optionalTextField("Designation"),
   joiningDate: z.string().optional(),
-  salary: z.coerce.number().optional(),
-  pan: z.string().optional(),
-  aadhaar: z.string().optional(),
-  bankName: z.string().optional(),
-  accountNumber: z.string().optional(),
-  ifscCode: z.string().optional(),
+  salary: moneyField("Salary"),
+  pan: panField(),
+  aadhaar: aadhaarField(),
+  bankName: optionalTextField("Bank name"),
+  accountNumber: accountNumberField(),
+  ifscCode: ifscField(),
   isActive: z.boolean().optional(),
-  qualification: z.string().optional(),
-  experienceYears: z.coerce.number().int().optional(),
-  licenseNumber: z.string().optional(),
-  vehicleNumber: z.string().optional(),
-  assignedBlock: z.string().optional(),
+  qualification: optionalTextField("Qualification"),
+  experienceYears: positiveIntField("Experience (years)", { max: 60 }),
+  licenseNumber: optionalTextField("License number"),
+  vehicleNumber: optionalTextField("Vehicle number"),
+  assignedBlock: optionalTextField("Assigned block"),
 });
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {

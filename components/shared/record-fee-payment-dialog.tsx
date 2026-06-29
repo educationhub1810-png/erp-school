@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { optionalTextField, optionalLongTextField, FIELD_MAX } from "@/lib/field-validation";
 
 const PAYMENT_MODES: { value: string; label: string }[] = [
   { value: "CASH", label: "Cash" },
@@ -34,12 +35,12 @@ const STATUSES: { value: string; label: string }[] = [
 const schema = z.object({
   studentId: z.string().min(1, "Student is required"),
   feeStructureId: z.string().min(1, "Fee structure is required"),
-  amountPaid: z.number().positive("Amount must be greater than 0"),
+  amountPaid: z.number().positive("Amount must be greater than 0").max(10_000_000, "Amount is too large"),
   paymentDate: z.string().optional(),
   paymentMode: z.enum(["CASH", "CHEQUE", "ONLINE", "NEFT", "UPI", "CARD"]),
-  transactionId: z.string().optional(),
+  transactionId: optionalTextField("Transaction ID"),
   status: z.enum(["PENDING", "PAID", "PARTIAL", "OVERDUE", "CANCELLED"]),
-  remarks: z.string().optional(),
+  remarks: optionalLongTextField("Remarks"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -135,7 +136,7 @@ export function RecordFeePaymentDialog({ students, feeStructures }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Amount Paid (₹) *</Label>
-              <Input type="number" min={0} {...register("amountPaid", { setValueAs: (v) => v === "" || v == null ? undefined : parseFloat(v) })} />
+              <Input type="number" min={0} max={10_000_000} {...register("amountPaid", { setValueAs: (v) => v === "" || v == null ? undefined : parseFloat(v) })} />
               {errors.amountPaid && <p className="text-xs text-red-500">{errors.amountPaid.message}</p>}
             </div>
             <div className="space-y-1.5">
@@ -169,12 +170,14 @@ export function RecordFeePaymentDialog({ students, feeStructures }: Props) {
 
           <div className="space-y-1.5">
             <Label>Transaction ID</Label>
-            <Input placeholder="Optional reference number" {...register("transactionId")} />
+            <Input placeholder="Optional reference number" maxLength={FIELD_MAX.shortText} {...register("transactionId")} />
+            {errors.transactionId && <p className="text-xs text-red-500">{errors.transactionId.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label>Remarks</Label>
-            <Textarea rows={2} {...register("remarks")} />
+            <Textarea rows={2} maxLength={FIELD_MAX.longText} {...register("remarks")} />
+            {errors.remarks && <p className="text-xs text-red-500">{errors.remarks.message}</p>}
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
