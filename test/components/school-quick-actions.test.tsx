@@ -7,7 +7,7 @@ vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 import { SchoolQuickActions } from "@/app/super-admin/schools/school-quick-actions";
 
-const school = { id: "school-1", name: "Delhi Public School", code: "SCH001", principalName: "Dr. Ramesh Sharma" };
+const school = { id: "school-1", name: "Delhi Public School", code: "SCH001", principalName: "Dr. Ramesh Sharma", isActive: true };
 
 describe("SchoolQuickActions", () => {
   beforeEach(() => {
@@ -38,5 +38,21 @@ describe("SchoolQuickActions", () => {
     const dialog = within(screen.getByRole("dialog", { name: /add new principal/i }));
     expect(dialog.getByText("Delhi Public School (SCH001)")).toBeInTheDocument();
     expect(dialog.getByDisplayValue("Dr. Ramesh Sharma")).toBeInTheDocument();
+  });
+
+  it("disables all three quick-add triggers for an inactive school", async () => {
+    const user = userEvent.setup();
+    render(<SchoolQuickActions school={{ ...school, isActive: false }} />);
+
+    const studentTrigger = screen.getByTitle(`Add Student to ${school.name} (enable the school first)`);
+    const teacherTrigger = screen.getByTitle(`Add Teacher to ${school.name} (enable the school first)`);
+    const principalTrigger = screen.getByTitle(`Add Principal to ${school.name} (enable the school first)`);
+
+    expect(studentTrigger.closest("button")).toBeDisabled();
+    expect(teacherTrigger.closest("button")).toBeDisabled();
+    expect(principalTrigger.closest("button")).toBeDisabled();
+
+    await user.click(studentTrigger);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

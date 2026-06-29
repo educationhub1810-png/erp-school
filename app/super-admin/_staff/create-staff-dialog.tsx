@@ -14,7 +14,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { UserPlus, Loader2, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorDialog } from "@/components/shared/error-dialog";
-import { formatDobAsPassword } from "@/lib/utils";
+import { cn, formatDobAsPassword } from "@/lib/utils";
 import { DOB_PASSWORD_STAFF_ROLES } from "@/lib/roles";
 import { ROLE_FIELDS, type StaffRole } from "./role-fields";
 
@@ -58,12 +58,16 @@ interface Props {
   defaultSchoolId?: string;
   /** Override the triggerContent button's contents; the underlying Button/DialogTrigger stay the same. */
   triggerContent?: ReactNode;
+  /** Extra classes for the trigger button (only applied alongside triggerContent). */
+  triggerClassName?: string;
+  /** Disable the trigger entirely (e.g. for an inactive school). */
+  disabled?: boolean;
 }
 
 const CODE_LABEL: Partial<Record<StaffRole, string>> = { PRINCIPAL: "Principal Code" };
 const CODE_PREFIX: Partial<Record<StaffRole, string>> = { PRINCIPAL: "PRN" };
 
-export function CreateStaffDialog({ role, roleLabel, schools, defaultSchoolId, triggerContent }: Props) {
+export function CreateStaffDialog({ role, roleLabel, schools, defaultSchoolId, triggerContent, triggerClassName, disabled }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -163,7 +167,7 @@ export function CreateStaffDialog({ role, roleLabel, schools, defaultSchoolId, t
         if (!v) reset();
       }}
     >
-      <DialogTrigger render={<Button variant={triggerContent ? "outline" : "default"} size={triggerContent ? "icon-sm" : "default"} className={triggerContent ? "" : "bg-indigo-600 hover:bg-indigo-700"} />}>
+      <DialogTrigger render={<Button disabled={disabled} variant={triggerContent ? "outline" : "default"} size={triggerContent ? "icon-sm" : "default"} className={triggerContent ? cn(triggerClassName) : "bg-indigo-600 hover:bg-indigo-700"} />}>
         {triggerContent ?? (<><UserPlus className="w-4 h-4 mr-2" /> Add {roleLabel}</>)}
       </DialogTrigger>
 
