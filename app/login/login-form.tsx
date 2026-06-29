@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -20,6 +20,8 @@ import {
   Lock,
   User,
   ShieldCheck,
+  KeyRound,
+  ArrowLeft,
   Users,
   BarChart3,
   Cloud,
@@ -35,6 +37,8 @@ import {
 } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/roles";
 import { SchoolIllustration } from "./school-illustration";
+
+const RESEND_COOLDOWN_SECONDS = 60;
 
 // Temporarily not selectable from the login dropdown — accounts with these
 // roles cannot sign in via this form while hidden here.
@@ -117,6 +121,14 @@ export function LoginForm() {
   const [adminError, setAdminError] = useState<string | null>(null);
   const [adminLoading, setAdminLoading] = useState(false);
 
+  // Email-OTP second step (Super Admin / School Admin). Once the password is
+  // accepted and a code is emailed, we swap the form for the code entry below
+  // and keep the verified credentials to replay into signIn with the code.
+  const [otpStep, setOtpStep] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [pendingCreds, setPendingCreds] = useState<FormValues | null>(null);
+  const [resendIn, setResendIn] = useState(0);
+
   const {
     register,
     handleSubmit,
@@ -152,25 +164,98 @@ export function LoginForm() {
     }
   };
 
+  // Tick the resend cooldown down to zero.
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
+
+  // Finish authentication. `code` is undefined for one-step roles and the typed
+  // 6-digit code for 2FA roles — the message is tailored to which step failed.
+  const completeSignIn = async (creds: FormValues, code?: string) => {
+    const result = await signIn("credentials", {
+      role: creds.role,
+      username: creds.username,
+      password: creds.password,
+      otp: code,
+      redirect: false,
+    });
+    if (result?.error || !result?.ok) {
+      setError(
+        code !== undefined
+          ? "Invalid or expired code. Please try again."
+          : "Invalid credentials. Please check your details.",
+      );
+      return false;
+    }
+    window.location.href = callbackUrl;
+    return true;
+  };
+
+  const requestOtp = async (creds: FormValues) => {
+    const res = await fetch("/api/auth/otp/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        role: creds.role,
+        username: creds.username,
+        password: creds.password,
+      }),
+    });
+    const json = await res.json().catch(() => null);
+    return { status: res.status, requires2fa: Boolean(json?.data?.requires2fa) };
+  };
+
   const onSubmit = async (data: FormValues) => {
     setError(null);
     setLoading(true);
     try {
-      const result = await signIn("credentials", {
-        role: data.role,
-        username: data.username,
-        password: data.password,
-        redirect: false,
-      });
-
-      if (result?.error || !result?.ok) {
-        setError("Invalid credentials. Please check your details.");
-      } else {
-        window.location.href = callbackUrl;
+      // Which roles need 2FA is configured by Super Admin (DB-backed), so the
+      // server decides: ask it first for every login.
+      const { status, requires2fa } = await requestOtp(data);
+      // 429 = a code is already live (resend throttle); 200+requires2fa = a
+      // fresh code was emailed. Either way, move to the code-entry step.
+      if (status === 429 || requires2fa) {
+        setPendingCreds(data);
+        setOtp("");
+        setOtpStep(true);
+        setResendIn(RESEND_COOLDOWN_SECONDS);
+        return;
       }
+      // requires2fa=false means either no 2FA for this role, or a wrong password
+      // the server intentionally hides — let signIn complete or surface the
+      // generic credentials error.
+      await completeSignIn(data);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!pendingCreds || otp.trim().length === 0) return;
+    setError(null);
+    setLoading(true);
+    try {
+      await completeSignIn(pendingCreds, otp.trim());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!pendingCreds || resendIn > 0) return;
+    setError(null);
+    setOtp("");
+    setResendIn(RESEND_COOLDOWN_SECONDS);
+    await requestOtp(pendingCreds);
+  };
+
+  const handleBackToLogin = () => {
+    setOtpStep(false);
+    setOtp("");
+    setPendingCreds(null);
+    setError(null);
   };
 
   return (
@@ -262,6 +347,7 @@ export function LoginForm() {
               </div>
             </div>
 
+            {!otpStep && (
             <form onSubmit={handleSubmit(onSubmit)} method="POST" className="space-y-3">
               {error && (
                 <Alert variant="destructive">
@@ -364,6 +450,79 @@ export function LoginForm() {
                 Login to Dashboard
               </Button>
             </form>
+            )}
+
+            {/* Step 2 — emailed code entry (Super Admin / School Admin) */}
+            {otpStep && (
+              <div className="space-y-3">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="flex items-start gap-2 rounded-lg bg-indigo-50 p-3">
+                  <ShieldCheck className="w-4 h-4 text-indigo-600 mt-0.5 shrink-0" />
+                  <p className="text-xs text-indigo-700">
+                    We emailed a 6-digit code to{" "}
+                    <span className="font-medium break-all">{pendingCreds?.username}</span>. Enter
+                    it below to finish signing in. It expires in 10 minutes.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="otp">Verification Code</Label>
+                  <div className="relative">
+                    <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <Input
+                      id="otp"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      placeholder="Enter 6-digit code"
+                      maxLength={6}
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                      onKeyDown={(e) => e.key === "Enter" && handleVerifyOtp()}
+                      autoFocus
+                      className="pl-10 tracking-[0.3em]"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={handleVerifyOtp}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700"
+                  disabled={loading || otp.trim().length === 0}
+                >
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <ShieldCheck className="w-4 h-4 mr-2" />
+                  )}
+                  Verify &amp; Sign In
+                </Button>
+
+                <div className="flex items-center justify-between text-xs">
+                  <button
+                    type="button"
+                    onClick={handleBackToLogin}
+                    className="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700"
+                  >
+                    <ArrowLeft className="w-3 h-3" /> Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={resendIn > 0}
+                    className="text-indigo-600 hover:text-indigo-700 disabled:text-gray-400"
+                  >
+                    {resendIn > 0 ? `Resend code in ${resendIn}s` : "Resend code"}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Support access — intentionally low-profile */}
             <div className="mt-3 text-center">

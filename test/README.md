@@ -61,6 +61,14 @@ E2E layer against the seeded database.
 npm run db:seed     # creates the per-role logins used by e2e/credentials.ts
 ```
 
+### Email-OTP two-factor and E2E
+
+Super Admin and School Admin logins require an emailed 6-digit code (see
+`lib/roles.ts` `requiresTwoFactor` and `app/api/auth/otp/request`). Browser tests
+can't read a real inbox, so `.env.test` sets `OTP_DISABLE_FOR_E2E=1`, which makes
+`requiresTwoFactor` return `false` and lets seeded admin logins sign in in one
+step. Never set that flag outside test environments.
+
 ## Adding tests for new functionality
 
 See the "Testing" section in `AGENTS.md` — every new route/form/page gets a test.

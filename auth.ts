@@ -1,18 +1,16 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { authConfig } from "./auth.config";
 import type { AppRole } from "@/lib/roles";
+import { isTwoFactorRequired } from "@/lib/two-factor-policy";
 import { writeAuditLog, clientIp } from "@/lib/audit";
-
-function dobToPassword(dob: Date): string {
-  const d = String(dob.getUTCDate()).padStart(2, "0");
-  const m = String(dob.getUTCMonth() + 1).padStart(2, "0");
-  const y = String(dob.getUTCFullYear());
-  return `${d}${m}${y}`;
-}
+import {
+  type AuthorizedUser,
+  resolveCredentials,
+  verifyAndConsumeOtp,
+} from "@/lib/auth-credentials";
 
 export function createImpersonateToken(userId: string): string {
   const code = process.env.ADMIN_SECRET_CODE!;
@@ -37,149 +35,53 @@ export function verifyImpersonateToken(token: string): string | null {
   }
 }
 
-type AuthorizedUser = {
-  id: string;
-  name: string;
-  email?: string;
-  role: AppRole;
-  schoolId?: string;
-  isImpersonating?: boolean;
-};
-
-// A throwaway bcrypt hash used to equalize timing on failed logins, so an
-// attacker cannot distinguish "user/student exists" from "does not exist" by
-// measuring whether a bcrypt comparison ran. (Mitigates account enumeration.)
-const DUMMY_HASH = bcrypt.hashSync("nonexistent-account-placeholder", 12);
+// Returned alongside the user so the provider can distinguish a wrong password
+// from a wrong/expired second factor for audit purposes.
+type AuthorizeResult =
+  | { user: AuthorizedUser; otpFailed?: false }
+  | { user: null; otpFailed: boolean };
 
 async function authorizeUser(
   credentials: Record<string, unknown> | undefined,
-): Promise<AuthorizedUser | null> {
-  const { role, username, password, impersonateToken } = (credentials ?? {}) as {
+): Promise<AuthorizeResult> {
+  const { role, username, password, otp, impersonateToken } = (credentials ?? {}) as {
     role: string;
     username: string;
     password: string;
+    otp?: string;
     impersonateToken: string;
   };
 
-  // Impersonation path — short-lived signed token, no password needed
+  // Impersonation path — short-lived signed token, no password or 2FA needed.
   if (impersonateToken) {
     const userId = verifyImpersonateToken(impersonateToken);
-    if (!userId) return null;
+    if (!userId) return { user: null, otpFailed: false };
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user || !user.isActive) return null;
+    if (!user || !user.isActive) return { user: null, otpFailed: false };
     return {
-      id: user.id,
-      name: user.name,
-      email: user.email ?? undefined,
-      role: user.role as AppRole,
-      schoolId: user.schoolId ?? undefined,
-      isImpersonating: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email ?? undefined,
+        role: user.role as AppRole,
+        schoolId: user.schoolId ?? undefined,
+        isImpersonating: true,
+      },
     };
   }
 
-  if (!username || !password || !role) return null;
+  const candidate = await resolveCredentials({ role, username, password });
+  if (!candidate) return { user: null, otpFailed: false };
 
-  // No school is collected on the login form — student codes and emails are
-  // globally unique, so the account is resolved by username alone. The user
-  // selects their role on the form and we enforce it against the account below.
-  let candidate: AuthorizedUser | null = null;
-
-  // 1. Student path — username = studentCode (global), password = DOB (DDMMYYYY)
-  const student = await prisma.student.findFirst({
-    where: { studentCode: username },
-    include: {
-      user: { select: { id: true, name: true, email: true, role: true, isActive: true } },
-    },
-  });
-  if (student && student.user.isActive && student.dob && password === dobToPassword(student.dob)) {
-    candidate = {
-      id: student.user.id,
-      name: student.user.name,
-      email: student.user.email ?? undefined,
-      role: student.user.role as AppRole,
-      schoolId: student.schoolId ?? undefined,
-    };
+  // Second factor: roles configured to require 2FA must present a valid emailed
+  // OTP. The code was issued by /api/auth/otp/request once the password checked
+  // out. The policy is managed by Super Admin (see lib/two-factor-policy.ts).
+  if (await isTwoFactorRequired(candidate.role)) {
+    const okOtp = await verifyAndConsumeOtp(candidate.id, otp ?? "");
+    if (!okOtp) return { user: null, otpFailed: true };
   }
 
-  // 2. Principal path — username = Staff.employeeId, password = DOB (DDMMYYYY).
-  // Mirrors the student path: these accounts may have no email/mobile on file
-  // at all, so path 5 below can never resolve them.
-  if (!candidate) {
-    const staff = await prisma.staff.findFirst({
-      where: { employeeId: username },
-      include: { user: { select: { id: true, name: true, email: true, role: true, isActive: true } } },
-    });
-    if (staff && staff.user.isActive && staff.dob && password === dobToPassword(staff.dob)) {
-      candidate = {
-        id: staff.user.id,
-        name: staff.user.name,
-        email: staff.user.email ?? undefined,
-        role: staff.user.role as AppRole,
-        schoolId: staff.schoolId ?? undefined,
-      };
-    }
-  }
-
-  // 3. Teacher path — username = Teacher.employeeId, password = DOB (DDMMYYYY).
-  if (!candidate) {
-    const teacher = await prisma.teacher.findFirst({
-      where: { employeeId: username },
-      include: { user: { select: { id: true, name: true, email: true, role: true, isActive: true } } },
-    });
-    if (teacher && teacher.user.isActive && teacher.dob && password === dobToPassword(teacher.dob)) {
-      candidate = {
-        id: teacher.user.id,
-        name: teacher.user.name,
-        email: teacher.user.email ?? undefined,
-        role: teacher.user.role as AppRole,
-        schoolId: teacher.schoolId ?? undefined,
-      };
-    }
-  }
-
-  // 4. Parent path — username = ParentProfile.parentCode, password = DOB (DDMMYYYY).
-  if (!candidate) {
-    const parent = await prisma.parentProfile.findFirst({
-      where: { parentCode: username },
-      include: { user: { select: { id: true, name: true, email: true, role: true, isActive: true } } },
-    });
-    if (parent && parent.user.isActive && parent.dob && password === dobToPassword(parent.dob)) {
-      candidate = {
-        id: parent.user.id,
-        name: parent.user.name,
-        email: parent.user.email ?? undefined,
-        role: parent.user.role as AppRole,
-        schoolId: parent.schoolId ?? undefined,
-      };
-    }
-  }
-
-  // 5. Everyone else (and the above roles when they log in with an email/mobile
-  // and their real password instead) — email/mobile + bcrypt
-  if (!candidate) {
-    const user = await prisma.user.findFirst({
-      where: { OR: [{ email: username }, { mobile: username }], isActive: true },
-    });
-    if (!user) {
-      await bcrypt.compare(password, DUMMY_HASH); // equalize timing
-      return null;
-    }
-    const isValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isValid) return null;
-    candidate = {
-      id: user.id,
-      name: user.name,
-      email: user.email ?? undefined,
-      role: user.role as AppRole,
-      schoolId: user.schoolId ?? undefined,
-    };
-  }
-
-  // Enforce the role the user selected on the form against their real account
-  // role — a mismatch is treated as a failed login.
-  if (candidate.role !== role) return null;
-
-  return candidate;
+  return { user: candidate };
 }
 
 // Re-validate the user against the DB at most this often (seconds), so that
@@ -238,31 +140,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         role: { label: "Role", type: "text" },
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
+        otp: { label: "OTP", type: "text" },
         impersonateToken: { label: "Impersonate Token", type: "text" },
       },
       async authorize(credentials, request) {
-        const user = await authorizeUser(credentials as Record<string, unknown> | undefined);
+        const result = await authorizeUser(credentials as Record<string, unknown> | undefined);
         const ip = request instanceof Request ? clientIp(request) : null;
 
-        if (user) {
+        if (result.user) {
           await writeAuditLog({
             action: "LOGIN_SUCCESS",
-            actorId: user.id,
-            actorRole: user.role,
-            schoolId: user.schoolId ?? null,
+            actorId: result.user.id,
+            actorRole: result.user.role,
+            schoolId: result.user.schoolId ?? null,
             ip,
-            metadata: user.isImpersonating ? { impersonation: true } : undefined,
+            metadata: result.user.isImpersonating ? { impersonation: true } : undefined,
           });
         } else {
           const uname = (credentials as { username?: unknown } | undefined)?.username;
           await writeAuditLog({
-            action: "LOGIN_FAILURE",
+            // A correct password but bad/expired OTP is logged distinctly so the
+            // audit trail separates 2FA failures from wrong passwords.
+            action: result.otpFailed ? "LOGIN_2FA_FAILURE" : "LOGIN_FAILURE",
             ip,
             metadata: typeof uname === "string" ? { username: uname.slice(0, 120) } : undefined,
           });
         }
 
-        return user;
+        return result.user;
       },
     }),
   ],

@@ -82,3 +82,9 @@ export const ROLE_ALLOWED_PREFIXES: Record<AppRole, string[]> = {
 // by Staff.employeeId at login, not email/mobile, since they're admin-created
 // in bulk and may never get a real email/mobile on file.
 export const DOB_PASSWORD_STAFF_ROLES: AppRole[] = ["PRINCIPAL"];
+
+// Built-in DEFAULT set of roles that require email-OTP two-factor at login,
+// used until a Super Admin overrides a role at /super-admin/settings. The live,
+// DB-backed decision lives in lib/two-factor-policy.ts (isTwoFactorRequired);
+// this constant is only the fallback default. Edge-safe (no Prisma).
+export const TWO_FACTOR_ROLES: AppRole[] = ["SUPER_ADMIN", "SCHOOL_ADMIN"];

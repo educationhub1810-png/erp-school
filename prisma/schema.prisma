@@ -255,11 +255,6 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  // Two-factor (TOTP) — currently used to harden SUPER_ADMIN login in prod.
-  totpSecret        String? // AES-256-GCM encrypted (see lib/totp.ts)
-  totpEnabled       Boolean @default(false)
-  totpRecoveryCodes String? // JSON array of bcrypt-hashed one-time codes
-
   school            School?      @relation(fields: [schoolId], references: [id], onDelete: SetNull)
   teacher           Teacher?
   staff             Staff?
@@ -273,8 +268,39 @@ model User {
   approvedLeaves    LeaveRequest[] @relation("ApprovedLeaves")
   announcements     Announcement[]
   reportedBugs      BugTicket[]   @relation("ReportedBugs")
+  loginOtps         LoginOtp[]
 
   @@map("users")
+}
+
+// Per-role two-factor policy, editable by Super Admin at
+// /super-admin/settings. One row per role that has been explicitly configured;
+// roles with no row fall back to the built-in default (TWO_FACTOR_ROLES). See
+// lib/two-factor-policy.ts.
+model TwoFactorPolicy {
+  role      String   @id // an AppRole value
+  required  Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  @@map("two_factor_policies")
+}
+
+// Email-OTP two-factor challenges. One row per code issued during a login
+// attempt for a role that requires 2FA (see lib/roles.ts requiresTwoFactor).
+// The code itself is never stored — only a bcrypt hash — and rows are short-
+// lived (OTP_TTL_MS) and single-use (consumedAt), with an attempt cap.
+model LoginOtp {
+  id         String    @id @default(cuid())
+  userId     String
+  codeHash   String // bcrypt hash of the 6-digit code
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("login_otps")
 }
 
 // NextAuth required models

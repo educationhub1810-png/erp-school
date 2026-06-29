@@ -13,6 +13,9 @@ export interface AuditActionMeta {
 export const AUDIT_ACTION_META: Record<string, AuditActionMeta> = {
   LOGIN_SUCCESS: { label: "Login", category: "AUTH", badge: "bg-green-100 text-green-700" },
   LOGIN_FAILURE: { label: "Failed login", category: "AUTH", badge: "bg-red-100 text-red-700" },
+  LOGIN_2FA_FAILURE: { label: "Failed 2FA", category: "AUTH", badge: "bg-red-100 text-red-700" },
+  OTP_SENT: { label: "Login code sent", category: "AUTH", badge: "bg-blue-100 text-blue-700" },
+  TWO_FACTOR_POLICY_UPDATE: { label: "2FA policy changed", category: "SECURITY", badge: "bg-amber-100 text-amber-700" },
   LOGOUT: { label: "Logout", category: "AUTH", badge: "bg-gray-100 text-gray-600" },
   ADMIN_ACCESS_GRANTED: { label: "Admin access granted", category: "SECURITY", badge: "bg-amber-100 text-amber-700" },
   ADMIN_ACCESS_DENIED: { label: "Admin access denied", category: "SECURITY", badge: "bg-red-100 text-red-700" },
@@ -46,6 +49,9 @@ export function actionMeta(action: string): AuditActionMeta {
 export const AUDIT_FILTERABLE_ACTIONS = [
   "LOGIN_SUCCESS",
   "LOGIN_FAILURE",
+  "LOGIN_2FA_FAILURE",
+  "OTP_SENT",
+  "TWO_FACTOR_POLICY_UPDATE",
   "LOGOUT",
   "ADMIN_ACCESS_GRANTED",
   "ADMIN_ACCESS_DENIED",

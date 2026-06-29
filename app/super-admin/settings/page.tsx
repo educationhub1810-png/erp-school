@@ -2,11 +2,15 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Shield, Database, Globe, Key } from "lucide-react";
+import { Settings, Shield, Database, Globe, Key, ShieldCheck } from "lucide-react";
+import { getTwoFactorPolicies } from "@/lib/two-factor-policy";
+import { Role2faToggles } from "./role-2fa-toggles";
 
 export default async function SuperAdminSettingsPage() {
   const session = await auth();
   if (!session) redirect("/login");
+
+  const twoFactorPolicies = await getTwoFactorPolicies();
 
   const info = [
     { label: "Platform",      value: "EduERP v1.0",              icon: Globe   },
@@ -48,6 +52,22 @@ export default async function SuperAdminSettingsPage() {
               <Badge className="bg-green-100 text-green-700">Full Platform</Badge>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Two-factor policy */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4" /> Two-Factor Authentication
+          </CardTitle>
+          <p className="text-sm text-gray-500">
+            Choose which roles must enter a 6-digit code emailed to them at login.
+            Codes are sent via the configured mailbox — make sure email is set up first.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <Role2faToggles policies={twoFactorPolicies} />
         </CardContent>
       </Card>
 

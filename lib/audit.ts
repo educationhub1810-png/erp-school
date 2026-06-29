@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 export type AuditAction =
   | "LOGIN_SUCCESS"
   | "LOGIN_FAILURE"
+  | "LOGIN_2FA_FAILURE"
+  | "OTP_SENT"
+  | "TWO_FACTOR_POLICY_UPDATE"
   | "LOGOUT"
   | "ADMIN_ACCESS_GRANTED"
   | "ADMIN_ACCESS_DENIED"
@@ -11,7 +14,6 @@ export type AuditAction =
   | "ACCOUNT_DEACTIVATE"
   | "USER_CREATE"
   | "USER_DELETE"
-  | "USER_2FA_RESET"
   | "USER_PASSWORD_RESET"
   | "SCHOOL_CREATE"
   | "SCHOOL_ACTIVATE"
