@@ -8,7 +8,6 @@ import { resetAuthMock } from "./mocks/auth";
 process.env.ADMIN_SECRET_CODE ??= "test-admin-secret";
 process.env.AUTH_SECRET ??= "test-auth-secret";
 process.env.DATABASE_URL ??= "postgresql://test:test@localhost:5432/test";
-process.env.TOTP_ENC_KEY ??= "0".repeat(64);
 
 beforeEach(() => {
   resetPrismaMock();

@@ -11,9 +11,22 @@ vi.mock("next/navigation", () => ({
 
 import { LoginForm } from "@/app/login/login-form";
 
+// Helper to stub the /api/auth/otp/request response (status + requires2fa).
+function mockOtpRequest(requires2fa: boolean, status = 200) {
+  (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    status,
+    json: async () => ({ success: status < 400, data: { requires2fa } }),
+  } as Response);
+}
+
 describe("LoginForm", () => {
   beforeEach(() => {
     signInMock.mockReset();
+    // Default: no 2FA required, so admin flows fall through to signIn.
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      status: 200,
+      json: async () => ({ success: true, data: { requires2fa: false } }),
+    } as Response) as typeof fetch;
   });
 
   it("renders the role dropdown, username and password fields", () => {
@@ -131,7 +144,8 @@ describe("LoginForm", () => {
     expect(signInMock).not.toHaveBeenCalled();
   });
 
-  it("submits role + username + password for Super Admin / School Admin", async () => {
+  it("runs the two-step email-OTP flow for Super Admin / School Admin", async () => {
+    mockOtpRequest(true); // password accepted → a code was emailed
     signInMock.mockResolvedValue({ ok: true });
     const user = userEvent.setup();
     render(<LoginForm />);
@@ -141,16 +155,37 @@ describe("LoginForm", () => {
     await user.type(screen.getByLabelText(/^password/i), "Admin@123");
     await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
 
+    // Step 1 posts the credentials to the OTP request route — not signIn yet.
+    await waitFor(() =>
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        "/api/auth/otp/request",
+        expect.objectContaining({ method: "POST" }),
+      ),
+    );
+    expect(signInMock).not.toHaveBeenCalled();
+
+    // The code-entry step appears; entering the code + verifying calls signIn.
+    const otpInput = await screen.findByLabelText(/verification code/i);
+    await user.type(otpInput, "482915");
+    await user.click(screen.getByRole("button", { name: /verify/i }));
+
     await waitFor(() => expect(signInMock).toHaveBeenCalledOnce());
-    expect(signInMock).toHaveBeenCalledWith("credentials", {
-      role: "SCHOOL_ADMIN",
-      username: "admin@sch001.com",
-      password: "Admin@123",
-      redirect: false,
-    });
+    expect(signInMock).toHaveBeenCalledWith(
+      "credentials",
+      expect.objectContaining({
+        role: "SCHOOL_ADMIN",
+        username: "admin@sch001.com",
+        password: "Admin@123",
+        otp: "482915",
+        redirect: false,
+      }),
+    );
   });
 
-  it("shows an error message when credentials are rejected", async () => {
+  it("shows an error message when an admin password is rejected", async () => {
+    // Wrong password → server hides it as requires2fa:false → signIn is tried
+    // and fails with the generic credentials error.
+    mockOtpRequest(false);
     signInMock.mockResolvedValue({ ok: false, error: "CredentialsSignin" });
     const user = userEvent.setup();
     render(<LoginForm />);
@@ -161,6 +196,24 @@ describe("LoginForm", () => {
     await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
 
     expect(await screen.findByText(/invalid credentials/i)).toBeInTheDocument();
+  });
+
+  it("shows 'invalid or expired code' when the OTP is rejected", async () => {
+    mockOtpRequest(true);
+    signInMock.mockResolvedValue({ ok: false, error: "CredentialsSignin" });
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
+    await user.type(screen.getByLabelText(/email or mobile/i), "admin@sch001.com");
+    await user.type(screen.getByLabelText(/^password/i), "Admin@123");
+    await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
+
+    const otpInput = await screen.findByLabelText(/verification code/i);
+    await user.type(otpInput, "000000");
+    await user.click(screen.getByRole("button", { name: /verify/i }));
+
+    expect(await screen.findByText(/invalid or expired code/i)).toBeInTheDocument();
   });
 
   it("renders the branded hero panel with all four feature badges", () => {
