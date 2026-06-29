@@ -85,9 +85,13 @@ interface Props {
   defaultSchoolId?: string;
   /** Override the trigger button's contents; the underlying Button/DialogTrigger stay the same. */
   triggerContent?: ReactNode;
+  /** Extra classes for the trigger button (only applied alongside triggerContent). */
+  triggerClassName?: string;
+  /** Disable the trigger entirely (e.g. for an inactive school). */
+  disabled?: boolean;
 }
 
-export function CreateStudentDialog({ schools, defaultSchoolId, triggerContent }: Props) {
+export function CreateStudentDialog({ schools, defaultSchoolId, triggerContent, triggerClassName, disabled }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
@@ -205,7 +209,7 @@ export function CreateStudentDialog({ schools, defaultSchoolId, triggerContent }
         if (!v) { reset(); setStep(0); setClasses([]); }
       }}
     >
-      <DialogTrigger render={<Button variant={triggerContent ? "outline" : "default"} size={triggerContent ? "icon-sm" : "default"} className={triggerContent ? "" : "bg-indigo-600 hover:bg-indigo-700"} />}>
+      <DialogTrigger render={<Button disabled={disabled} variant={triggerContent ? "outline" : "default"} size={triggerContent ? "icon-sm" : "default"} className={triggerContent ? cn(triggerClassName) : "bg-indigo-600 hover:bg-indigo-700"} />}>
         {triggerContent ?? (<><UserPlus className="w-4 h-4 mr-2" /> Add Student</>)}
       </DialogTrigger>
 
