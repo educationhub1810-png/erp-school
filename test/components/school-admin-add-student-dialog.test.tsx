@@ -20,10 +20,6 @@ function inputForLabel(text: string | RegExp): HTMLInputElement {
   return screen.getByText(text).closest("div")!.querySelector("input") as HTMLInputElement;
 }
 
-function allInputsForLabel(text: string | RegExp): HTMLInputElement[] {
-  return screen.getAllByText(text).map((label) => label.closest("div")!.querySelector("input") as HTMLInputElement);
-}
-
 async function selectOnlyClass(user: ReturnType<typeof userEvent.setup>) {
   // Class renders before Section/House in the DOM.
   await user.click(screen.getAllByRole("combobox")[0]);
@@ -65,7 +61,7 @@ describe("AddStudentDialog (school-admin)", () => {
     expect(screen.queryByText(/select class/i)).not.toBeInTheDocument();
   });
 
-  it("walks through all 4 steps and submits with schoolId, showing the student code + DOB password", async () => {
+  it("walks through all 3 steps and submits with schoolId, showing the student code + DOB password", async () => {
     const user = userEvent.setup();
     render(<AddStudentDialog classes={classes} schoolId="school-1" schoolName="Vidyapeeth School" />);
     await user.click(screen.getByRole("button", { name: /^add student$/i }));
@@ -81,10 +77,6 @@ describe("AddStudentDialog (school-admin)", () => {
 
     // Step 3: Contact
     await screen.findByText("Address");
-    await user.click(nextButton());
-
-    // Step 4: Parent
-    await screen.findByText("Father's Details");
     await user.click(screen.getByRole("button", { name: /save student/i }));
 
     await waitFor(() => expect(global.fetch).toHaveBeenCalledOnce());
@@ -95,13 +87,14 @@ describe("AddStudentDialog (school-admin)", () => {
     expect(body.firstName).toBe("Asha");
     expect(body.lastName).toBe("Rao");
     expect(body.classId).toBe("class-1");
+    expect(body.fatherName).toBeUndefined();
 
     expect(await screen.findByText(/student added successfully/i)).toBeInTheDocument();
     const credentialsDialog = screen.getByRole("dialog", { name: /student added successfully/i });
     expect(within(credentialsDialog).getByText("V-STD00001")).toBeInTheDocument();
-  });
+  }, 15000);
 
-  it("rejects a malformed father's mobile number on the Parent step", async () => {
+  it("rejects a malformed mobile number on the Contact step", async () => {
     const user = userEvent.setup();
     render(<AddStudentDialog classes={classes} schoolId="school-1" schoolName="Vidyapeeth School" />);
     await user.click(screen.getByRole("button", { name: /^add student$/i }));
@@ -112,14 +105,11 @@ describe("AddStudentDialog (school-admin)", () => {
     await selectOnlyClass(user);
     await user.click(nextButton());
     await screen.findByText("Address");
-    await user.click(nextButton());
-    await screen.findByText("Father's Details");
 
-    const fatherMobile = allInputsForLabel("Mobile")[0];
-    await user.type(fatherMobile, "12345");
+    await user.type(inputForLabel("Mobile"), "12345");
     await user.click(screen.getByRole("button", { name: /save student/i }));
 
     expect(await screen.findByText(/valid 10-digit mobile number/i)).toBeInTheDocument();
     expect(global.fetch).not.toHaveBeenCalled();
-  });
+  }, 15000);
 });

@@ -57,7 +57,7 @@ const STEPS = ["Personal", "Academic", "Contact"];
 const FIELD_STEP: Partial<Record<keyof FormValues, number>> = {
   schoolId: 0, firstName: 0, lastName: 0, gender: 0, dob: 0,
   classId: 1,
-  email: 2,
+  email: 2, mobile: 2, address: 2,
 };
 const STEP_FIELDS: (keyof FormValues)[][] = [
   ["schoolId", "firstName", "lastName", "gender", "dob"],
