@@ -35,7 +35,6 @@ const schema = z.object({
   salary: moneyField("Salary"),
   pan: panField(),
   aadhaar: aadhaarField(),
-  bankName: optionalTextField("Bank name"),
 }).superRefine((data, ctx) => {
   if (!data.dob) ctx.addIssue({ code: "custom", message: "Date of birth is required", path: ["dob"] });
 });
@@ -219,7 +218,7 @@ export function CreateTeacherDialog({ schools, defaultSchoolId, triggerContent, 
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>PAN</Label>
               <Input maxLength={FIELD_MAX.pan} {...register("pan")} />
@@ -230,17 +229,6 @@ export function CreateTeacherDialog({ schools, defaultSchoolId, triggerContent, 
               <Input placeholder="XXXX XXXX XXXX" inputMode="numeric" maxLength={FIELD_MAX.aadhaar} onKeyDown={digitsOnlyKeyDown} {...register("aadhaar")} />
               {errors.aadhaar && <p className="text-xs text-red-500">{errors.aadhaar.message}</p>}
             </div>
-            <div className="space-y-1.5">
-              <Label>Bank Name</Label>
-              <Input maxLength={FIELD_MAX.shortText} {...register("bankName")} />
-              {errors.bankName && <p className="text-xs text-red-500">{errors.bankName.message}</p>}
-            </div>
-          </div>
-
-          <div className="p-3 bg-blue-50 rounded-lg">
-            <p className="text-xs text-blue-700">
-              A login account will be created with the email above. Default password: <strong>Teacher@123</strong>
-            </p>
           </div>
 
           <DialogFooter>

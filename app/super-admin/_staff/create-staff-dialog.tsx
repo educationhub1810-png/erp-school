@@ -300,16 +300,6 @@ export function CreateStaffDialog({ role, roleLabel, schools, defaultSchoolId, t
             </div>
           )}
 
-          <div className="p-3 bg-blue-50 rounded-lg">
-            <p className="text-xs text-blue-700">
-              {requiresDob ? (
-                <>A login account will be created with the email above. Password: their <strong>date of birth (DDMMYYYY)</strong>.</>
-              ) : (
-                <>A login account will be created with the email above. Default password: <strong>Staff@123</strong></>
-              )}
-            </p>
-          </div>
-
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
             <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading}>

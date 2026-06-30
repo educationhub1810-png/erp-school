@@ -352,12 +352,6 @@ export function CreateParentDialog({ schoolId, schoolName, classes }: Props) {
             {ROLES.map((role) => renderPersonFields(role))}
           </div>
 
-          <div className="p-3 bg-blue-50 rounded-lg">
-            <p className="text-xs text-blue-700">
-              A separate login account is created for each parent added above. Default password: <strong>Parent@123</strong>
-            </p>
-          </div>
-
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
             <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
