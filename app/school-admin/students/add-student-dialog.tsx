@@ -129,7 +129,7 @@ export function AddStudentDialog({ classes, schoolId }: Props) {
         <UserPlus className="w-4 h-4 mr-2" /> Add Student
       </DialogTrigger>
 
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-4xl sm:max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Add New Student</DialogTitle>
         </DialogHeader>

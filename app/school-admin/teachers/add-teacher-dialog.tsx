@@ -71,7 +71,7 @@ export function AddTeacherDialog() {
       <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700" />}>
         <UserPlus className="w-4 h-4 mr-2" /> Add Teacher
       </DialogTrigger>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Teacher</DialogTitle>
         </DialogHeader>

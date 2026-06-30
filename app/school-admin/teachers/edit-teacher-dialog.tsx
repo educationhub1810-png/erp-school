@@ -114,7 +114,7 @@ export function EditTeacherDialog({ teacher, open, onOpenChange }: Props) {
         onOpenChange(v);
       }}
     >
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Teacher</DialogTitle>
         </DialogHeader>
