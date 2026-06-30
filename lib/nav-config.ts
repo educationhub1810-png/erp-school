@@ -60,7 +60,6 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: "Students", href: "/school-admin/students", icon: GraduationCap },
     { label: "Parents", href: "/school-admin/parents", icon: Home },
     { label: "Teachers", href: "/school-admin/teachers", icon: UserCheck },
-    { label: "Staff", href: "/school-admin/staff", icon: Briefcase },
     { label: "Classes", href: "/school-admin/classes", icon: BookOpen },
     { label: "Subjects", href: "/school-admin/subjects", icon: BookOpen },
     { label: "Timetable", href: "/school-admin/timetable", icon: CalendarCheck },
@@ -69,7 +68,6 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: "Fees", href: "/school-admin/fees", icon: DollarSign },
     { label: "Reports", href: "/school-admin/reports", icon: BarChart3 },
     { label: "Bug Board", href: "/school-admin/bugs", icon: Bug },
-    { label: "Settings", href: "/school-admin/settings", icon: Settings },
   ],
   PRINCIPAL: [
     { label: "Dashboard", href: "/principal/dashboard", icon: LayoutDashboard },
