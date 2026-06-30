@@ -14,6 +14,8 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { UserPlus, Loader2, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorDialog } from "@/components/shared/error-dialog";
+import { formatDobAsPassword } from "@/lib/utils";
+import { DOB_PASSWORD_STAFF_ROLES } from "@/lib/roles";
 import { ROLE_FIELDS, type StaffRole } from "@/app/super-admin/_staff/role-fields";
 import {
   nameField, emailField, mobileField, aadhaarField, panField, ifscField,
@@ -43,6 +45,7 @@ const baseSchema = z.object({
   employeeId: optionalTextField("Employee ID"),
   department: optionalTextField("Department"),
   designation: optionalTextField("Designation"),
+  dob: z.string().optional(),
   joiningDate: z.string().optional(),
   salary: moneyField("Salary"),
   pan: panField(),
@@ -65,13 +68,18 @@ export function CreateStaffDialog() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [createdCode, setCreatedCode] = useState<string | null>(null);
-  const [copiedField, setCopiedField] = useState<"code" | null>(null);
+  const [createdDob, setCreatedDob] = useState<string | null>(null);
+  const [createdRole, setCreatedRole] = useState<StaffRole | null>(null);
+  const [copiedField, setCopiedField] = useState<"code" | "dob" | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(baseSchema.superRefine((data, ctx) => {
       if (data.role !== "PRINCIPAL" && !data.employeeId) {
         ctx.addIssue({ code: "custom", message: "Employee ID is required", path: ["employeeId"] });
+      }
+      if (DOB_PASSWORD_STAFF_ROLES.includes(data.role) && !data.dob) {
+        ctx.addIssue({ code: "custom", message: "Date of birth is required", path: ["dob"] });
       }
     })),
     defaultValues: { role: "ACCOUNTANT" },
@@ -82,10 +90,18 @@ export function CreateStaffDialog() {
   const hasAutoCode = role in CODE_LABEL;
   const codeLabel = CODE_LABEL[role];
   const codePrefix = CODE_PREFIX[role];
+  const requiresDob = DOB_PASSWORD_STAFF_ROLES.includes(role);
 
-  const handleCopy = async (value: string) => {
+  // The success dialog stays open after the form resets back to its default
+  // role, so its copy must be derived from the role that was actually
+  // submitted (createdRole), not the live form state.
+  const createdRoleLabel = createdRole ? (ROLE_OPTIONS.find((r) => r.value === createdRole)?.label ?? "Staff") : "";
+  const createdCodeLabel = createdRole ? CODE_LABEL[createdRole] : undefined;
+  const createdRequiresDob = createdRole ? DOB_PASSWORD_STAFF_ROLES.includes(createdRole) : false;
+
+  const handleCopy = async (field: "code" | "dob", value: string) => {
     await navigator.clipboard.writeText(value);
-    setCopiedField("code");
+    setCopiedField(field);
     setTimeout(() => setCopiedField(null), 1500);
   };
 
@@ -104,6 +120,8 @@ export function CreateStaffDialog() {
       }
       toast.success(`${roleLabel} added successfully`);
       setCreatedCode(json.data?.employeeId ?? null);
+      setCreatedDob(json.data?.dob ?? null);
+      setCreatedRole(data.role);
       reset({ role: "ACCOUNTANT" });
       setOpen(false);
       router.refresh();
@@ -171,7 +189,7 @@ export function CreateStaffDialog() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className={`grid grid-cols-1 gap-3 ${requiresDob ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
             <div className="space-y-1.5">
               <Label>Email</Label>
               <Input type="email" placeholder="name@school.com" maxLength={FIELD_MAX.email} {...register("email")} />
@@ -182,6 +200,13 @@ export function CreateStaffDialog() {
               <Input type="tel" inputMode="numeric" placeholder="9876543210" maxLength={FIELD_MAX.mobile} onKeyDown={digitsOnlyKeyDown} {...register("mobile")} />
               {errors.mobile && <p className="text-xs text-red-500">{errors.mobile.message}</p>}
             </div>
+            {requiresDob && (
+              <div className="space-y-1.5">
+                <Label>Date of Birth *</Label>
+                <DatePicker value={watch("dob")} onChange={(v) => setValue("dob", v, { shouldValidate: true })} placeholder="Select date of birth" disableFuture />
+                {errors.dob && <p className="text-xs text-red-500">{errors.dob.message}</p>}
+              </div>
+            )}
           </div>
 
           <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{roleLabel} Details</p>
@@ -244,7 +269,11 @@ export function CreateStaffDialog() {
 
           <div className="p-3 bg-blue-50 rounded-lg">
             <p className="text-xs text-blue-700">
-              A login account will be created with the email above. Default password: <strong>Staff@123</strong>
+              {requiresDob ? (
+                <>A login account will be created with the email above. Password: their <strong>date of birth (DDMMYYYY)</strong>.</>
+              ) : (
+                <>A login account will be created with the email above. Default password: <strong>Staff@123</strong></>
+              )}
             </p>
           </div>
 
@@ -259,26 +288,44 @@ export function CreateStaffDialog() {
       </DialogContent>
     </Dialog>
 
-    <Dialog open={!!createdCode} onOpenChange={(o) => { if (!o) setCreatedCode(null); }}>
+    <Dialog open={!!createdCode} onOpenChange={(o) => { if (!o) { setCreatedCode(null); setCreatedDob(null); setCreatedRole(null); } }}>
       <DialogContent showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>{roleLabel} Added Successfully</DialogTitle>
+          <DialogTitle>{createdRoleLabel} Added Successfully</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">
-          Share this {(codeLabel ?? "employee id").toLowerCase()} with the {roleLabel.toLowerCase()} to log in.
+          Share this {(createdCodeLabel ?? "employee id").toLowerCase()} with the {createdRoleLabel.toLowerCase()} to log in.
+          {createdRequiresDob && " The password is their date of birth (DDMMYYYY)."}
         </p>
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">{codeLabel ?? "Employee ID"}</Label>
-          <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
-            <span className="font-mono text-base font-semibold tracking-wide">{createdCode}</span>
-            <Button type="button" variant="outline" size="sm" onClick={() => createdCode && handleCopy(createdCode)}>
-              {copiedField === "code" ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
-              {copiedField === "code" ? "Copied" : "Copy"}
-            </Button>
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">{createdCodeLabel ?? "Employee ID"}</Label>
+            <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
+              <span className="font-mono text-base font-semibold tracking-wide">{createdCode}</span>
+              <Button type="button" variant="outline" size="sm" onClick={() => createdCode && handleCopy("code", createdCode)}>
+                {copiedField === "code" ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                {copiedField === "code" ? "Copied" : "Copy"}
+              </Button>
+            </div>
           </div>
+
+          {createdDob && (
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Date of Birth</Label>
+              <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-3 py-2.5">
+                <span className="font-mono text-base font-semibold tracking-wide">
+                  {formatDobAsPassword(createdDob)}
+                </span>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleCopy("dob", formatDobAsPassword(createdDob))}>
+                  {copiedField === "dob" ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                  {copiedField === "dob" ? "Copied" : "Copy"}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
         <DialogFooter>
-          <Button type="button" className="bg-indigo-600 hover:bg-indigo-700" onClick={() => setCreatedCode(null)}>
+          <Button type="button" className="bg-indigo-600 hover:bg-indigo-700" onClick={() => { setCreatedCode(null); setCreatedDob(null); setCreatedRole(null); }}>
             OK
           </Button>
         </DialogFooter>
