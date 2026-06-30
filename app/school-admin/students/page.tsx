@@ -40,7 +40,7 @@ export default async function StudentsPage({ searchParams }: Props) {
     }),
   };
 
-  const [students, total, classesQuery, principalName] = await Promise.all([
+  const [students, total, classesQuery, principalName, school] = await Promise.all([
     prisma.student.findMany({
       where,
       include: {
@@ -58,6 +58,7 @@ export default async function StudentsPage({ searchParams }: Props) {
       include: { sections: true },
     }),
     getPrincipalName(schoolId),
+    prisma.school.findUnique({ where: { id: schoolId }, select: { name: true } }),
   ]);
   let classesRaw = classesQuery;
   if (await ensureClassSections(classesRaw)) {
@@ -77,7 +78,7 @@ export default async function StudentsPage({ searchParams }: Props) {
             {principalName && <span> · Principal: <span className="text-gray-700 font-medium">{principalName}</span></span>}
           </p>
         </div>
-        <AddStudentDialog classes={classes} schoolId={schoolId} />
+        <AddStudentDialog classes={classes} schoolId={schoolId} schoolName={school?.name ?? ""} />
       </div>
 
       <StudentFilters classes={classes} />
