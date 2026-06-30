@@ -21,7 +21,20 @@ describe("POST /api/v1/teachers", () => {
       POST,
       buildRequest("/api/v1/teachers", {
         method: "POST",
-        body: { name: "New Teacher", mobile: "12345" },
+        body: { name: "New Teacher", mobile: "12345", dob: "1990-05-15" },
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("400s when date of birth is missing", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+
+    const res = await callRoute(
+      POST,
+      buildRequest("/api/v1/teachers", {
+        method: "POST",
+        body: { name: "New Teacher" },
       }),
     );
     expect(res.status).toBe(400);

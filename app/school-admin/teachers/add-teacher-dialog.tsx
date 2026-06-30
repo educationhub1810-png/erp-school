@@ -16,8 +16,8 @@ import { toast } from "sonner";
 import { ErrorDialog } from "@/components/shared/error-dialog";
 import { formatDobAsPassword } from "@/lib/utils";
 import {
-  nameField, emailField, mobileField, aadhaarField, panField, ifscField,
-  accountNumberField, moneyField, positiveIntField, optionalTextField, FIELD_MAX,
+  nameField, emailField, mobileField, aadhaarField, panField,
+  moneyField, positiveIntField, optionalTextField, FIELD_MAX,
 } from "@/lib/field-validation";
 import { digitsOnlyKeyDown } from "@/lib/field-behavior";
 
@@ -35,8 +35,8 @@ const schema = z.object({
   pan: panField(),
   aadhaar: aadhaarField(),
   bankName: optionalTextField("Bank name"),
-  accountNumber: accountNumberField(),
-  ifscCode: ifscField(),
+}).superRefine((data, ctx) => {
+  if (!data.dob) ctx.addIssue({ code: "custom", message: "Date of birth is required", path: ["dob"] });
 });
 
 type FormInput = z.input<typeof schema>;
@@ -148,8 +148,9 @@ export function AddTeacherDialog({ schoolName }: Props) {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label>Date of Birth</Label>
-              <DatePicker value={watch("dob")} onChange={(v) => setValue("dob", v)} placeholder="Select date of birth" disableFuture />
+              <Label>Date of Birth *</Label>
+              <DatePicker value={watch("dob")} onChange={(v) => setValue("dob", v, { shouldValidate: true })} placeholder="Select date of birth" disableFuture />
+              {errors.dob && <p className="text-xs text-red-500">{errors.dob.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Qualification</Label>
@@ -195,19 +196,6 @@ export function AddTeacherDialog({ schoolName }: Props) {
               <Label>Bank Name</Label>
               <Input maxLength={FIELD_MAX.shortText} {...register("bankName")} />
               {errors.bankName && <p className="text-xs text-red-500">{errors.bankName.message}</p>}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Account Number</Label>
-              <Input inputMode="numeric" maxLength={FIELD_MAX.accountNumber} onKeyDown={digitsOnlyKeyDown} {...register("accountNumber")} />
-              {errors.accountNumber && <p className="text-xs text-red-500">{errors.accountNumber.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label>IFSC Code</Label>
-              <Input maxLength={FIELD_MAX.ifsc} {...register("ifscCode")} />
-              {errors.ifscCode && <p className="text-xs text-red-500">{errors.ifscCode.message}</p>}
             </div>
           </div>
 
