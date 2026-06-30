@@ -58,6 +58,7 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
   SCHOOL_ADMIN: [
     { label: "Dashboard", href: "/school-admin/dashboard", icon: LayoutDashboard },
     { label: "Students", href: "/school-admin/students", icon: GraduationCap },
+    { label: "Parents", href: "/school-admin/parents", icon: Home },
     { label: "Teachers", href: "/school-admin/teachers", icon: UserCheck },
     { label: "Staff", href: "/school-admin/staff", icon: Briefcase },
     { label: "Classes", href: "/school-admin/classes", icon: BookOpen },

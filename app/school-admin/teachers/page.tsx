@@ -34,7 +34,7 @@ export default async function TeachersPage({ searchParams }: Props) {
     }),
   };
 
-  const [teachers, total, principalName] = await Promise.all([
+  const [teachers, total, principalName, school] = await Promise.all([
     prisma.teacher.findMany({
       where,
       include: { user: { select: { name: true, email: true, mobile: true, isActive: true } } },
@@ -44,6 +44,7 @@ export default async function TeachersPage({ searchParams }: Props) {
     }),
     prisma.teacher.count({ where }),
     getPrincipalName(schoolId),
+    prisma.school.findUnique({ where: { id: schoolId }, select: { name: true } }),
   ]);
 
   const totalPages = Math.ceil(total / limit);
@@ -58,7 +59,7 @@ export default async function TeachersPage({ searchParams }: Props) {
             {principalName && <span> · Principal: <span className="text-gray-700 font-medium">{principalName}</span></span>}
           </p>
         </div>
-        <AddTeacherDialog />
+        <AddTeacherDialog schoolName={school?.name ?? ""} />
       </div>
 
       <Card className="border-0 shadow-sm">
