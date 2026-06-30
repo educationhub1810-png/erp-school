@@ -26,6 +26,8 @@ const createSchema = z.object({
   bankName: optionalTextField("Bank name"),
   accountNumber: accountNumberField(),
   ifscCode: ifscField(),
+}).superRefine((data, ctx) => {
+  if (!data.dob) ctx.addIssue({ code: "custom", message: "Date of birth is required", path: ["dob"] });
 });
 
 export async function GET(req: Request) {
