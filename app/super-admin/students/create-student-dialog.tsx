@@ -10,15 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { DatePicker } from "@/components/ui/date-picker";
 import { UserPlus, Loader2, ChevronRight, ChevronLeft, Check, Upload, X, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { cn, formatDobAsPassword } from "@/lib/utils";
 import { getStudentAvatarSrc } from "@/lib/student-avatar";
-import { nameField, optionalTextField, optionalLongTextField, emailField, mobileField, aadhaarField, addressField, FIELD_MAX } from "@/lib/field-validation";
+import { nameField, optionalTextField, emailField, mobileField, aadhaarField, addressField, pincodeField, FIELD_MAX } from "@/lib/field-validation";
 import { digitsOnlyKeyDown } from "@/lib/field-behavior";
+import { INDIAN_STATES } from "@/lib/indian-states";
 
 const MAX_PHOTO_BYTES = 1_500_000;
 
@@ -40,15 +40,18 @@ const schema = z.object({
   classId: z.string().min(1, "Class is required"),
   sectionId: z.string().optional(),
   admissionDate: z.string().optional(),
-  house: z.string().optional(),
   previousSchool: optionalTextField("Previous school"),
   transportRequired: z.boolean(),
   hostelRequired: z.boolean(),
-  medicalNotes: optionalLongTextField("Medical notes"),
   // Step 3: Contact
   email: emailField(),
   mobile: mobileField(),
-  address: addressField(),
+  addressLine1: addressField(),
+  addressLine2: optionalTextField("Address line 2"),
+  zipCode: pincodeField(),
+  city: optionalTextField("City"),
+  state: z.string().optional(),
+  country: optionalTextField("Country"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -57,7 +60,7 @@ const STEPS = ["Personal", "Academic", "Contact"];
 const FIELD_STEP: Partial<Record<keyof FormValues, number>> = {
   schoolId: 0, firstName: 0, lastName: 0, gender: 0, dob: 0,
   classId: 1,
-  email: 2, mobile: 2, address: 2,
+  email: 2, mobile: 2, addressLine1: 2, addressLine2: 2, zipCode: 2, city: 2, state: 2, country: 2,
 };
 const STEP_FIELDS: (keyof FormValues)[][] = [
   ["schoolId", "firstName", "lastName", "gender", "dob"],
@@ -67,7 +70,6 @@ const STEP_FIELDS: (keyof FormValues)[][] = [
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const CATEGORIES = ["General", "OBC", "SC", "ST", "EWS", "Other"];
 const RELIGIONS = ["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Other"];
-const HOUSES = ["Red", "Blue", "Green", "Yellow", "House A", "House B", "House C", "House D"];
 
 interface School {
   id: string;
@@ -115,6 +117,7 @@ export function CreateStudentDialog({ schools, defaultSchoolId, triggerContent, 
       transportRequired: false,
       hostelRequired: false,
       admissionDate: new Date().toISOString().split("T")[0],
+      country: "India",
     },
   });
 
@@ -433,19 +436,10 @@ export function CreateStudentDialog({ schools, defaultSchoolId, triggerContent, 
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Admission Date</Label>
                     <DatePicker value={watch("admissionDate")} onChange={(v) => setValue("admissionDate", v)} placeholder="Select admission date" disableFuture />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>House</Label>
-                    <Select onValueChange={(v) => setValue("house", v as string)}>
-                      <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
-                      <SelectContent>
-                        {HOUSES.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
                   </div>
                   <div className="space-y-1.5">
                     <Label>Previous School</Label>
@@ -463,12 +457,6 @@ export function CreateStudentDialog({ schools, defaultSchoolId, triggerContent, 
                     <input type="checkbox" className="w-4 h-4 rounded" {...register("hostelRequired")} />
                     <span className="text-sm text-gray-700">Hostel Required</span>
                   </label>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label>Medical Notes</Label>
-                  <Textarea rows={2} placeholder="Any medical conditions or allergies..." maxLength={FIELD_MAX.longText} {...register("medicalNotes")} />
-                  {errors.medicalNotes && <p className="text-xs text-red-500">{errors.medicalNotes.message}</p>}
                 </div>
               </>
             )}
@@ -488,10 +476,43 @@ export function CreateStudentDialog({ schools, defaultSchoolId, triggerContent, 
                     {errors.mobile && <p className="text-xs text-red-500">{errors.mobile.message}</p>}
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Address</Label>
-                  <Textarea rows={3} placeholder="Full address..." maxLength={FIELD_MAX.address} {...register("address")} />
-                  {errors.address && <p className="text-xs text-red-500">{errors.address.message}</p>}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Address Line 1</Label>
+                    <Input placeholder="Building, Street, Area" maxLength={FIELD_MAX.address} {...register("addressLine1")} />
+                    {errors.addressLine1 && <p className="text-xs text-red-500">{errors.addressLine1.message}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Address Line 2</Label>
+                    <Input maxLength={FIELD_MAX.shortText} {...register("addressLine2")} />
+                    {errors.addressLine2 && <p className="text-xs text-red-500">{errors.addressLine2.message}</p>}
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>City</Label>
+                    <Input maxLength={FIELD_MAX.shortText} {...register("city")} />
+                    {errors.city && <p className="text-xs text-red-500">{errors.city.message}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>State</Label>
+                    <Select value={watch("state") ?? ""} onValueChange={(v) => { if (v != null) setValue("state", v as string); }}>
+                      <SelectTrigger className="w-full"><SelectValue placeholder="Select state" /></SelectTrigger>
+                      <SelectContent>
+                        {INDIAN_STATES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Zip Code</Label>
+                    <Input inputMode="numeric" placeholder="110001" maxLength={FIELD_MAX.pincode} onKeyDown={digitsOnlyKeyDown} {...register("zipCode")} />
+                    {errors.zipCode && <p className="text-xs text-red-500">{errors.zipCode.message}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Country</Label>
+                    <Input maxLength={FIELD_MAX.shortText} {...register("country")} />
+                    {errors.country && <p className="text-xs text-red-500">{errors.country.message}</p>}
+                  </div>
                 </div>
               </>
             )}

@@ -3,7 +3,7 @@ import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
 import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
 import { imageDataUrl } from "@/lib/validation";
-import { nameField, optionalTextField, optionalLongTextField, emailField, mobileField, aadhaarField, addressField } from "@/lib/field-validation";
+import { nameField, optionalTextField, optionalLongTextField, emailField, mobileField, aadhaarField, addressField, pincodeField } from "@/lib/field-validation";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
@@ -23,7 +23,12 @@ const createSchema = z.object({
   // Contact
   email: emailField(),
   mobile: mobileField(),
-  address: addressField(),
+  addressLine1: addressField(),
+  addressLine2: optionalTextField("Address line 2"),
+  zipCode: pincodeField(),
+  city: optionalTextField("City"),
+  state: optionalTextField("State"),
+  country: optionalTextField("Country"),
   // Academic
   classId: z.string().min(1, "Class is required"),
   sectionId: z.string().optional(),
@@ -106,6 +111,12 @@ export async function GET(req: Request) {
         aadhaar: true,
         medicalNotes: true,
         previousSchool: true,
+        addressLine1: true,
+        addressLine2: true,
+        zipCode: true,
+        city: true,
+        state: true,
+        country: true,
       }),
       school: { select: { name: true, code: true } },
       class: { select: { name: true } },
@@ -214,6 +225,12 @@ export async function POST(req: Request) {
               transportRequired: data.transportRequired,
               hostelRequired: data.hostelRequired,
               medicalNotes: data.medicalNotes || null,
+              addressLine1: data.addressLine1 || null,
+              addressLine2: data.addressLine2 || null,
+              zipCode: data.zipCode || null,
+              city: data.city || null,
+              state: data.state || null,
+              country: data.country || null,
             },
           });
 

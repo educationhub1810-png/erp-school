@@ -129,6 +129,27 @@ describe("POST /api/v1/students", () => {
     expect(String(userArg.passwordHash)).not.toBe("Student@123");
   });
 
+  it("400s on a malformed zip code", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    const res = await callRoute(POST, buildRequest("/api/v1/students", { method: "POST", body: { ...validBody, zipCode: "123" } }));
+    expect(res.status).toBe(400);
+  });
+
+  it("persists the split address fields on the student record", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    await callRoute(POST, buildRequest("/api/v1/students", {
+      method: "POST",
+      body: { ...validBody, addressLine1: "221B Baker Street", addressLine2: "Near Park", zipCode: "110001", city: "New Delhi", state: "Delhi", country: "India" },
+    }));
+    const studentArg = prismaMock.student.create.mock.calls[0][0]!.data as Record<string, unknown>;
+    expect(studentArg.addressLine1).toBe("221B Baker Street");
+    expect(studentArg.addressLine2).toBe("Near Park");
+    expect(studentArg.zipCode).toBe("110001");
+    expect(studentArg.city).toBe("New Delhi");
+    expect(studentArg.state).toBe("Delhi");
+    expect(studentArg.country).toBe("India");
+  });
+
   it("creates a parent record only when parent info is provided", async () => {
     setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
     await callRoute(POST, buildRequest("/api/v1/students", { method: "POST", body: validBody }));
