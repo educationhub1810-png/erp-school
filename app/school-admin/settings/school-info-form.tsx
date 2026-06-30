@@ -15,6 +15,7 @@ import { useState } from "react";
 import type { School } from "@/lib/generated/prisma/client";
 import { nameField, optionalTextField, emailField, mobileField, addressField, FIELD_MAX } from "@/lib/field-validation";
 import { digitsOnlyKeyDown } from "@/lib/field-behavior";
+import { INDIAN_STATES } from "@/lib/indian-states";
 
 const schema = z.object({
   name: nameField("School name"),
@@ -32,15 +33,6 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
-
-const INDIAN_STATES = [
-  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
-  "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
-  "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram",
-  "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
-  "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
-  "Delhi", "Jammu & Kashmir", "Ladakh", "Puducherry", "Chandigarh",
-];
 
 export function SchoolInfoForm({ school }: { school: School }) {
   const router = useRouter();

@@ -15,6 +15,7 @@ import { Plus, Loader2, AlertCircle, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { nameField, emailField, mobileField, optionalTextField, addressField, FIELD_MAX } from "@/lib/field-validation";
 import { digitsOnlyKeyDown } from "@/lib/field-behavior";
+import { INDIAN_STATES } from "@/lib/indian-states";
 
 const schema = z.object({
   name: nameField("School name"),
@@ -31,15 +32,6 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
-
-const INDIAN_STATES = [
-  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
-  "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
-  "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram",
-  "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
-  "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
-  "Delhi", "Jammu & Kashmir", "Ladakh", "Puducherry", "Chandigarh",
-];
 
 export function CreateSchoolDialog() {
   const router = useRouter();

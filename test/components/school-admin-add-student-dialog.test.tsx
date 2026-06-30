@@ -61,7 +61,20 @@ describe("AddStudentDialog (school-admin)", () => {
     expect(screen.queryByText(/select class/i)).not.toBeInTheDocument();
   });
 
-  it("walks through all 3 steps and submits with schoolId, showing the student code + DOB password", async () => {
+  it("does not render House or Medical Notes fields on the Academic step", async () => {
+    const user = userEvent.setup();
+    render(<AddStudentDialog classes={classes} schoolId="school-1" schoolName="Vidyapeeth School" />);
+    await user.click(screen.getByRole("button", { name: /^add student$/i }));
+
+    await fillPersonalStep(user);
+    await user.click(nextButton());
+    await screen.findByText("Roll Number");
+
+    expect(screen.queryByText("House")).not.toBeInTheDocument();
+    expect(screen.queryByText("Medical Notes")).not.toBeInTheDocument();
+  });
+
+  it("walks through all 3 steps and submits split address fields with schoolId, showing the student code + DOB password", async () => {
     const user = userEvent.setup();
     render(<AddStudentDialog classes={classes} schoolId="school-1" schoolName="Vidyapeeth School" />);
     await user.click(screen.getByRole("button", { name: /^add student$/i }));
@@ -76,7 +89,10 @@ describe("AddStudentDialog (school-admin)", () => {
     await user.click(nextButton());
 
     // Step 3: Contact
-    await screen.findByText("Address");
+    await screen.findByText("Address Line 1");
+    await user.type(inputForLabel("Address Line 1"), "221B Baker Street");
+    await user.type(inputForLabel("City"), "New Delhi");
+    await user.type(inputForLabel("Zip Code"), "110001");
     await user.click(screen.getByRole("button", { name: /save student/i }));
 
     await waitFor(() => expect(global.fetch).toHaveBeenCalledOnce());
@@ -87,6 +103,12 @@ describe("AddStudentDialog (school-admin)", () => {
     expect(body.firstName).toBe("Asha");
     expect(body.lastName).toBe("Rao");
     expect(body.classId).toBe("class-1");
+    expect(body.addressLine1).toBe("221B Baker Street");
+    expect(body.city).toBe("New Delhi");
+    expect(body.zipCode).toBe("110001");
+    expect(body.country).toBe("India");
+    expect(body.house).toBeUndefined();
+    expect(body.medicalNotes).toBeUndefined();
     expect(body.fatherName).toBeUndefined();
 
     expect(await screen.findByText(/student added successfully/i)).toBeInTheDocument();
@@ -104,12 +126,31 @@ describe("AddStudentDialog (school-admin)", () => {
     await screen.findByText("Roll Number");
     await selectOnlyClass(user);
     await user.click(nextButton());
-    await screen.findByText("Address");
+    await screen.findByText("Address Line 1");
 
     await user.type(inputForLabel("Mobile"), "12345");
     await user.click(screen.getByRole("button", { name: /save student/i }));
 
     expect(await screen.findByText(/valid 10-digit mobile number/i)).toBeInTheDocument();
+    expect(global.fetch).not.toHaveBeenCalled();
+  }, 15000);
+
+  it("rejects a malformed zip code on the Contact step", async () => {
+    const user = userEvent.setup();
+    render(<AddStudentDialog classes={classes} schoolId="school-1" schoolName="Vidyapeeth School" />);
+    await user.click(screen.getByRole("button", { name: /^add student$/i }));
+
+    await fillPersonalStep(user);
+    await user.click(nextButton());
+    await screen.findByText("Roll Number");
+    await selectOnlyClass(user);
+    await user.click(nextButton());
+    await screen.findByText("Address Line 1");
+
+    await user.type(inputForLabel("Zip Code"), "123");
+    await user.click(screen.getByRole("button", { name: /save student/i }));
+
+    expect(await screen.findByText(/valid 6-digit pin code/i)).toBeInTheDocument();
     expect(global.fetch).not.toHaveBeenCalled();
   }, 15000);
 });
