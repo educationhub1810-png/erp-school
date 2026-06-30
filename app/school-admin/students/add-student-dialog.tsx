@@ -434,11 +434,6 @@ export function AddStudentDialog({ classes, schoolId, schoolName }: Props) {
                   <Textarea rows={3} placeholder="Full address..." maxLength={FIELD_MAX.address} {...register("address")} />
                   {errors.address && <p className="text-xs text-red-500">{errors.address.message}</p>}
                 </div>
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <p className="text-xs text-blue-700">
-                    A login account will be created with the email above. Default password: <strong>Student@123</strong>
-                  </p>
-                </div>
               </>
             )}
           </div>
