@@ -7,8 +7,24 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
-function Dialog({ ...props }: DialogPrimitive.Root.Props) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+function Dialog({ onOpenChange, ...props }: DialogPrimitive.Root.Props) {
+  return (
+    <DialogPrimitive.Root
+      data-slot="dialog"
+      onOpenChange={(open, eventDetails) => {
+        // Only let the dialog close via its explicit close button (or a
+        // programmatic close, e.g. after a successful submit) — never from
+        // clicking outside, pressing Escape, or losing focus, so in-progress
+        // form data is never lost to an accidental dismiss.
+        if (!open && eventDetails.reason !== "close-press" && eventDetails.reason !== "imperative-action") {
+          eventDetails.cancel()
+          return
+        }
+        onOpenChange?.(open, eventDetails)
+      }}
+      {...props}
+    />
+  )
 }
 
 function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
