@@ -24,6 +24,7 @@ import {
   Bug,
   FlaskConical,
   ShieldAlert,
+  ShieldCheck,
 } from "lucide-react";
 
 export type NavItem = {
@@ -37,6 +38,7 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
   SUPER_ADMIN: [
     { label: "Dashboard", href: "/super-admin/dashboard", icon: LayoutDashboard },
     { label: "Schools", href: "/super-admin/schools", icon: School },
+    { label: "School Admins", href: "/super-admin/school-admins", icon: ShieldCheck },
     { label: "Students", href: "/super-admin/students", icon: GraduationCap },
     { label: "Principals", href: "/super-admin/principals", icon: UserCog },
     { label: "Teachers", href: "/super-admin/teachers", icon: UserCheck },

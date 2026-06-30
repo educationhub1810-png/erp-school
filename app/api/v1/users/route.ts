@@ -12,7 +12,7 @@ const createSchema = z.object({
   name: nameField(),
   email: emailField(),
   mobile: mobileField(),
-  role: z.enum(["PRINCIPAL", "TEACHER", "STUDENT", "PARENT", "ACCOUNTANT", "LIBRARIAN", "TRANSPORT_MANAGER", "HR_MANAGER", "WARDEN_MANAGER", "MESS_MANAGER"]),
+  role: z.enum(["SCHOOL_ADMIN", "PRINCIPAL", "TEACHER", "STUDENT", "PARENT", "ACCOUNTANT", "LIBRARIAN", "TRANSPORT_MANAGER", "HR_MANAGER", "WARDEN_MANAGER", "MESS_MANAGER"]),
   password: z.string().min(6, "Min 6 characters").max(72, "Password is too long").optional(),
 });
 
@@ -61,6 +61,8 @@ export async function POST(req: Request) {
     if (!parsed.success) return badRequest(parsed.error.issues[0].message);
 
     const data = parsed.data;
+
+    if (data.role === "SCHOOL_ADMIN" && actor.role !== "SUPER_ADMIN") return forbidden();
 
     const schoolId = actor.role === "SUPER_ADMIN" ? data.schoolId : actor.schoolId;
     if (!schoolId) return badRequest("School is required");
