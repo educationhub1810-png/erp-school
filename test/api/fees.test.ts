@@ -213,3 +213,94 @@ describe("POST /api/v1/fees/payments", () => {
     expect(data.periodLabel).toBe("Q2 Jul–Sep 2025");
   });
 });
+
+describe("PUT /api/v1/fees/structures/[id]", () => {
+  it("updates a fee structure that belongs to the school", async () => {
+    const { PUT } = await import("@/app/api/v1/fees/structures/[id]/route");
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    prismaMock.feeStructure.findFirst.mockResolvedValue(makeFeeStructure({ schoolId: "school-1" }) as never);
+    prismaMock.feeStructure.update.mockResolvedValue(makeFeeStructure({ feeType: "Updated Fee" }) as never);
+
+    const res = await callRoute(
+      PUT,
+      buildRequest("/api/v1/fees/structures/fee-structure-1", {
+        method: "PUT",
+        body: { feeType: "Updated Fee", amount: 6000 },
+      }),
+      { params: Promise.resolve({ id: "fee-structure-1" }) },
+    );
+    expect(res.status).toBe(200);
+    const data = prismaMock.feeStructure.update.mock.calls[0][0]!.data as Record<string, unknown>;
+    expect(data.feeType).toBe("Updated Fee");
+    expect(data.amount).toBe(6000);
+  });
+
+  it("404s when the fee structure does not belong to the school", async () => {
+    const { PUT } = await import("@/app/api/v1/fees/structures/[id]/route");
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    prismaMock.feeStructure.findFirst.mockResolvedValue(null as never);
+
+    const res = await callRoute(
+      PUT,
+      buildRequest("/api/v1/fees/structures/other-id", { method: "PUT", body: { feeType: "X", amount: 1 } }),
+      { params: Promise.resolve({ id: "other-id" }) },
+    );
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("DELETE /api/v1/fees/structures/[id]", () => {
+  it("deletes a fee structure that belongs to the school", async () => {
+    const { DELETE } = await import("@/app/api/v1/fees/structures/[id]/route");
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    prismaMock.feeStructure.findFirst.mockResolvedValue(makeFeeStructure({ schoolId: "school-1" }) as never);
+    prismaMock.feeStructure.delete.mockResolvedValue(makeFeeStructure() as never);
+
+    const res = await callRoute(
+      DELETE,
+      buildRequest("/api/v1/fees/structures/fee-structure-1", { method: "DELETE" }),
+      { params: Promise.resolve({ id: "fee-structure-1" }) },
+    );
+    expect(res.status).toBe(200);
+    expect(prismaMock.feeStructure.delete).toHaveBeenCalledWith({ where: { id: "fee-structure-1" } });
+  });
+});
+
+describe("PUT /api/v1/fees/payments/[id]", () => {
+  it("updates a payment and persists the new periodLabel", async () => {
+    const { PUT } = await import("@/app/api/v1/fees/payments/[id]/route");
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    prismaMock.feePayment.findFirst.mockResolvedValue(makeFeePayment({ schoolId: "school-1" }) as never);
+    prismaMock.feePayment.update.mockResolvedValue(makeFeePayment({ periodLabel: "Q2 Jul–Sep 2025" }) as never);
+
+    const res = await callRoute(
+      PUT,
+      buildRequest("/api/v1/fees/payments/payment-1", {
+        method: "PUT",
+        body: { amountPaid: 5000, paymentMode: "UPI", status: "PAID", periodLabel: "Q2 Jul–Sep 2025" },
+      }),
+      { params: Promise.resolve({ id: "payment-1" }) },
+    );
+    expect(res.status).toBe(200);
+    const data = prismaMock.feePayment.update.mock.calls[0][0]!.data as Record<string, unknown>;
+    expect(data.periodLabel).toBe("Q2 Jul–Sep 2025");
+    expect(data.paymentMode).toBe("UPI");
+  });
+});
+
+describe("DELETE /api/v1/fees/payments/[id]", () => {
+  it("deletes a payment that belongs to the school", async () => {
+    const { DELETE } = await import("@/app/api/v1/fees/payments/[id]/route");
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    prismaMock.feePayment.findFirst.mockResolvedValue(makeFeePayment({ schoolId: "school-1" }) as never);
+    prismaMock.feePayment.delete.mockResolvedValue(makeFeePayment() as never);
+
+    const res = await callRoute(
+      DELETE,
+      buildRequest("/api/v1/fees/payments/payment-1", { method: "DELETE" }),
+      { params: Promise.resolve({ id: "payment-1" }) },
+    );
+    expect(res.status).toBe(200);
+    expect(prismaMock.feePayment.delete).toHaveBeenCalledWith({ where: { id: "payment-1" } });
+  });
+});
