@@ -13,6 +13,7 @@ const createSchema = z.object({
   paymentMode: z.enum(["CASH", "CHEQUE", "ONLINE", "NEFT", "UPI", "CARD"]),
   transactionId: optionalTextField("Transaction ID"),
   status: z.enum(["PENDING", "PAID", "PARTIAL", "OVERDUE", "CANCELLED"]),
+  periodLabel: z.string().max(100).optional(),
   remarks: optionalLongTextField("Remarks"),
 });
 
@@ -54,6 +55,7 @@ export async function POST(req: Request) {
         paymentMode: data.paymentMode,
         transactionId: data.transactionId || null,
         status: data.status,
+        periodLabel: data.periodLabel || null,
         remarks: data.remarks || null,
       },
     });

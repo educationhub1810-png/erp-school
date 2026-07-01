@@ -44,6 +44,15 @@ describe("POST /api/v1/fees/structures", () => {
     frequency: "MONTHLY",
   };
 
+  it("accepts HALF_YEARLY as a valid frequency", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    const res = await callRoute(
+      POST_STRUCTURE,
+      buildRequest("/api/v1/fees/structures", { method: "POST", body: { ...validBody, frequency: "HALF_YEARLY", monthlyDueDay: undefined } }),
+    );
+    expect(res.status).toBe(201);
+  });
+
   beforeEach(() => {
     prismaMock.academicYear.findFirst.mockResolvedValue({ id: "ay-1" } as never);
     prismaMock.feeStructure.create.mockResolvedValue(makeFeeStructure() as never);
@@ -192,5 +201,15 @@ describe("POST /api/v1/fees/payments", () => {
     expect(data.studentId).toBe("student-1");
     expect(data.feeStructureId).toBe("fee-structure-1");
     expect(String(data.receiptNumber)).toMatch(/^RCPT-SCH001-\d{8}$/);
+  });
+
+  it("stores the periodLabel on the payment record", async () => {
+    setSession(sessionFor("SCHOOL_ADMIN", { schoolId: "school-1" }));
+    await callRoute(POST_PAYMENT, buildRequest("/api/v1/fees/payments", {
+      method: "POST",
+      body: { ...validBody, periodLabel: "Q2 Jul–Sep 2025" },
+    }));
+    const data = prismaMock.feePayment.create.mock.calls[0][0]!.data as Record<string, unknown>;
+    expect(data.periodLabel).toBe("Q2 Jul–Sep 2025");
   });
 });
