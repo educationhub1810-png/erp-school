@@ -60,6 +60,7 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: "Students", href: "/school-admin/students", icon: GraduationCap },
     { label: "Parents", href: "/school-admin/parents", icon: Home },
     { label: "Teachers", href: "/school-admin/teachers", icon: UserCheck },
+    { label: "Principal", href: "/school-admin/principals", icon: UserCog },
     { label: "Classes", href: "/school-admin/classes", icon: BookOpen },
     { label: "Subjects", href: "/school-admin/subjects", icon: BookOpen },
     { label: "Timetable", href: "/school-admin/timetable", icon: CalendarCheck },
