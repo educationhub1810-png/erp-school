@@ -136,6 +136,7 @@ enum FrequencyType {
   ONE_TIME
   MONTHLY
   QUARTERLY
+  HALF_YEARLY
   ANNUALLY
 }
 
@@ -731,6 +732,8 @@ model FeeStructure {
   amount         Float
   dueDate        DateTime?
   frequency      FrequencyType @default(ONE_TIME)
+  monthlyDueDay  Int?          // day-of-month (1–31) for MONTHLY structures
+  installments   Json?         // [{period:"Q1 Apr–Jun",dueDate:"2025-06-30"},…] for QUARTERLY/HALF_YEARLY
   description    String?
   createdAt      DateTime      @default(now())
 
@@ -754,6 +757,7 @@ model FeePayment {
   transactionId   String?
   status          PaymentStatus @default(PAID)
   remarks         String?
+  periodLabel     String?       // e.g. "January 2025", "Q2 Jul–Sep 2025", "Apr–Sep 2025"
 
   student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
   feeStructure FeeStructure @relation(fields: [feeStructureId], references: [id], onDelete: Cascade)

@@ -8,6 +8,7 @@ export interface ReceiptDetails {
   receiptNumber: string;
   studentName: string;
   feeType: string;
+  periodLabel?: string | null;
   amountPaid: number;
   remaining: number;
   paymentDate: string | null;
@@ -17,8 +18,7 @@ export interface ReceiptDetails {
   schoolCode: string;
 }
 
-// jsPDF's built-in fonts don't have a ₹ glyph, so the PDF itself uses "Rs."
-// instead of the ₹ symbol used everywhere else in the UI.
+// jsPDF's built-in fonts don't have a ₹ glyph — the PDF uses "Rs." instead.
 async function generateReceiptPdf(receipt: ReceiptDetails) {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF();
@@ -40,13 +40,17 @@ async function generateReceiptPdf(receipt: ReceiptDetails) {
     doc.text(value, 90, y);
     y += 9;
   };
-  row("Receipt No:", receipt.receiptNumber);
-  row("Date:", receipt.paymentDate ? new Date(receipt.paymentDate).toLocaleDateString("en-IN") : "—");
-  row("Student Name:", receipt.studentName);
-  row("Fee Type:", receipt.feeType);
-  row("Amount Paid:", `Rs. ${receipt.amountPaid.toLocaleString("en-IN")}`);
-  row("Payment Mode:", receipt.paymentMode);
-  row("Status:", receipt.status);
+
+  row("Receipt No:",        receipt.receiptNumber);
+  row("Date:",              receipt.paymentDate ? new Date(receipt.paymentDate).toLocaleDateString("en-IN") : "—");
+  row("Student Name:",      receipt.studentName);
+  row("Fee Type:",          receipt.feeType);
+  if (receipt.periodLabel) {
+    row("Period:",          receipt.periodLabel);
+  }
+  row("Amount Paid:",       `Rs. ${receipt.amountPaid.toLocaleString("en-IN")}`);
+  row("Payment Mode:",      receipt.paymentMode);
+  row("Status:",            receipt.status);
   row("Remaining Balance:", `Rs. ${receipt.remaining.toLocaleString("en-IN")}`);
 
   doc.line(20, y + 2, 190, y + 2);
@@ -69,7 +73,11 @@ export function DownloadReceiptButton({ receipt }: { receipt: ReceiptDetails }) 
   };
 
   return (
-    <Button type="button" variant="ghost" size="sm" onClick={handleClick} disabled={loading} className="h-7 px-2 text-gray-500 hover:text-gray-900">
+    <Button
+      type="button" variant="ghost" size="sm" onClick={handleClick}
+      disabled={loading}
+      className="h-7 px-2 text-gray-500 hover:text-gray-900"
+    >
       {loading ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1" />}
       Receipt
     </Button>

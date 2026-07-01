@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/shared/stat-card";
 import { Pagination } from "@/components/shared/pagination";
-import { buildPaidMap, remainingFor } from "@/lib/fees";
+import { buildPaidMap, remainingFor, installmentCount } from "@/lib/fees";
 import { DownloadReceiptButton } from "@/components/shared/download-receipt-button";
 import { IndianRupee } from "lucide-react";
 
@@ -31,7 +31,7 @@ export default async function StudentFeesPage({ searchParams }: Props) {
     prisma.feePayment.findMany({ where: { studentId }, select: { studentId: true, feeStructureId: true, amountPaid: true, status: true } }),
     prisma.feePayment.findMany({
       where: { studentId },
-      include: { feeStructure: { select: { amount: true, feeType: true } } },
+      include: { feeStructure: { select: { amount: true, feeType: true, frequency: true } } },
       orderBy: { paymentDate: "desc" },
       skip,
       take: limit,
@@ -46,11 +46,14 @@ export default async function StudentFeesPage({ searchParams }: Props) {
   ]);
   const studentName = student ? `${student.firstName} ${student.lastName}` : "—";
   const totalPages = Math.ceil(total / limit);
-  const structureById = new Map(applicableStructures.map((s) => [s.id, s]));
+  const structureById = new Map(applicableStructures.map((s) => [s.id, { amount: Number(s.amount), frequency: s.frequency }]));
   const paidMap = buildPaidMap(allPayments);
 
-  const totalPaid = allPayments.filter((p) => p.status === "PAID").reduce((s, p) => s + Number(p.amountPaid), 0);
-  const expectedTotal = applicableStructures.reduce((sum, s) => sum + Number(s.amount), 0);
+  const totalPaid = allPayments.filter((p) => p.status === "PAID" || p.status === "PARTIAL").reduce((s, p) => s + Number(p.amountPaid), 0);
+  const expectedTotal = applicableStructures.reduce(
+    (sum, s) => sum + Number(s.amount) * installmentCount(s.frequency),
+    0,
+  );
   const totalDue = Math.max(0, expectedTotal - totalPaid);
 
   const statusStyle: Record<string, string> = {
@@ -84,8 +87,9 @@ export default async function StudentFeesPage({ searchParams }: Props) {
               <thead>
                 <tr className="border-b bg-gray-50">
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Fee Type</th>
+                  <th className="text-left px-6 py-3 font-medium text-gray-500">Period</th>
                   <th className="text-right px-6 py-3 font-medium text-gray-500">Amount</th>
-                  <th className="text-right px-6 py-3 font-medium text-gray-500">Remaining</th>
+                  <th className="text-right px-6 py-3 font-medium text-gray-500">Balance</th>
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Date</th>
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Status</th>
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Receipt</th>
@@ -93,11 +97,15 @@ export default async function StudentFeesPage({ searchParams }: Props) {
               </thead>
               <tbody className="divide-y">
                 {payments.map((p) => {
-                  const structureAmount = Number(structureById.get(p.feeStructureId)?.amount ?? p.feeStructure?.amount ?? 0);
-                  const remaining = remainingFor(paidMap, p.studentId, p.feeStructureId, structureAmount);
+                  const struct = structureById.get(p.feeStructureId);
+                  const structureAmount    = struct?.amount ?? Number(p.feeStructure?.amount ?? 0);
+                  const structureFrequency = struct?.frequency ?? p.feeStructure?.frequency ?? "ONE_TIME";
+                  const remaining = remainingFor(paidMap, p.studentId, p.feeStructureId, structureAmount, structureFrequency);
+                  const periodLabel = p.periodLabel;
                   return (
                     <tr key={p.id} className="hover:bg-gray-50">
                       <td className="px-6 py-3 font-medium text-gray-900">{p.feeStructure?.feeType ?? "—"}</td>
+                      <td className="px-6 py-3 text-gray-500 text-xs">{periodLabel ?? "—"}</td>
                       <td className="px-6 py-3 text-right text-gray-700">₹{Number(p.amountPaid).toLocaleString("en-IN")}</td>
                       <td className={`px-6 py-3 text-right ${remaining > 0 ? "text-red-600 font-medium" : "text-gray-400"}`}>₹{remaining.toLocaleString("en-IN")}</td>
                       <td className="px-6 py-3 text-gray-500">
@@ -113,14 +121,15 @@ export default async function StudentFeesPage({ searchParams }: Props) {
                           receipt={{
                             receiptNumber: p.receiptNumber,
                             studentName,
-                            feeType: p.feeStructure?.feeType ?? "—",
-                            amountPaid: Number(p.amountPaid),
+                            feeType:      p.feeStructure?.feeType ?? "—",
+                            periodLabel,
+                            amountPaid:   Number(p.amountPaid),
                             remaining,
-                            paymentDate: p.paymentDate ? p.paymentDate.toISOString() : null,
-                            paymentMode: p.paymentMode,
-                            status: p.status,
-                            schoolName: school?.name ?? "School",
-                            schoolCode: school?.code ?? "",
+                            paymentDate:  p.paymentDate ? p.paymentDate.toISOString() : null,
+                            paymentMode:  p.paymentMode,
+                            status:       p.status,
+                            schoolName:   school?.name ?? "School",
+                            schoolCode:   school?.code ?? "",
                           }}
                         />
                       </td>

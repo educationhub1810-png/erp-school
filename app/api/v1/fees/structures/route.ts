@@ -5,12 +5,19 @@ import { created, badRequest, unauthorized, forbidden, serverError } from "@/lib
 import { requiredTextField, optionalLongTextField, FIELD_MAX } from "@/lib/field-validation";
 import { z } from "zod";
 
+const installmentSchema = z.object({
+  period: z.string().min(1),
+  dueDate: z.string().optional(),
+});
+
 const createSchema = z.object({
   feeType: requiredTextField("Fee type", FIELD_MAX.shortText),
   amount: z.coerce.number().positive("Amount must be greater than 0").max(10_000_000, "Amount is too large"),
   classId: z.string().optional(),
   dueDate: z.string().optional(),
-  frequency: z.enum(["ONE_TIME", "MONTHLY", "QUARTERLY", "ANNUALLY"]),
+  frequency: z.enum(["ONE_TIME", "MONTHLY", "QUARTERLY", "HALF_YEARLY", "ANNUALLY"]),
+  monthlyDueDay: z.coerce.number().int().min(1).max(31).optional(),
+  installments: z.array(installmentSchema).optional(),
   description: optionalLongTextField("Description"),
 });
 
@@ -45,6 +52,8 @@ export async function POST(req: Request) {
         amount: data.amount,
         dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
         frequency: data.frequency,
+        monthlyDueDay: data.monthlyDueDay ?? null,
+        installments: data.installments ? JSON.parse(JSON.stringify(data.installments)) : null,
         description: data.description || null,
       },
     });

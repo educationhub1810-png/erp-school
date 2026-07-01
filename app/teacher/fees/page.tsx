@@ -63,7 +63,10 @@ export default async function TeacherFeesPage() {
         </div>
         <div className="flex gap-2">
           <CreateFeeStructureDialog classes={classes} />
-          <RecordFeePaymentDialog students={students} feeStructures={structures.map((s) => ({ id: s.id, feeType: s.feeType, amount: Number(s.amount) }))} />
+          <RecordFeePaymentDialog
+            students={students}
+            feeStructures={structures.map((s) => ({ id: s.id, feeType: s.feeType, amount: Number(s.amount), frequency: s.frequency }))}
+          />
         </div>
       </div>
 
