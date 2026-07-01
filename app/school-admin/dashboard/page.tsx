@@ -5,16 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { getUser } from "@/lib/session";
 import { StatCard } from "@/components/shared/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { AttendanceTrendChart } from "@/components/dashboard/attendance-trend-chart";
 import { FeesDonutChart } from "@/components/dashboard/fees-donut-chart";
 import {
   GraduationCap, UserCheck, ClipboardList, DollarSign, ListTodo,
-  Plus, UserPlus, FileText, MessageSquare, BarChart3,
-  UserCog, Briefcase,
+  UserPlus, FileText, MessageSquare, BarChart3, UserCog,
 } from "lucide-react";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -151,25 +146,6 @@ export default async function SchoolAdminDashboard() {
             {today.toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}
           </p>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700" />}>
-            <Plus className="w-4 h-4 mr-1.5" /> Add New
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem render={<Link href="/school-admin/students" />}>
-              <GraduationCap className="w-4 h-4 mr-2" /> Add Student
-            </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/school-admin/teachers" />}>
-              <UserCheck className="w-4 h-4 mr-2" /> Add Teacher
-            </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/school-admin/staff" />}>
-              <Briefcase className="w-4 h-4 mr-2" /> Add Staff
-            </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/school-admin/communication" />}>
-              <MessageSquare className="w-4 h-4 mr-2" /> Create Notice
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
