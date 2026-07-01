@@ -17,7 +17,8 @@ function inputForLabel(text: string | RegExp): HTMLInputElement {
 async function fillNameAndDob(user: ReturnType<typeof userEvent.setup>) {
   await user.type(inputForLabel("Full Name *"), "Priya Singh");
   await user.click(screen.getByRole("button", { name: /select date of birth/i }));
-  await user.click(screen.getByText("15", { exact: true }));
+  await user.click(await screen.findByRole("button", { name: /go to the previous month/i }));
+  await user.click(await screen.findByText("15", { exact: true }));
 }
 
 describe("AddTeacherDialog (school-admin)", () => {

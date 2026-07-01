@@ -30,7 +30,8 @@ async function fillPersonalStep(user: ReturnType<typeof userEvent.setup>) {
   await user.type(inputForLabel("First Name *"), "Asha");
   await user.type(inputForLabel("Last Name *"), "Rao");
   await user.click(screen.getByRole("button", { name: /select date of birth/i }));
-  await user.click(screen.getByText("15", { exact: true }));
+  await user.click(await screen.findByRole("button", { name: /go to the previous month/i }));
+  await user.click(await screen.findByText("15", { exact: true }));
 }
 
 describe("AddStudentDialog (school-admin)", () => {

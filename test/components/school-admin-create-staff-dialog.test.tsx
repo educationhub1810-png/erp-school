@@ -66,7 +66,8 @@ describe("CreateStaffDialog (school-admin)", () => {
 
     await user.type(inputForLabel("Full Name *"), "Dr. Ramesh Sharma");
     await user.click(screen.getByRole("button", { name: /select date of birth/i }));
-    await user.click(screen.getByText("10", { exact: true }));
+    await user.click(await screen.findByRole("button", { name: /go to the previous month/i }));
+    await user.click(await screen.findByText("10", { exact: true }));
     await user.click(screen.getByRole("button", { name: /save principal/i }));
 
     await waitFor(() => expect(global.fetch).toHaveBeenCalledOnce());
