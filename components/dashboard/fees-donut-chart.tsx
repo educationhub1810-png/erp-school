@@ -20,16 +20,16 @@ export function FeesDonutChart({ collected, pending }: Props) {
     : [{ name: "No data", value: 1, color: "#e5e7eb" }];
 
   return (
-    <div className="relative w-full h-[180px]">
+    <div className="relative w-full h-[130px]">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <Pie data={data} dataKey="value" nameKey="name" innerRadius={58} outerRadius={80} paddingAngle={total > 0 ? 3 : 0} strokeWidth={0}>
+          <Pie data={data} dataKey="value" nameKey="name" innerRadius={42} outerRadius={58} paddingAngle={total > 0 ? 3 : 0} strokeWidth={0}>
             {data.map((d) => <Cell key={d.name} fill={d.color} />)}
           </Pie>
         </PieChart>
       </ResponsiveContainer>
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <span className="text-2xl font-bold text-gray-900">{pct}%</span>
+        <span className="text-xl font-bold text-gray-900">{pct}%</span>
       </div>
     </div>
   );

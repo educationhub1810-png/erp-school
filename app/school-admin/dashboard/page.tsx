@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AttendanceTrendChart } from "@/components/dashboard/attendance-trend-chart";
 import { FeesDonutChart } from "@/components/dashboard/fees-donut-chart";
 import {
-  GraduationCap, UserCheck, ClipboardList, DollarSign, ListTodo,
+  GraduationCap, UserCheck, ClipboardList, IndianRupee, ListTodo,
   UserPlus, FileText, MessageSquare, BarChart3, UserCog,
 } from "lucide-react";
 
@@ -104,7 +104,7 @@ export default async function SchoolAdminDashboard() {
       detail: `${latestStudent.firstName} ${latestStudent.lastName}`,
     },
     latestFeePayment && {
-      icon: DollarSign, color: "text-green-600 bg-green-100",
+      icon: IndianRupee, color: "text-green-600 bg-green-100",
       label: "Fees Collected", time: latestFeePayment.paymentDate,
       detail: `₹${latestFeePayment.amountPaid.toLocaleString("en-IN")}`,
     },
@@ -131,66 +131,69 @@ export default async function SchoolAdminDashboard() {
     { label: "Add Student", href: "/school-admin/students", icon: GraduationCap, color: "bg-blue-100 text-blue-600" },
     { label: "Add Teacher", href: "/school-admin/teachers", icon: UserCheck, color: "bg-green-100 text-green-600" },
     { label: "Mark Attendance", href: "/school-admin/attendance", icon: ClipboardList, color: "bg-purple-100 text-purple-600" },
-    { label: "Collect Fees", href: "/school-admin/fees", icon: DollarSign, color: "bg-orange-100 text-orange-600" },
+    { label: "Collect Fees", href: "/school-admin/fees", icon: IndianRupee, color: "bg-orange-100 text-orange-600" },
     { label: "Exam Schedule", href: "/school-admin/exams", icon: FileText, color: "bg-pink-100 text-pink-600" },
     { label: "Create Notice", href: "/school-admin/communication", icon: MessageSquare, color: "bg-cyan-100 text-cyan-600" },
     { label: "View Reports", href: "/school-admin/reports", icon: BarChart3, color: "bg-indigo-100 text-indigo-600" },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-3 h-full">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Overview</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-xl font-bold text-gray-900">Overview</h1>
+          <p className="text-xs text-gray-500">
             {today.toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <StatCard title="Total Students" value={totalStudents} subtitle="Enrolled students" icon={<GraduationCap className="w-5 h-5" />} color="blue" />
-        <StatCard title="Teachers" value={totalTeachers} subtitle="Teaching staff" icon={<UserCheck className="w-5 h-5" />} color="green" />
-        <StatCard title="Attendance" value={`${attendancePct}%`} subtitle="Today" icon={<UserCog className="w-5 h-5" />} color="purple" />
-        <StatCard title="Fees Collection" value={`₹${collected.toLocaleString("en-IN")}`} subtitle="Collected" icon={<DollarSign className="w-5 h-5" />} color="orange" />
-        <StatCard title="Pending Tasks" value={pendingTasks} subtitle="Need attention" icon={<ListTodo className="w-5 h-5" />} color="red" />
+      {/* Stat cards */}
+      <div className="grid grid-cols-5 gap-3">
+        <StatCard title="Total Students" value={totalStudents} subtitle="Enrolled" icon={<GraduationCap className="w-4 h-4" />} color="blue" />
+        <StatCard title="Teachers" value={totalTeachers} subtitle="Teaching staff" icon={<UserCheck className="w-4 h-4" />} color="green" />
+        <StatCard title="Attendance" value={`${attendancePct}%`} subtitle="Today" icon={<UserCog className="w-4 h-4" />} color="purple" />
+        <StatCard title="Fees Collected" value={`₹${collected.toLocaleString("en-IN")}`} subtitle="Collected" icon={<IndianRupee className="w-4 h-4" />} color="orange" />
+        <StatCard title="Pending Tasks" value={pendingTasks} subtitle="Need attention" icon={<ListTodo className="w-4 h-4" />} color="red" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="border-0 shadow-sm lg:col-span-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Attendance Trend</CardTitle>
+      {/* Charts + Activities row */}
+      <div className="grid grid-cols-3 gap-3 flex-1 min-h-0">
+        <Card className="border-0 shadow-sm flex flex-col">
+          <CardHeader className="pb-1 pt-3 px-4">
+            <CardTitle className="text-sm">Attendance Trend</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 pb-3 flex-1">
             <AttendanceTrendChart data={attendanceTrend} />
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm lg:col-span-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Fees Collection</CardTitle>
+        <Card className="border-0 shadow-sm flex flex-col">
+          <CardHeader className="pb-1 pt-3 px-4">
+            <CardTitle className="text-sm">Fees Collection</CardTitle>
           </CardHeader>
-          <CardContent className="flex items-center gap-4">
+          <CardContent className="px-4 pb-3 flex items-center gap-3">
             <FeesDonutChart collected={collected} pending={pending} />
-            <div className="space-y-2.5 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+            <div className="space-y-1.5 text-xs">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
                 <div>
-                  <p className="text-gray-500 text-xs">Collected</p>
+                  <p className="text-gray-400">Collected</p>
                   <p className="font-semibold text-gray-900">₹{collected.toLocaleString("en-IN")}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
                 <div>
-                  <p className="text-gray-500 text-xs">Pending</p>
+                  <p className="text-gray-400">Pending</p>
                   <p className="font-semibold text-gray-900">₹{pending.toLocaleString("en-IN")}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
                 <div>
-                  <p className="text-gray-500 text-xs">Total</p>
+                  <p className="text-gray-400">Total</p>
                   <p className="font-semibold text-gray-900">₹{(collected + pending).toLocaleString("en-IN")}</p>
                 </div>
               </div>
@@ -198,21 +201,21 @@ export default async function SchoolAdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm lg:col-span-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Recent Activities</CardTitle>
+        <Card className="border-0 shadow-sm flex flex-col">
+          <CardHeader className="pb-1 pt-3 px-4">
+            <CardTitle className="text-sm">Recent Activities</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="px-4 pb-3 space-y-2 flex-1">
             {activities.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-6">No recent activity.</p>
+              <p className="text-xs text-gray-400 text-center py-4">No recent activity.</p>
             ) : (
               activities.map((a, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${a.color}`}>
-                    <a.icon className="w-4 h-4" />
+                <div key={i} className="flex items-center gap-2">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${a.color}`}>
+                    <a.icon className="w-3.5 h-3.5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{a.label}</p>
+                    <p className="text-xs font-medium text-gray-900 truncate">{a.label}</p>
                     {a.detail && <p className="text-xs text-gray-400 truncate">{a.detail}</p>}
                   </div>
                   <span className="text-xs text-gray-400 shrink-0">
@@ -225,19 +228,20 @@ export default async function SchoolAdminDashboard() {
         </Card>
       </div>
 
+      {/* Quick Access */}
       <div>
-        <h2 className="text-base font-semibold text-gray-900 mb-3">Quick Access</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Quick Access</p>
+        <div className="grid grid-cols-7 gap-2">
           {quickAccess.map((q) => (
             <Link
               key={q.label}
               href={q.href}
-              className="flex flex-col items-center gap-2 rounded-xl border bg-white p-4 text-center shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+              className="flex flex-col items-center gap-1.5 rounded-xl border bg-white p-3 text-center shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
             >
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${q.color}`}>
-                <q.icon className="w-5 h-5" />
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${q.color}`}>
+                <q.icon className="w-4 h-4" />
               </div>
-              <span className="text-xs font-medium text-gray-700">{q.label}</span>
+              <span className="text-xs font-medium text-gray-700 leading-tight">{q.label}</span>
             </Link>
           ))}
         </div>
