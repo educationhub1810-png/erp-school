@@ -22,21 +22,21 @@ const colorMap = {
 export function StatCard({ title, value, subtitle, icon, trend, color = "indigo" }: StatCardProps) {
   return (
     <Card className="border-0 shadow-sm">
-      <CardContent className="p-5">
+      <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm text-gray-500 font-medium">{title}</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+            <p className="text-xs text-gray-500 font-medium">{title}</p>
+            <p className="text-xl font-bold text-gray-900 mt-0.5">{value}</p>
             {subtitle && (
-              <p className="text-xs text-gray-400 mt-1">{subtitle}</p>
+              <p className="text-xs text-gray-400">{subtitle}</p>
             )}
             {trend && (
-              <p className={cn("text-xs mt-1 font-medium", trend.value >= 0 ? "text-green-600" : "text-red-600")}>
+              <p className={cn("text-xs font-medium", trend.value >= 0 ? "text-green-600" : "text-red-600")}>
                 {trend.value >= 0 ? "+" : ""}{trend.value}% {trend.label}
               </p>
             )}
           </div>
-          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", colorMap[color])}>
+          <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", colorMap[color])}>
             {icon}
           </div>
         </div>
