@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
-import { ok, badRequest, unauthorized, forbidden, notFound, serverError } from "@/lib/api-response";
+import { ok, badRequest, unauthorized, forbidden, notFound, serverError, duplicateValue } from "@/lib/api-response";
 import { imageDataUrl } from "@/lib/validation";
 import { nameField, optionalTextField, optionalLongTextField, emailField, mobileField, aadhaarField } from "@/lib/field-validation";
 import { writeAuditLog, auditAccountStatusChange, clientIp } from "@/lib/audit";
@@ -106,6 +106,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     return ok(updated);
   } catch (e) {
+    if ((e as { code?: string })?.code === "P2002") return duplicateValue(e);
     return serverError(e);
   }
 }

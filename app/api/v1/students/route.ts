@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { getUser } from "@/lib/session";
-import { ok, created, badRequest, unauthorized, forbidden, serverError } from "@/lib/api-response";
+import { ok, created, badRequest, unauthorized, forbidden, serverError, duplicateValue } from "@/lib/api-response";
 import { imageDataUrl } from "@/lib/validation";
 import { nameField, optionalTextField, optionalLongTextField, emailField, mobileField, aadhaarField, addressField, pincodeField } from "@/lib/field-validation";
 import { z } from "zod";
@@ -271,6 +271,7 @@ export async function POST(req: Request) {
 
     return created(result);
   } catch (e) {
+    if ((e as { code?: string })?.code === "P2002") return duplicateValue(e);
     return serverError(e);
   }
 }
