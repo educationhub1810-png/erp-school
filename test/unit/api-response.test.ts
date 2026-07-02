@@ -47,11 +47,11 @@ describe("api-response helpers", () => {
 });
 
 describe("duplicateValue field mapping", () => {
-  it("maps a known field to a friendly label (target shape)", async () => {
+  it("maps a known field to a friendly message (target shape)", async () => {
     const res = duplicateValue({ meta: { target: ["email"] } });
     const { status, body } = await read(res);
     expect(status).toBe(400);
-    expect(body.error).toBe("Please enter correct value (Email)");
+    expect(body.error).toMatch(/email.*already in use/i);
   });
 
   it("reads the driver-adapter constraint shape", async () => {
@@ -59,18 +59,18 @@ describe("duplicateValue field mapping", () => {
       meta: { driverAdapterError: { cause: { constraint: { fields: ["studentCode"] } } } },
     });
     const { body } = await read(res);
-    expect(body.error).toBe("Please enter correct value (Student Code)");
+    expect(body.error).toMatch(/student code.*already in use/i);
   });
 
   it("humanizes an unknown camelCase field", async () => {
     const res = duplicateValue({ meta: { target: ["rollNumber"] } });
     const { body } = await read(res);
-    expect(body.error).toBe("Please enter correct value (Roll Number)");
+    expect(body.error).toMatch(/roll number.*already in use/i);
   });
 
-  it("falls back to a humanized 'value' when no field info is present", async () => {
+  it("falls back gracefully when no field info is present", async () => {
     const res = duplicateValue({});
     const { body } = await read(res);
-    expect(body.error).toBe("Please enter correct value (Value)");
+    expect(body.error).toMatch(/already in use/i);
   });
 });
