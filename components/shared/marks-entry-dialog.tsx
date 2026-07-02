@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-interface Schedule { id: string; subject: { name: string }; totalMarks: number; passMarks: number }
+interface Schedule { id: string; subjectId: string; subject: { name: string }; totalMarks: number; passMarks: number }
+interface ClassSubject { id: string; name: string; totalMarks: number; passMarks: number | null }
 interface StudentResult {
   id: string;
   firstName: string;
@@ -28,17 +29,57 @@ interface Props {
 
 export function MarksEntryDialog({ examId, open, onOpenChange }: Props) {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [classSubjects, setClassSubjects] = useState<ClassSubject[]>([]);
+  const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [scheduleId, setScheduleId] = useState("");
   const [students, setStudents] = useState<StudentResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [creatingSchedule, setCreatingSchedule] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!open) { setScheduleId(""); setStudents([]); return; }
+    if (!open) { setSelectedSubjectId(""); setScheduleId(""); setStudents([]); return; }
     fetch(`/api/v1/exams/${examId}`)
       .then((res) => res.json())
-      .then((json) => setSchedules(json.data?.schedules ?? []));
+      .then((json) => {
+        const data = json.data ?? {};
+        setSchedules(data.schedules ?? []);
+        setClassSubjects(data.class?.subjects ?? []);
+      });
   }, [open, examId]);
+
+  const handleSubjectSelect = async (subjectId: string) => {
+    setSelectedSubjectId(subjectId);
+    setStudents([]);
+
+    // Find existing schedule for this subject
+    const existing = schedules.find((s) => s.subjectId === subjectId);
+    if (existing) {
+      setScheduleId(existing.id);
+      return;
+    }
+
+    // No schedule yet — create one automatically
+    setCreatingSchedule(true);
+    try {
+      const res = await fetch(`/api/v1/exams/${examId}/schedules`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subjectId }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json.error || "Failed to create subject schedule");
+        setSelectedSubjectId("");
+        return;
+      }
+      const newSchedule: Schedule = json.data;
+      setSchedules((prev) => [...prev, newSchedule]);
+      setScheduleId(newSchedule.id);
+    } finally {
+      setCreatingSchedule(false);
+    }
+  };
 
   useEffect(() => {
     if (!scheduleId) { setStudents([]); return; }
@@ -83,6 +124,13 @@ export function MarksEntryDialog({ examId, open, onOpenChange }: Props) {
     }
   };
 
+  // Merge: all class subjects, preferring ones that already have a schedule
+  const subjectOptions = classSubjects.map((cs) => ({
+    subjectId: cs.id,
+    name: cs.name,
+    hasSchedule: schedules.some((s) => s.subjectId === cs.id),
+  }));
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
@@ -90,16 +138,31 @@ export function MarksEntryDialog({ examId, open, onOpenChange }: Props) {
 
         <div className="space-y-1.5">
           <Label>Subject *</Label>
-          <Select value={scheduleId} onValueChange={(v) => { if (v != null) setScheduleId(v); }}>
+          <Select
+            value={selectedSubjectId}
+            onValueChange={(v) => { if (v) handleSubjectSelect(v); }}
+            disabled={creatingSchedule}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select subject">
-                {(value: string) => schedules.find((s) => s.id === value)?.subject.name ?? "Select subject"}
+                {(value: string) => subjectOptions.find((s) => s.subjectId === value)?.name ?? "Select subject"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {schedules.map((s) => <SelectItem key={s.id} value={s.id}>{s.subject.name} (out of {s.totalMarks})</SelectItem>)}
+              {subjectOptions.length === 0 ? (
+                <div className="px-3 py-2 text-xs text-gray-400">No subjects found for this class</div>
+              ) : (
+                subjectOptions.map((s) => (
+                  <SelectItem key={s.subjectId} value={s.subjectId}>{s.name}</SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
+          {creatingSchedule && (
+            <p className="text-xs text-gray-500 flex items-center gap-1.5">
+              <Loader2 className="w-3 h-3 animate-spin" /> Setting up subject schedule…
+            </p>
+          )}
         </div>
 
         {loading ? (
@@ -132,13 +195,13 @@ export function MarksEntryDialog({ examId, open, onOpenChange }: Props) {
               </div>
             ))}
           </div>
-        ) : scheduleId ? (
+        ) : scheduleId && !loading ? (
           <p className="text-sm text-gray-400 text-center py-8">No students found for this class.</p>
         ) : null}
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-          <Button type="button" onClick={handleSave} disabled={!scheduleId || saving} className="bg-indigo-600 hover:bg-indigo-700">
+          <Button type="button" onClick={handleSave} disabled={!scheduleId || saving || creatingSchedule} className="bg-indigo-600 hover:bg-indigo-700">
             {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Save Marks
           </Button>

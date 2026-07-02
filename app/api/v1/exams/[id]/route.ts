@@ -14,7 +14,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   try {
     const exam = await prisma.exam.findUnique({
       where: { id },
-      include: { schedules: { include: { subject: { select: { name: true } } } } },
+      include: {
+        schedules: { include: { subject: { select: { name: true } } } },
+        class: { include: { subjects: { select: { id: true, name: true, totalMarks: true, passMarks: true } } } },
+      },
     });
     if (!exam) return notFound("Exam not found");
     if (exam.schoolId !== user.schoolId) return forbidden();
