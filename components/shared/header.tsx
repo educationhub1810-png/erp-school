@@ -57,7 +57,7 @@ export function Header({ user, school }: HeaderProps) {
               <span className="text-white text-sm font-bold">{schoolInitials}</span>
             </div>
           )}
-          <span className="text-base font-bold text-gray-900 truncate max-w-[260px]">
+          <span className="text-lg font-bold text-gray-900 truncate max-w-[280px]">
             {school.name}
           </span>
         </div>

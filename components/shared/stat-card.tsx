@@ -22,11 +22,11 @@ const colorMap = {
 export function StatCard({ title, value, subtitle, icon, trend, color = "indigo" }: StatCardProps) {
   return (
     <Card className="border-0 shadow-sm">
-      <CardContent className="p-3">
+      <CardContent className="px-3 py-2">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs text-gray-500 font-medium">{title}</p>
-            <p className="text-base font-bold text-gray-900 mt-0.5">{value}</p>
+            <p className="text-[11px] text-gray-500 font-medium">{title}</p>
+            <p className="text-sm font-bold text-gray-900 mt-0.5">{value}</p>
             {subtitle && (
               <p className="text-xs text-gray-400">{subtitle}</p>
             )}
@@ -36,7 +36,7 @@ export function StatCard({ title, value, subtitle, icon, trend, color = "indigo"
               </p>
             )}
           </div>
-          <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", colorMap[color])}>
+          <div className={cn("w-6 h-6 rounded-md flex items-center justify-center", colorMap[color])}>
             {icon}
           </div>
         </div>
