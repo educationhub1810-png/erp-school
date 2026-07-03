@@ -50,14 +50,14 @@ export function Header({ user, school }: HeaderProps) {
             <img
               src={school.logo}
               alt={school.name}
-              className="w-8 h-8 rounded-md object-cover flex-shrink-0"
+              className="w-9 h-9 rounded-md object-cover flex-shrink-0"
             />
           ) : (
-            <div className="w-8 h-8 rounded-md bg-indigo-600 flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-xs font-bold">{schoolInitials}</span>
+            <div className="w-9 h-9 rounded-md bg-indigo-600 flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-sm font-bold">{schoolInitials}</span>
             </div>
           )}
-          <span className="text-sm font-semibold text-gray-900 truncate max-w-[220px]">
+          <span className="text-base font-bold text-gray-900 truncate max-w-[260px]">
             {school.name}
           </span>
         </div>
