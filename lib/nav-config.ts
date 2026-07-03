@@ -69,6 +69,7 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: "Attendance", href: "/school-admin/attendance", icon: ClipboardList },
     { label: "Exams", href: "/school-admin/exams", icon: FileText },
     { label: "Fees", href: "/school-admin/fees", icon: IndianRupee },
+    { label: "Transport", href: "/school-admin/transport", icon: Bus },
     { label: "Reports", href: "/school-admin/reports", icon: BarChart3 },
     { label: "Bug Board", href: "/school-admin/bugs", icon: Bug },
   ],

@@ -205,6 +205,7 @@ model School {
   feeStructures      FeeStructure[]
   libraryBooks       LibraryBook[]
   transportRoutes    TransportRoute[]
+  transportSlabs     TransportDistanceSlab[]
   hostelRooms        HostelRoom[]
   lmsCourses         LmsCourse[]
   exams              Exam[]
@@ -859,17 +860,35 @@ model TransportRoute {
 }
 
 model TransportStudent {
-  id        String @id @default(cuid())
-  schoolId  String
-  studentId String @unique
-  routeId   String
-  stopName  String?
-  feeAmount Float?
+  id         String  @id @default(cuid())
+  schoolId   String
+  studentId  String  @unique
+  routeId    String
+  slabId     String?
+  stopName   String?
+  distanceKm Float?
+  feeAmount  Float?
 
-  student Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  route   TransportRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  student Student                @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  route   TransportRoute         @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  slab    TransportDistanceSlab? @relation(fields: [slabId], references: [id])
 
   @@map("transport_students")
+}
+
+model TransportDistanceSlab {
+  id        String   @id @default(cuid())
+  schoolId  String
+  label     String
+  fromKm    Float
+  toKm      Float?
+  amount    Float
+  createdAt DateTime @default(now())
+
+  school   School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  students TransportStudent[]
+
+  @@map("transport_distance_slabs")
 }
 
 // ─────────────────────────────────────────────
