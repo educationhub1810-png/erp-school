@@ -20,6 +20,7 @@ const createSchema = z.object({
   timezone: z.string().default("Asia/Kolkata"),
   currency: z.string().default("INR"),
   language: z.string().default("en"),
+  logo: z.string().optional(),
 });
 
 export async function GET() {
@@ -73,6 +74,7 @@ export async function POST(req: Request) {
             ...data,
             code,
             email: data.email || null,
+            logo: data.logo || null,
             establishedDate: data.establishedDate ? new Date(data.establishedDate) : null,
           },
         });

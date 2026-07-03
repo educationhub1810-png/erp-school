@@ -64,4 +64,22 @@ describe("POST /api/v1/schools", () => {
     const sectionRows = prismaMock.section.createMany.mock.calls[0][0]!.data as { name: string }[];
     expect(sectionRows).toHaveLength(15 * 7);
   });
+
+  it("stores the logo when provided, and null when omitted", async () => {
+    setSession(sessionFor("SUPER_ADMIN"));
+    await callRoute(
+      POST,
+      buildRequest("/api/v1/schools", {
+        method: "POST",
+        body: { name: "Greenwood High", logo: "data:image/png;base64,abc123" },
+      }),
+    );
+    expect((prismaMock.school.create.mock.calls[0][0]!.data as { logo?: string | null }).logo).toBe(
+      "data:image/png;base64,abc123",
+    );
+
+    prismaMock.school.create.mockClear();
+    await callRoute(POST, buildRequest("/api/v1/schools", { method: "POST", body: validBody }));
+    expect((prismaMock.school.create.mock.calls[0][0]!.data as { logo?: string | null }).logo).toBeNull();
+  });
 });

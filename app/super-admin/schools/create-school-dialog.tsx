@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,11 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Plus, Loader2, AlertCircle, Copy, Check } from "lucide-react";
+import { Plus, Loader2, AlertCircle, Copy, Check, Upload, X, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { nameField, emailField, mobileField, optionalTextField, addressField, FIELD_MAX } from "@/lib/field-validation";
 import { digitsOnlyKeyDown } from "@/lib/field-behavior";
 import { INDIAN_STATES } from "@/lib/indian-states";
+
+const MAX_LOGO_BYTES = 1_500_000;
 
 const schema = z.object({
   name: nameField("School name"),
@@ -29,6 +31,7 @@ const schema = z.object({
   country: z.string().optional(),
   timezone: z.string().optional(),
   currency: z.string().optional(),
+  logo: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -87,6 +90,25 @@ export function CreateSchoolDialog() {
     setTimeout(() => setCopiedField(null), 1500);
   };
 
+  const logo = watch("logo");
+
+  const handleLogoChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    if (file.size > MAX_LOGO_BYTES) {
+      toast.error("Logo must be smaller than 1.5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setValue("logo", reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   return (
     <>
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setError(null); }}>
@@ -104,6 +126,32 @@ export function CreateSchoolDialog() {
               {error}
             </div>
           )}
+          <div className="flex items-center gap-4">
+            {logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logo} alt="School logo" className="w-16 h-16 rounded-md object-cover flex-shrink-0" />
+            ) : (
+              <div className="w-16 h-16 rounded-md bg-indigo-600 flex items-center justify-center flex-shrink-0">
+                <Building2 className="w-7 h-7 text-white" />
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <Label>School Logo</Label>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" nativeButton={false} render={<label className="cursor-pointer" />}>
+                  <Upload className="w-4 h-4 mr-1.5" /> Upload Logo
+                  <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
+                </Button>
+                {logo && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setValue("logo", "")}>
+                    <X className="w-3.5 h-3.5 mr-1" /> Remove
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-gray-400">Optional. Shown in the header once the school is created.</p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="col-span-3 space-y-1.5">
               <Label>School Name *</Label>
