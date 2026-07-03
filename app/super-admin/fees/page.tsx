@@ -1,24 +1,16 @@
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getUser } from "@/lib/session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/shared/stat-card";
-import { Pagination } from "@/components/shared/pagination";
-import { CreateFeeStructureDialog } from "@/components/shared/create-fee-structure-dialog";
-import { RecordFeePaymentDialog } from "@/components/shared/record-fee-payment-dialog";
-import { FeeStructureRowActions, FeePaymentRowActions } from "@/components/shared/fee-row-actions";
 import { sortClassesByGrade } from "@/lib/class-order";
-import { computeExpectedTotal, buildPaidMap, remainingFor, frequencyLabel, installmentCount } from "@/lib/fees";
-import { DownloadReceiptButton } from "@/components/shared/download-receipt-button";
-import { IndianRupee, Users, CalendarClock, BookOpen } from "lucide-react";
+import { computeExpectedTotal, buildPaidMap, frequencyLabel, installmentCount } from "@/lib/fees";
+import { IndianRupee, Users, CalendarClock, BookOpen, Building2 } from "lucide-react";
 import Link from "next/link";
 
 type Tab = "overview" | "ledger" | "due-dates" | "class-pending";
 
 interface Props {
-  searchParams: Promise<{ tab?: string; page?: string; classId?: string; search?: string }>;
+  searchParams: Promise<{ tab?: string; schoolId?: string; classId?: string; search?: string }>;
 }
 
 const TABS: { key: Tab; label: string }[] = [
@@ -35,32 +27,40 @@ const statusStyle: Record<string, string> = {
   OVERDUE: "bg-red-100 text-red-700",
 };
 
-export default async function FeesPage({ searchParams }: Props) {
-  const session = await auth();
-  if (!session) redirect("/login");
-  const { schoolId } = getUser(session);
-  if (!schoolId) redirect("/login");
-
+export default async function SuperAdminFeesPage({ searchParams }: Props) {
   const sp = await searchParams;
   const tab = (sp.tab ?? "overview") as Tab;
-  const page = parseInt(sp.page ?? "1");
+  const filterSchoolId = sp.schoolId ?? "";
   const filterClassId = sp.classId ?? "";
   const search = sp.search ?? "";
-  const limit = 20;
-  const skip = (page - 1) * limit;
 
-  // ── Core data (needed by all tabs) ───────────────────────────────────────
-  const [structures, classesRaw, allStudents, allPaymentsRaw, school] = await Promise.all([
+  // ── All schools for filter dropdown ──────────────────────────────────────
+  const schools = await prisma.school.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+
+  // ── Core data (scoped to selected school if any) ──────────────────────────
+  const schoolWhere = filterSchoolId ? { schoolId: filterSchoolId } : {};
+
+  const [structures, classesRaw, allStudents, allPaymentsRaw] = await Promise.all([
     prisma.feeStructure.findMany({
-      where: { schoolId },
-      include: { class: { select: { name: true } } },
+      where: schoolWhere,
+      include: {
+        class: { select: { name: true } },
+        school: { select: { id: true, name: true } },
+      },
       orderBy: { feeType: "asc" },
     }),
-    prisma.class.findMany({ where: { schoolId }, select: { id: true, name: true } }),
+    prisma.class.findMany({
+      where: filterSchoolId ? { schoolId: filterSchoolId } : {},
+      select: { id: true, name: true, schoolId: true },
+    }),
     prisma.student.findMany({
-      where: { schoolId, isAlumni: false },
+      where: { isAlumni: false, ...schoolWhere },
       select: {
         id: true, classId: true, firstName: true, lastName: true,
+        schoolId: true,
         class: { select: { id: true, name: true } },
         section: { select: { name: true } },
         user: { select: { name: true } },
@@ -68,15 +68,13 @@ export default async function FeesPage({ searchParams }: Props) {
       orderBy: [{ class: { name: "asc" } }, { firstName: "asc" }],
     }),
     prisma.feePayment.findMany({
-      where: { schoolId },
-      select: { id: true, studentId: true, feeStructureId: true, amountPaid: true, status: true },
+      where: schoolWhere,
+      select: { id: true, studentId: true, feeStructureId: true, amountPaid: true, status: true, schoolId: true },
     }),
-    prisma.school.findUnique({ where: { id: schoolId }, select: { name: true, code: true } }),
   ]);
 
   const classes = sortClassesByGrade(classesRaw);
   const paidMap = buildPaidMap(allPaymentsRaw);
-  const structureById = new Map(structures.map((s) => [s.id, s]));
 
   const totalCollected = allPaymentsRaw
     .filter((p) => p.status === "PAID" || p.status === "PARTIAL")
@@ -87,45 +85,16 @@ export default async function FeesPage({ searchParams }: Props) {
   );
   const totalPending = Math.max(0, expectedTotal - totalCollected);
 
-  // ── Overview tab extra data ───────────────────────────────────────────────
-  let payments: Awaited<ReturnType<typeof prisma.feePayment.findMany>> = [];
-  let paymentsTotal = 0;
-  let fullPaymentById = new Map<string, { id: string; periodLabel: string | null; transactionId: string | null; remarks: string | null; paymentMode: string; status: string; paymentDate: Date | null; amountPaid: number; feeStructureId: string }>();
-
-  if (tab === "overview") {
-    const [paymentsData, totalCount, fullPaymentsData] = await Promise.all([
-      prisma.feePayment.findMany({
-        where: { schoolId },
-        include: {
-          student: { include: { user: { select: { name: true } } } },
-          feeStructure: { select: { feeType: true, frequency: true } },
-        },
-        orderBy: { paymentDate: "desc" },
-        skip,
-        take: limit,
-      }),
-      prisma.feePayment.count({ where: { schoolId } }),
-      prisma.feePayment.findMany({
-        where: { schoolId },
-        select: {
-          id: true, periodLabel: true, transactionId: true, remarks: true,
-          paymentMode: true, status: true, paymentDate: true, amountPaid: true, feeStructureId: true,
-        },
-        orderBy: { paymentDate: "desc" },
-        skip,
-        take: limit,
-      }),
-    ]);
-    payments = paymentsData;
-    paymentsTotal = totalCount;
-    fullPaymentById = new Map(fullPaymentsData.map((p) => [p.id, { ...p, amountPaid: Number(p.amountPaid) }]));
-  }
-
-  const totalPages = Math.ceil(paymentsTotal / limit);
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
   function studentName(s: (typeof allStudents)[0]) {
     return s.user?.name ?? `${s.firstName} ${s.lastName}`;
+  }
+
+  // ── School filter URL builder ─────────────────────────────────────────────
+  function tabUrl(t: Tab) {
+    const params = new URLSearchParams();
+    params.set("tab", t);
+    if (filterSchoolId) params.set("schoolId", filterSchoolId);
+    return `?${params.toString()}`;
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -135,26 +104,39 @@ export default async function FeesPage({ searchParams }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Fee Management</h1>
-          <p className="text-sm text-gray-500 mt-1">{structures.length} fee structures · {allPaymentsRaw.length} transactions</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {filterSchoolId
+              ? schools.find((s) => s.id === filterSchoolId)?.name
+              : `All Schools · ${schools.length} schools`}
+          </p>
         </div>
-        <div className="flex gap-2">
-          <CreateFeeStructureDialog classes={classes} />
-          <RecordFeePaymentDialog
-            students={allStudents}
-            feeStructures={structures.map((s) => ({
-              id: s.id, feeType: s.feeType, amount: Number(s.amount), frequency: s.frequency,
-              installments: s.installments as { period: string; dueDate?: string }[] | null,
-              monthlyDueDay: s.monthlyDueDay,
-            }))}
-            existingPayments={allPaymentsRaw}
-          />
-        </div>
+        {/* School filter */}
+        <form method="GET" className="flex gap-2">
+          <input type="hidden" name="tab" value={tab} />
+          <select
+            name="schoolId"
+            defaultValue={filterSchoolId}
+            className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">All Schools</option>
+            {schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+          <button type="submit" className="h-9 px-4 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+            Filter
+          </button>
+          {filterSchoolId && (
+            <Link href={`?tab=${tab}`} className="h-9 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 flex items-center">
+              Clear
+            </Link>
+          )}
+        </form>
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-4">
-        <StatCard title="Total Collected" value={`₹${totalCollected.toLocaleString("en-IN")}`} subtitle="Paid + Partial" icon={<IndianRupee className="w-4 h-4" />} color="green" />
-        <StatCard title="Annual Pending"  value={`₹${totalPending.toLocaleString("en-IN")}`}  subtitle="Full-year outstanding" icon={<IndianRupee className="w-4 h-4" />} color="red" />
+      <div className="grid grid-cols-3 gap-4">
+        <StatCard title="Total Collected"   value={`₹${totalCollected.toLocaleString("en-IN")}`}   subtitle="Paid + Partial" icon={<IndianRupee className="w-4 h-4" />} color="green" />
+        <StatCard title="Annual Expected"   value={`₹${expectedTotal.toLocaleString("en-IN")}`}    subtitle="Full-year obligation" icon={<IndianRupee className="w-4 h-4" />} color="blue" />
+        <StatCard title="Annual Pending"    value={`₹${totalPending.toLocaleString("en-IN")}`}     subtitle="Outstanding balance" icon={<IndianRupee className="w-4 h-4" />} color="red" />
       </div>
 
       {/* Tabs */}
@@ -162,7 +144,7 @@ export default async function FeesPage({ searchParams }: Props) {
         {TABS.map((t) => (
           <Link
             key={t.key}
-            href={`?tab=${t.key}`}
+            href={tabUrl(t.key)}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
               tab === t.key
                 ? "bg-white border border-b-white text-indigo-600 border-gray-200 -mb-px"
@@ -177,27 +159,106 @@ export default async function FeesPage({ searchParams }: Props) {
       {/* ── OVERVIEW TAB ── */}
       {tab === "overview" && (
         <div className="space-y-5">
+          {/* Cross-school summary when no filter */}
+          {!filterSchoolId && (
+            <Card className="border-0 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-indigo-500" />
+                  School-wise Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {(() => {
+                  const schoolMap = new Map<string, { name: string; collected: number; expected: number; students: number }>();
+                  for (const s of schools) schoolMap.set(s.id, { name: s.name, collected: 0, expected: 0, students: 0 });
+
+                  for (const p of allPaymentsRaw) {
+                    if (p.status === "PAID" || p.status === "PARTIAL") {
+                      const row = schoolMap.get(p.schoolId);
+                      if (row) row.collected += Number(p.amountPaid);
+                    }
+                  }
+                  for (const st of allStudents) {
+                    const row = schoolMap.get(st.schoolId);
+                    if (row) row.students += 1;
+                  }
+                  for (const struct of structures) {
+                    const schoolStudents = allStudents.filter((st) => st.schoolId === struct.schoolId);
+                    const applicable = schoolStudents.filter((st) => !struct.classId || st.classId === struct.classId);
+                    const row = schoolMap.get(struct.schoolId);
+                    if (row) row.expected += Number(struct.amount) * installmentCount(struct.frequency) * applicable.length;
+                  }
+
+                  const rows = Array.from(schoolMap.values()).filter((r) => r.students > 0 || r.expected > 0);
+                  if (rows.length === 0) return <p className="text-sm text-gray-400 text-center py-8">No data.</p>;
+
+                  return (
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b bg-gray-50">
+                          <th className="text-left px-4 py-3 font-medium text-gray-500">School</th>
+                          <th className="text-right px-4 py-3 font-medium text-gray-500">Students</th>
+                          <th className="text-right px-4 py-3 font-medium text-gray-500">Annual Expected</th>
+                          <th className="text-right px-4 py-3 font-medium text-gray-500">Collected</th>
+                          <th className="text-right px-4 py-3 font-medium text-gray-500">Pending</th>
+                          <th className="text-right px-4 py-3 font-medium text-gray-500">% Collected</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {rows.map((r) => {
+                          const pct = r.expected > 0 ? Math.round((r.collected / r.expected) * 100) : 0;
+                          const pending = Math.max(0, r.expected - r.collected);
+                          return (
+                            <tr key={r.name} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 font-medium text-gray-900">{r.name}</td>
+                              <td className="px-4 py-3 text-right text-gray-600">{r.students}</td>
+                              <td className="px-4 py-3 text-right text-gray-700">₹{r.expected.toLocaleString("en-IN")}</td>
+                              <td className="px-4 py-3 text-right text-green-600">₹{r.collected.toLocaleString("en-IN")}</td>
+                              <td className={`px-4 py-3 text-right font-medium ${pending > 0 ? "text-red-600" : "text-gray-400"}`}>
+                                ₹{pending.toLocaleString("en-IN")}
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div className="h-full bg-green-500 rounded-full" style={{ width: `${pct}%` }} />
+                                  </div>
+                                  <span className="text-xs text-gray-500">{pct}%</span>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Fee Structures */}
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-3"><CardTitle className="text-base">Fee Structures</CardTitle></CardHeader>
             <CardContent className="p-0">
               {structures.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-10">No fee structures defined yet.</p>
+                <p className="text-sm text-gray-400 text-center py-10">No fee structures found.</p>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-gray-50">
+                      {!filterSchoolId && <th className="text-left px-4 py-3 font-medium text-gray-500">School</th>}
                       <th className="text-left px-4 py-3 font-medium text-gray-500">Fee Type</th>
                       <th className="text-left px-4 py-3 font-medium text-gray-500">Frequency</th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-500">Amount / Installment</th>
+                      <th className="text-right px-4 py-3 font-medium text-gray-500">Amount</th>
                       <th className="text-right px-4 py-3 font-medium text-gray-500">Annual Total</th>
                       <th className="text-left px-4 py-3 font-medium text-gray-500">Applies To</th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-500">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {structures.map((s) => (
                       <tr key={s.id} className="hover:bg-gray-50">
+                        {!filterSchoolId && <td className="px-4 py-3 text-gray-500 text-xs">{s.school.name}</td>}
                         <td className="px-4 py-3 font-medium text-gray-900">{s.feeType}</td>
                         <td className="px-4 py-3 text-gray-600">{frequencyLabel(s.frequency)}</td>
                         <td className="px-4 py-3 text-right text-gray-700">₹{Number(s.amount).toLocaleString("en-IN")}</td>
@@ -205,17 +266,6 @@ export default async function FeesPage({ searchParams }: Props) {
                           ₹{(Number(s.amount) * installmentCount(s.frequency)).toLocaleString("en-IN")}
                         </td>
                         <td className="px-4 py-3 text-gray-500">{s.class?.name ?? "All classes"}</td>
-                        <td className="px-4 py-3 text-right">
-                          <FeeStructureRowActions
-                            structure={{
-                              id: s.id, feeType: s.feeType, amount: Number(s.amount),
-                              frequency: s.frequency, dueDate: s.dueDate?.toISOString() ?? null,
-                              monthlyDueDay: s.monthlyDueDay,
-                              installments: s.installments as { period: string; dueDate?: string }[] | null,
-                              description: s.description,
-                            }}
-                          />
-                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -223,91 +273,6 @@ export default async function FeesPage({ searchParams }: Props) {
               )}
             </CardContent>
           </Card>
-
-          {/* Payment History */}
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-3"><CardTitle className="text-base">Payment History</CardTitle></CardHeader>
-            <CardContent className="p-0">
-              {paymentsTotal === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-12">No payments found.</p>
-              ) : (
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-gray-50">
-                      <th className="text-left px-4 py-3 font-medium text-gray-500">Student</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-500">Fee Type</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-500">Period</th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-500">Amount</th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-500">Balance</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-500">Date</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-500">Status</th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-500">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {payments.map((p) => {
-                      const structure = structureById.get(p.feeStructureId);
-                      const remaining = remainingFor(paidMap, p.studentId, p.feeStructureId, Number(structure?.amount ?? 0), structure?.frequency ?? "ONE_TIME");
-                      const full = fullPaymentById.get(p.id);
-                      return (
-                        <tr key={p.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 font-medium text-gray-900">{(p as { student?: { user?: { name?: string | null } | null } | null }).student?.user?.name ?? "—"}</td>
-                          <td className="px-4 py-3 text-gray-500">{(p as { feeStructure?: { feeType?: string } | null }).feeStructure?.feeType ?? "—"}</td>
-                          <td className="px-4 py-3 text-gray-500 text-xs">{full?.periodLabel ?? "—"}</td>
-                          <td className="px-4 py-3 text-right text-gray-700">₹{Number(p.amountPaid).toLocaleString("en-IN")}</td>
-                          <td className={`px-4 py-3 text-right ${remaining > 0 ? "text-red-600 font-medium" : "text-gray-400"}`}>
-                            ₹{remaining.toLocaleString("en-IN")}
-                          </td>
-                          <td className="px-4 py-3 text-gray-500 text-xs">
-                            {p.paymentDate ? new Date(p.paymentDate).toLocaleDateString("en-IN") : "—"}
-                          </td>
-                          <td className="px-4 py-3">
-                            <Badge className={statusStyle[p.status] ?? "bg-gray-100 text-gray-500"}>{p.status}</Badge>
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <DownloadReceiptButton
-                                receipt={{
-                                  receiptNumber: p.receiptNumber,
-                                  studentName: (p as { student?: { user?: { name?: string | null } | null } | null }).student?.user?.name ?? "—",
-                                  feeType: (p as { feeStructure?: { feeType?: string } | null }).feeStructure?.feeType ?? "—",
-                                  periodLabel: full?.periodLabel,
-                                  amountPaid: Number(p.amountPaid),
-                                  remaining,
-                                  paymentDate: p.paymentDate ? p.paymentDate.toISOString() : null,
-                                  paymentMode: p.paymentMode,
-                                  status: p.status,
-                                  schoolName: school?.name ?? "School",
-                                  schoolCode: school?.code ?? "",
-                                }}
-                              />
-                              {full && (
-                                <FeePaymentRowActions
-                                  payment={{
-                                    id: p.id,
-                                    amountPaid: Number(p.amountPaid),
-                                    paymentDate: p.paymentDate ? p.paymentDate.toISOString() : null,
-                                    paymentMode: full.paymentMode,
-                                    transactionId: full.transactionId,
-                                    status: full.status,
-                                    periodLabel: full.periodLabel,
-                                    remarks: full.remarks,
-                                    feeStructureFrequency: structure?.frequency,
-                                    feeStructureInstallments: structure?.installments as { period: string }[] | null,
-                                  }}
-                                />
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
-            </CardContent>
-          </Card>
-          <Pagination page={page} totalPages={totalPages} total={paymentsTotal} limit={limit} skip={skip} />
         </div>
       )}
 
@@ -323,7 +288,9 @@ export default async function FeesPage({ searchParams }: Props) {
         });
 
         const ledger = filtered.map((student) => {
-          const applicable = structures.filter((s) => !s.classId || s.classId === student.classId);
+          const applicable = structures.filter(
+            (s) => s.schoolId === student.schoolId && (!s.classId || s.classId === student.classId),
+          );
           const lines = applicable.map((s) => {
             const obligation = Number(s.amount) * installmentCount(s.frequency);
             const paid = paidMap.get(`${student.id}:${s.id}`) ?? 0;
@@ -338,9 +305,9 @@ export default async function FeesPage({ searchParams }: Props) {
 
         return (
           <div className="space-y-4">
-            {/* Filters */}
             <form method="GET" className="flex gap-3">
               <input type="hidden" name="tab" value="ledger" />
+              {filterSchoolId && <input type="hidden" name="schoolId" value={filterSchoolId} />}
               <input
                 name="search"
                 defaultValue={search}
@@ -365,12 +332,12 @@ export default async function FeesPage({ searchParams }: Props) {
                 {ledger.map(({ student, lines, totalObligation, totalPaid, totalBalance }) => (
                   <Card key={student.id} className="border-0 shadow-sm">
                     <CardContent className="p-0">
-                      {/* Student header */}
                       <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50 rounded-t-xl">
                         <div>
                           <p className="font-semibold text-gray-900 text-sm">{studentName(student)}</p>
                           <p className="text-xs text-gray-500">
                             {student.class.name}{student.section ? ` – ${student.section.name}` : ""}
+                            {!filterSchoolId && ` · ${structures.find((s) => s.schoolId === student.schoolId)?.school.name ?? ""}`}
                           </p>
                         </div>
                         <div className="flex gap-4 text-right">
@@ -390,7 +357,6 @@ export default async function FeesPage({ searchParams }: Props) {
                           </div>
                         </div>
                       </div>
-                      {/* Fee lines */}
                       {lines.length > 0 && (
                         <table className="w-full text-xs">
                           <thead>
@@ -417,9 +383,6 @@ export default async function FeesPage({ searchParams }: Props) {
                           </tbody>
                         </table>
                       )}
-                      {lines.length === 0 && (
-                        <p className="px-4 py-3 text-xs text-gray-400">No fee structures applicable.</p>
-                      )}
                     </CardContent>
                   </Card>
                 ))}
@@ -434,12 +397,12 @@ export default async function FeesPage({ searchParams }: Props) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Build a list of due items from all structures
         interface DueItem {
           structureId: string;
           feeType: string;
           frequency: string;
           className: string;
+          schoolName: string;
           dueLabel: string;
           dueDate: Date | null;
           totalStudents: number;
@@ -452,15 +415,14 @@ export default async function FeesPage({ searchParams }: Props) {
         const dueItems: DueItem[] = [];
 
         for (const s of structures) {
-          const applicableStudents = s.classId
-            ? allStudents.filter((st) => st.classId === s.classId)
-            : allStudents;
+          const applicableStudents = allStudents.filter(
+            (st) => st.schoolId === s.schoolId && (!s.classId || st.classId === s.classId),
+          );
           const count = applicableStudents.length;
           const amountPerInstallment = Number(s.amount);
-
-          const collected = applicableStudents.reduce((sum, st) => {
-            return sum + (paidMap.get(`${st.id}:${s.id}`) ?? 0);
-          }, 0);
+          const collected = applicableStudents.reduce(
+            (sum, st) => sum + (paidMap.get(`${st.id}:${s.id}`) ?? 0), 0,
+          );
 
           if (s.frequency === "MONTHLY") {
             const dayLabel = s.monthlyDueDay ? `${s.monthlyDueDay}th of each month` : "recurring";
@@ -468,6 +430,7 @@ export default async function FeesPage({ searchParams }: Props) {
             dueItems.push({
               structureId: s.id, feeType: s.feeType, frequency: s.frequency,
               className: s.class?.name ?? "All classes",
+              schoolName: s.school.name,
               dueLabel: `Monthly — due on ${dayLabel}`,
               dueDate: null,
               totalStudents: count,
@@ -488,6 +451,7 @@ export default async function FeesPage({ searchParams }: Props) {
                 dueItems.push({
                   structureId: s.id, feeType: s.feeType, frequency: s.frequency,
                   className: s.class?.name ?? "All classes",
+                  schoolName: s.school.name,
                   dueLabel: inst.period,
                   dueDate: dd,
                   totalStudents: count,
@@ -501,13 +465,13 @@ export default async function FeesPage({ searchParams }: Props) {
             }
           }
 
-          // ONE_TIME / ANNUALLY
           const dd = s.dueDate ? new Date(s.dueDate) : null;
           const isOverdue = dd ? dd < today : false;
           const totalExpected = amountPerInstallment * installmentCount(s.frequency) * count;
           dueItems.push({
             structureId: s.id, feeType: s.feeType, frequency: s.frequency,
             className: s.class?.name ?? "All classes",
+            schoolName: s.school.name,
             dueLabel: frequencyLabel(s.frequency),
             dueDate: dd,
             totalStudents: count,
@@ -518,7 +482,6 @@ export default async function FeesPage({ searchParams }: Props) {
           });
         }
 
-        // Sort: overdue first, then by due date ascending, then no-date last
         dueItems.sort((a, b) => {
           if (a.isOverdue && !b.isOverdue) return -1;
           if (!a.isOverdue && b.isOverdue) return 1;
@@ -536,9 +499,10 @@ export default async function FeesPage({ searchParams }: Props) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-gray-50">
+                {!filterSchoolId && <th className="text-left px-4 py-3 font-medium text-gray-500">School</th>}
                 <th className="text-left px-4 py-3 font-medium text-gray-500">Fee Type</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">Class</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Period / Due Date</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500">Period / Due</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-500">Students</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-500">Expected</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-500">Collected</th>
@@ -548,6 +512,7 @@ export default async function FeesPage({ searchParams }: Props) {
             <tbody className="divide-y">
               {items.map((d, i) => (
                 <tr key={i} className={`hover:bg-gray-50 ${d.isOverdue ? "bg-red-50" : ""}`}>
+                  {!filterSchoolId && <td className="px-4 py-3 text-gray-500 text-xs">{d.schoolName}</td>}
                   <td className="px-4 py-3 font-medium text-gray-900">{d.feeType}</td>
                   <td className="px-4 py-3 text-gray-500">{d.className}</td>
                   <td className="px-4 py-3 text-gray-600">
@@ -584,7 +549,6 @@ export default async function FeesPage({ searchParams }: Props) {
                 <CardContent className="p-0"><SummaryTable items={overdueItems} /></CardContent>
               </Card>
             )}
-
             {upcomingItems.length > 0 && (
               <Card className="border-0 shadow-sm">
                 <CardHeader className="pb-3">
@@ -596,7 +560,6 @@ export default async function FeesPage({ searchParams }: Props) {
                 <CardContent className="p-0"><SummaryTable items={upcomingItems} /></CardContent>
               </Card>
             )}
-
             {recurringItems.length > 0 && (
               <Card className="border-0 shadow-sm">
                 <CardHeader className="pb-3">
@@ -608,7 +571,6 @@ export default async function FeesPage({ searchParams }: Props) {
                 <CardContent className="p-0"><SummaryTable items={recurringItems} /></CardContent>
               </Card>
             )}
-
             {dueItems.length === 0 && (
               <p className="text-sm text-gray-400 text-center py-12">No fee structures defined yet.</p>
             )}
@@ -618,10 +580,10 @@ export default async function FeesPage({ searchParams }: Props) {
 
       {/* ── CLASS-WISE PENDING TAB ── */}
       {tab === "class-pending" && (() => {
-        // Group students by class
-        const classBuckets = new Map<string, { className: string; students: typeof allStudents }>();
+        const classBuckets = new Map<string, { className: string; schoolName: string; classSchoolId: string; students: typeof allStudents }>();
         for (const cls of classes) {
-          classBuckets.set(cls.id, { className: cls.name, students: [] });
+          const school = structures.find((s) => s.schoolId === cls.schoolId)?.school;
+          classBuckets.set(cls.id, { className: cls.name, schoolName: school?.name ?? "", classSchoolId: cls.schoolId, students: [] });
         }
         for (const student of allStudents) {
           const bucket = classBuckets.get(student.classId);
@@ -631,25 +593,29 @@ export default async function FeesPage({ searchParams }: Props) {
         const classRows = Array.from(classBuckets.values())
           .filter((b) => b.students.length > 0)
           .map((bucket) => {
-            const applicable = structures.filter((s) => !s.classId || s.classId === bucket.students[0]?.classId);
+            const applicable = structures.filter(
+              (s) => s.schoolId === bucket.classSchoolId && (!s.classId || bucket.students.some((st) => st.classId === s.classId || !s.classId)),
+            );
             const classObligations = bucket.students.map((student) => {
-              const lines = applicable.map((s) => {
+              const studentStructures = applicable.filter((s) => !s.classId || s.classId === student.classId);
+              const lines = studentStructures.map((s) => {
                 const obligation = Number(s.amount) * installmentCount(s.frequency);
                 const paid = paidMap.get(`${student.id}:${s.id}`) ?? 0;
                 const balance = Math.max(0, obligation - paid);
                 return { obligation, paid, balance };
               });
-              const totalObligation = lines.reduce((sum, l) => sum + l.obligation, 0);
-              const totalPaid = lines.reduce((sum, l) => sum + l.paid, 0);
-              const totalBalance = lines.reduce((sum, l) => sum + l.balance, 0);
-              return { student, totalObligation, totalPaid, totalBalance };
+              return {
+                student,
+                totalObligation: lines.reduce((sum, l) => sum + l.obligation, 0),
+                totalPaid: lines.reduce((sum, l) => sum + l.paid, 0),
+                totalBalance: lines.reduce((sum, l) => sum + l.balance, 0),
+              };
             }).filter((r) => r.totalBalance > 0);
 
-            const classTotalObligation = classObligations.reduce((sum, r) => sum + r.totalObligation, 0);
-            const classTotalPaid = classObligations.reduce((sum, r) => sum + r.totalPaid, 0);
             const classTotalPending = classObligations.reduce((sum, r) => sum + r.totalBalance, 0);
-
-            return { className: bucket.className, students: classObligations, classTotalObligation, classTotalPaid, classTotalPending };
+            const classTotalPaid = classObligations.reduce((sum, r) => sum + r.totalPaid, 0);
+            const classTotalObligation = classObligations.reduce((sum, r) => sum + r.totalObligation, 0);
+            return { className: bucket.className, schoolName: bucket.schoolName, students: classObligations, classTotalObligation, classTotalPaid, classTotalPending };
           })
           .filter((c) => c.students.length > 0)
           .sort((a, b) => b.classTotalPending - a.classTotalPending);
@@ -658,7 +624,6 @@ export default async function FeesPage({ searchParams }: Props) {
 
         return (
           <div className="space-y-4">
-            {/* Summary banner */}
             {classRows.length > 0 && (
               <div className="flex items-center gap-3 p-3 bg-red-50 border border-red-100 rounded-xl text-sm">
                 <Users className="w-4 h-4 text-red-500 shrink-0" />
@@ -668,19 +633,15 @@ export default async function FeesPage({ searchParams }: Props) {
                 </span>
               </div>
             )}
-
-            {classRows.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-12">No pending fees found.</p>
-            )}
-
-            {classRows.map((cls) => (
-              <Card key={cls.className} className="border-0 shadow-sm">
+            {classRows.length === 0 && <p className="text-sm text-gray-400 text-center py-12">No pending fees found.</p>}
+            {classRows.map((cls, ci) => (
+              <Card key={ci} className="border-0 shadow-sm">
                 <CardContent className="p-0">
-                  {/* Class header */}
                   <div className="flex items-center justify-between px-4 py-3 border-b bg-indigo-50 rounded-t-xl">
                     <div className="flex items-center gap-2">
                       <BookOpen className="w-4 h-4 text-indigo-500" />
                       <span className="font-semibold text-gray-900 text-sm">{cls.className}</span>
+                      {!filterSchoolId && <span className="text-xs text-gray-500">· {cls.schoolName}</span>}
                       <span className="text-xs text-gray-500">· {cls.students.length} pending</span>
                     </div>
                     <div className="flex gap-4 text-right">
@@ -698,8 +659,6 @@ export default async function FeesPage({ searchParams }: Props) {
                       </div>
                     </div>
                   </div>
-
-                  {/* Student rows */}
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b">
