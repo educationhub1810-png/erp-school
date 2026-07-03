@@ -21,9 +21,10 @@ interface HeaderProps {
     email?: string;
     role: Role;
   };
+  school?: { name: string; logo: string | null } | null;
 }
 
-export function Header({ user }: HeaderProps) {
+export function Header({ user, school }: HeaderProps) {
   const router = useRouter();
   const initials = user.name
     .split(" ")
@@ -32,9 +33,37 @@ export function Header({ user }: HeaderProps) {
     .toUpperCase()
     .slice(0, 2);
 
+  const schoolInitials = school?.name
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) ?? "";
+
   return (
     <header className="h-14 bg-white border-b flex items-center justify-between px-6 sticky top-0 z-30">
-      <div />
+      {school ? (
+        <div className="flex items-center gap-2.5 min-w-0">
+          {school.logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={school.logo}
+              alt={school.name}
+              className="w-8 h-8 rounded-md object-cover flex-shrink-0"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-md bg-indigo-600 flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-xs font-bold">{schoolInitials}</span>
+            </div>
+          )}
+          <span className="text-sm font-semibold text-gray-900 truncate max-w-[220px]">
+            {school.name}
+          </span>
+        </div>
+      ) : (
+        <div />
+      )}
 
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" className="relative">

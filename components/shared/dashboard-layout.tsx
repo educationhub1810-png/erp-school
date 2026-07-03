@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { ImpersonationBanner } from "./impersonation-banner";
@@ -26,6 +27,14 @@ export async function DashboardLayout({
     redirect(ROLE_DASHBOARDS[userRole]);
   }
 
+  const schoolId = (session.user as { schoolId?: string }).schoolId;
+  const school = schoolId
+    ? await prisma.school.findUnique({
+        where: { id: schoolId },
+        select: { name: true, logo: true },
+      })
+    : null;
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {isImpersonating && (
@@ -43,6 +52,7 @@ export async function DashboardLayout({
               email: session.user.email,
               role: userRole,
             }}
+            school={school ? { name: school.name, logo: school.logo ?? null } : null}
           />
           <main className="flex-1 overflow-y-auto p-6">{children}</main>
         </div>
