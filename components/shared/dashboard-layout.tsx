@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getUser } from "@/lib/session";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { ImpersonationBanner } from "./impersonation-banner";
@@ -20,19 +21,19 @@ export async function DashboardLayout({
 
   if (!session) redirect("/login");
 
-  const userRole = session.user.role as Role;
+  const sessionUser = getUser(session);
+  const userRole = sessionUser.role as Role;
   const isImpersonating = (session.user as { isImpersonating?: boolean }).isImpersonating ?? false;
 
   if (!allowedRoles.includes(userRole)) {
     redirect(ROLE_DASHBOARDS[userRole]);
   }
 
-  const schoolId = (session.user as { schoolId?: string }).schoolId;
-  const school = schoolId
+  const school = sessionUser.schoolId
     ? await prisma.school.findUnique({
-        where: { id: schoolId },
+        where: { id: sessionUser.schoolId },
         select: { name: true, logo: true },
-      })
+      }).catch(() => null)
     : null;
 
   return (
