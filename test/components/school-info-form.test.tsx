@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { School } from "@/lib/generated/prisma/client";
 
@@ -76,5 +76,33 @@ describe("SchoolInfoForm", () => {
     expect(body.principalName).toBe("Dr. Mehta");
 
     await waitFor(() => expect(refreshMock).toHaveBeenCalledOnce());
+  });
+
+  it("previews an uploaded logo and allows removing it", async () => {
+    const user = userEvent.setup();
+    render(<SchoolInfoForm school={school} />);
+
+    const file = new File(["logo-bytes"], "logo.png", { type: "image/png" });
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, file);
+
+    const preview = await screen.findByAltText(/school logo/i);
+    expect(preview).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /remove/i }));
+    expect(screen.queryByAltText(/school logo/i)).not.toBeInTheDocument();
+  });
+
+  it("rejects a non-image file for the logo", async () => {
+    const { toast } = await import("sonner");
+    render(<SchoolInfoForm school={school} />);
+
+    const file = new File(["not-an-image"], "doc.txt", { type: "text/plain" });
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(input, "files", { value: [file] });
+    fireEvent.change(input);
+
+    expect(toast.error).toHaveBeenCalledWith("Please select an image file");
+    expect(screen.queryByAltText(/school logo/i)).not.toBeInTheDocument();
   });
 });

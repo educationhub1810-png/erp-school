@@ -9,13 +9,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Upload, X, Building2 } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import type { School } from "@/lib/generated/prisma/client";
 import { nameField, optionalTextField, emailField, mobileField, addressField, FIELD_MAX } from "@/lib/field-validation";
 import { digitsOnlyKeyDown } from "@/lib/field-behavior";
 import { INDIAN_STATES } from "@/lib/indian-states";
+
+const MAX_LOGO_BYTES = 1_500_000;
 
 const schema = z.object({
   name: nameField("School name"),
@@ -30,6 +32,7 @@ const schema = z.object({
   currency: z.string().optional(),
   regNumber: optionalTextField("Registration number"),
   affiliationNumber: optionalTextField("Affiliation number"),
+  logo: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -38,7 +41,7 @@ export function SchoolInfoForm({ school }: { school: School }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: school.name,
@@ -53,8 +56,28 @@ export function SchoolInfoForm({ school }: { school: School }) {
       currency: school.currency ?? "INR",
       regNumber: school.regNumber ?? "",
       affiliationNumber: school.affiliationNumber ?? "",
+      logo: school.logo ?? "",
     },
   });
+
+  const logo = watch("logo");
+
+  const handleLogoChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    if (file.size > MAX_LOGO_BYTES) {
+      toast.error("Logo must be smaller than 1.5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setValue("logo", reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const onSubmit = async (data: FormValues) => {
     setLoading(true);
@@ -80,6 +103,32 @@ export function SchoolInfoForm({ school }: { school: School }) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="flex items-center gap-4">
+            {logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logo} alt="School logo" className="w-16 h-16 rounded-md object-cover flex-shrink-0" />
+            ) : (
+              <div className="w-16 h-16 rounded-md bg-indigo-600 flex items-center justify-center flex-shrink-0">
+                <Building2 className="w-7 h-7 text-white" />
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <Label>School Logo</Label>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" nativeButton={false} render={<label className="cursor-pointer" />}>
+                  <Upload className="w-4 h-4 mr-1.5" /> Upload Logo
+                  <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
+                </Button>
+                {logo && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setValue("logo", "")}>
+                    <X className="w-3.5 h-3.5 mr-1" /> Remove
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-gray-400">Shown in the header.</p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-1.5">
               <Label>School Name *</Label>
