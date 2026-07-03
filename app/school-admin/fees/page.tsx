@@ -13,6 +13,7 @@ import { sortClassesByGrade } from "@/lib/class-order";
 import { computeExpectedTotal, buildPaidMap, remainingFor, frequencyLabel, installmentCount } from "@/lib/fees";
 import { DownloadReceiptButton } from "@/components/shared/download-receipt-button";
 import { IndianRupee, Users, CalendarClock, BookOpen } from "lucide-react";
+import { StudentLedgerTable } from "@/components/fees/student-ledger-table";
 import Link from "next/link";
 
 type Tab = "overview" | "ledger" | "due-dates" | "class-pending";
@@ -313,119 +314,42 @@ export default async function FeesPage({ searchParams }: Props) {
 
       {/* ── STUDENT LEDGER TAB ── */}
       {tab === "ledger" && (() => {
-        const filtered = allStudents.filter((s) => {
-          if (filterClassId && s.classId !== filterClassId) return false;
-          if (search) {
-            const name = studentName(s).toLowerCase();
-            if (!name.includes(search.toLowerCase())) return false;
-          }
-          return true;
-        });
-
-        const ledger = filtered.map((student) => {
+        const ledgerRows = allStudents.map((student) => {
           const applicable = structures.filter((s) => !s.classId || s.classId === student.classId);
           const lines = applicable.map((s) => {
             const obligation = Number(s.amount) * installmentCount(s.frequency);
             const paid = paidMap.get(`${student.id}:${s.id}`) ?? 0;
             const balance = Math.max(0, obligation - paid);
-            return { feeType: s.feeType, frequency: s.frequency, obligation, paid, balance };
+            return {
+              feeStructureId: s.id,
+              feeType: s.feeType,
+              frequency: s.frequency,
+              obligation,
+              paid,
+              balance,
+              installments: s.installments as { period: string }[] | null,
+              monthlyDueDay: s.monthlyDueDay,
+            };
           });
-          const totalObligation = lines.reduce((sum, l) => sum + l.obligation, 0);
-          const totalPaid = lines.reduce((sum, l) => sum + l.paid, 0);
-          const totalBalance = lines.reduce((sum, l) => sum + l.balance, 0);
-          return { student, lines, totalObligation, totalPaid, totalBalance };
+          return {
+            studentId: student.id,
+            studentName: studentName(student),
+            className: student.class.name,
+            sectionName: student.section?.name ?? null,
+            totalObligation: lines.reduce((sum, l) => sum + l.obligation, 0),
+            totalPaid: lines.reduce((sum, l) => sum + l.paid, 0),
+            totalBalance: lines.reduce((sum, l) => sum + l.balance, 0),
+            lines,
+          };
         });
 
         return (
-          <div className="space-y-4">
-            {/* Filters */}
-            <form method="GET" className="flex gap-3">
-              <input type="hidden" name="tab" value="ledger" />
-              <input
-                name="search"
-                defaultValue={search}
-                placeholder="Search student name…"
-                className="h-9 flex-1 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              <select
-                name="classId"
-                defaultValue={filterClassId}
-                className="h-9 rounded-lg border border-gray-200 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="">All Classes</option>
-                {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              <button type="submit" className="h-9 px-4 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">Filter</button>
-            </form>
-
-            {ledger.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-12">No students found.</p>
-            ) : (
-              <div className="space-y-3">
-                {ledger.map(({ student, lines, totalObligation, totalPaid, totalBalance }) => (
-                  <Card key={student.id} className="border-0 shadow-sm">
-                    <CardContent className="p-0">
-                      {/* Student header */}
-                      <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50 rounded-t-xl">
-                        <div>
-                          <p className="font-semibold text-gray-900 text-sm">{studentName(student)}</p>
-                          <p className="text-xs text-gray-500">
-                            {student.class.name}{student.section ? ` – ${student.section.name}` : ""}
-                          </p>
-                        </div>
-                        <div className="flex gap-4 text-right">
-                          <div>
-                            <p className="text-xs text-gray-400">Annual Due</p>
-                            <p className="text-sm font-semibold text-gray-800">₹{totalObligation.toLocaleString("en-IN")}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-400">Paid</p>
-                            <p className="text-sm font-semibold text-green-600">₹{totalPaid.toLocaleString("en-IN")}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-400">Balance</p>
-                            <p className={`text-sm font-semibold ${totalBalance > 0 ? "text-red-600" : "text-gray-400"}`}>
-                              ₹{totalBalance.toLocaleString("en-IN")}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      {/* Fee lines */}
-                      {lines.length > 0 && (
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr className="border-b">
-                              <th className="text-left px-4 py-2 font-medium text-gray-400">Fee Type</th>
-                              <th className="text-left px-4 py-2 font-medium text-gray-400">Frequency</th>
-                              <th className="text-right px-4 py-2 font-medium text-gray-400">Annual Due</th>
-                              <th className="text-right px-4 py-2 font-medium text-gray-400">Paid</th>
-                              <th className="text-right px-4 py-2 font-medium text-gray-400">Balance</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y">
-                            {lines.map((l, i) => (
-                              <tr key={i} className="hover:bg-gray-50">
-                                <td className="px-4 py-2 text-gray-700">{l.feeType}</td>
-                                <td className="px-4 py-2 text-gray-500">{frequencyLabel(l.frequency)}</td>
-                                <td className="px-4 py-2 text-right text-gray-700">₹{l.obligation.toLocaleString("en-IN")}</td>
-                                <td className="px-4 py-2 text-right text-green-600">₹{l.paid.toLocaleString("en-IN")}</td>
-                                <td className={`px-4 py-2 text-right font-medium ${l.balance > 0 ? "text-red-600" : "text-gray-400"}`}>
-                                  ₹{l.balance.toLocaleString("en-IN")}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      )}
-                      {lines.length === 0 && (
-                        <p className="px-4 py-3 text-xs text-gray-400">No fee structures applicable.</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+          <StudentLedgerTable
+            rows={ledgerRows}
+            classes={classes}
+            filterClassId={filterClassId}
+            search={search}
+          />
         );
       })()}
 
