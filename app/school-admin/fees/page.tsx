@@ -349,6 +349,8 @@ export default async function FeesPage({ searchParams }: Props) {
             classes={classes}
             filterClassId={filterClassId}
             search={search}
+            schoolName={school?.name ?? ""}
+            schoolCode={school?.code ?? ""}
           />
         );
       })()}

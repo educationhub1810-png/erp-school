@@ -8,41 +8,43 @@ import { toast } from "sonner";
 
 interface FeeLine {
   feeStructureId: string;
-  feeType: string;
-  frequency: string;
-  obligation: number;
-  paid: number;
-  balance: number;
-  installments?: { period: string }[] | null;
+  feeType:        string;
+  frequency:      string;
+  obligation:     number;
+  paid:           number;
+  balance:        number;
+  installments?:  { period: string }[] | null;
   monthlyDueDay?: number | null;
 }
 
 interface StudentRow {
-  studentId: string;
-  studentName: string;
-  className: string;
-  sectionName: string | null;
+  studentId:       string;
+  studentName:     string;
+  className:       string;
+  sectionName:     string | null;
   totalObligation: number;
-  totalPaid: number;
-  totalBalance: number;
-  lines: FeeLine[];
+  totalPaid:       number;
+  totalBalance:    number;
+  lines:           FeeLine[];
 }
 
 interface Props {
-  rows: StudentRow[];
-  classes: { id: string; name: string }[];
+  rows:          StudentRow[];
+  classes:       { id: string; name: string }[];
   filterClassId: string;
-  search: string;
+  search:        string;
+  schoolName:    string;
+  schoolCode:    string;
 }
 
 function downloadCSV(rows: StudentRow[]) {
-  const headers = ["Student", "Class", "Fee Type", "Frequency", "Annual Due (₹)", "Paid (₹)", "Balance (₹)"];
+  const headers = ["Student", "Class", "Fee Type", "Frequency", "Annual Due (Rs)", "Paid (Rs)", "Balance (Rs)"];
   const csvRows: string[][] = [headers];
   for (const r of rows) {
     for (const l of r.lines) {
       csvRows.push([
         r.studentName,
-        r.className + (r.sectionName ? ` – ${r.sectionName}` : ""),
+        r.className + (r.sectionName ? ` - ${r.sectionName}` : ""),
         l.feeType,
         l.frequency,
         String(l.obligation),
@@ -51,9 +53,10 @@ function downloadCSV(rows: StudentRow[]) {
       ]);
     }
     csvRows.push([r.studentName, "", "TOTAL", "", String(r.totalObligation), String(r.totalPaid), String(r.totalBalance)]);
+    csvRows.push([]);
   }
   const csv = csvRows.map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -63,72 +66,107 @@ function downloadCSV(rows: StudentRow[]) {
   toast.success("CSV downloaded");
 }
 
-async function downloadStudentPDF(row: StudentRow) {
+async function downloadStudentPDF(row: StudentRow, schoolName: string, schoolCode: string) {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
+  const w = doc.internal.pageSize.getWidth();
 
-  doc.setFontSize(14);
+  // Header band
+  doc.setFillColor(79, 70, 229);
+  doc.rect(0, 0, w, 30, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(15);
   doc.setFont("helvetica", "bold");
-  doc.text("Student Fee Ledger", pageWidth / 2, 18, { align: "center" });
-
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Student: ${row.studentName}`, 14, 28);
-  doc.text(`Class: ${row.className}${row.sectionName ? ` – ${row.sectionName}` : ""}`, 14, 35);
-  doc.text(`Date: ${new Date().toLocaleDateString("en-IN")}`, 14, 42);
-
+  doc.text(schoolName, w / 2, 13, { align: "center" });
   doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
-
-  const colX  = [14, 80, 120, 148, 178];
-  const colW  = [66, 40, 28,  30,  25];
-  let y = 52;
-
-  doc.setFillColor(240, 240, 250);
-  doc.rect(14, y - 5, pageWidth - 28, 7, "F");
-  doc.text("Fee Type",     colX[0], y);
-  doc.text("Frequency",    colX[1], y);
-  doc.text("Annual Due",   colX[2], y);
-  doc.text("Paid",         colX[3], y);
-  doc.text("Balance",      colX[4], y);
-
   doc.setFont("helvetica", "normal");
-  y += 6;
-  doc.line(14, y, pageWidth - 14, y);
-  y += 4;
+  doc.text(`Code: ${schoolCode}`, w / 2, 20, { align: "center" });
+  doc.text("STUDENT FEE LEDGER", w / 2, 27, { align: "center" });
 
-  for (const l of row.lines) {
-    if (y > 270) { doc.addPage(); y = 20; }
-    doc.text(l.feeType.substring(0, 30), colX[0], y);
-    doc.text(l.frequency.charAt(0) + l.frequency.slice(1).toLowerCase().replace(/_/g, " "), colX[1], y);
-    doc.text(`Rs.${l.obligation.toLocaleString("en-IN")}`, colX[2], y);
-    doc.text(`Rs.${l.paid.toLocaleString("en-IN")}`, colX[3], y);
-    if (l.balance > 0) doc.setTextColor(200, 0, 0);
-    doc.text(`Rs.${l.balance.toLocaleString("en-IN")}`, colX[4], y);
-    doc.setTextColor(0, 0, 0);
-    y += 6;
-  }
-
-  y += 2;
-  doc.line(14, y, pageWidth - 14, y);
-  y += 5;
-  doc.setFont("helvetica", "bold");
-  doc.text("TOTAL", colX[0], y);
-  doc.text(`Rs.${row.totalObligation.toLocaleString("en-IN")}`, colX[2], y);
-  doc.text(`Rs.${row.totalPaid.toLocaleString("en-IN")}`, colX[3], y);
-  if (row.totalBalance > 0) doc.setTextColor(200, 0, 0);
-  doc.text(`Rs.${row.totalBalance.toLocaleString("en-IN")}`, colX[4], y);
   doc.setTextColor(0, 0, 0);
 
-  doc.save(`ledger-${row.studentName.replace(/\s+/g, "-")}.pdf`);
+  // Student info
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Student: ${row.studentName}`, 14, 40);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Class: ${row.className}${row.sectionName ? ` – ${row.sectionName}` : ""}`, 14, 47);
+  doc.text(`Generated: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}`, w - 14, 40, { align: "right" });
+
+  // Summary band
+  doc.setFillColor(245, 245, 255);
+  doc.rect(14, 52, w - 28, 14, "F");
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Annual Due: Rs.${row.totalObligation.toLocaleString("en-IN")}`, 18, 60);
+  doc.setTextColor(22, 163, 74);
+  doc.text(`Paid: Rs.${row.totalPaid.toLocaleString("en-IN")}`, 90, 60);
+  doc.setTextColor(row.totalBalance > 0 ? 220 : 100, row.totalBalance > 0 ? 0 : 100, 0);
+  doc.text(`Balance: Rs.${row.totalBalance.toLocaleString("en-IN")}`, 150, 60);
+  doc.setTextColor(0, 0, 0);
+
+  // Table header
+  let y = 74;
+  doc.setFillColor(230, 230, 245);
+  doc.rect(14, y - 5, w - 28, 7, "F");
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  const cols = [14, 80, 120, 148, 175];
+  doc.text("Fee Type",    cols[0], y);
+  doc.text("Frequency",  cols[1], y);
+  doc.text("Annual Due", cols[2], y);
+  doc.text("Paid",       cols[3], y);
+  doc.text("Balance",    cols[4], y);
+
+  doc.setFont("helvetica", "normal");
+  y += 4;
+  doc.setDrawColor(200, 200, 220);
+  doc.line(14, y, w - 14, y);
+  y += 5;
+
+  for (const l of row.lines) {
+    if (y > 272) { doc.addPage(); y = 20; }
+    const freqLabel = l.frequency.charAt(0) + l.frequency.slice(1).toLowerCase().replace(/_/g, " ");
+    doc.text(l.feeType.substring(0, 28), cols[0], y);
+    doc.text(freqLabel, cols[1], y);
+    doc.text(`Rs.${l.obligation.toLocaleString("en-IN")}`, cols[2], y);
+    doc.setTextColor(22, 163, 74);
+    doc.text(`Rs.${l.paid.toLocaleString("en-IN")}`, cols[3], y);
+    doc.setTextColor(l.balance > 0 ? 220 : 100, l.balance > 0 ? 0 : 100, 0);
+    doc.text(`Rs.${l.balance.toLocaleString("en-IN")}`, cols[4], y);
+    doc.setTextColor(0, 0, 0);
+    y += 7;
+    doc.setDrawColor(235, 235, 235);
+    doc.line(14, y - 3, w - 14, y - 3);
+  }
+
+  // Total row
+  y += 2;
+  doc.setFillColor(245, 245, 255);
+  doc.rect(14, y - 5, w - 28, 8, "F");
+  doc.setFont("helvetica", "bold");
+  doc.text("TOTAL", cols[0], y);
+  doc.text(`Rs.${row.totalObligation.toLocaleString("en-IN")}`, cols[2], y);
+  doc.setTextColor(22, 163, 74);
+  doc.text(`Rs.${row.totalPaid.toLocaleString("en-IN")}`, cols[3], y);
+  doc.setTextColor(row.totalBalance > 0 ? 220 : 22, row.totalBalance > 0 ? 0 : 163, 0);
+  doc.text(`Rs.${row.totalBalance.toLocaleString("en-IN")}`, cols[4], y);
+  doc.setTextColor(0, 0, 0);
+
+  y += 14;
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(150, 150, 150);
+  doc.text("This is a system-generated statement.", w / 2, y, { align: "center" });
+
+  doc.save(`ledger-${row.studentName.replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.pdf`);
   toast.success("PDF downloaded");
 }
 
-export function StudentLedgerTable({ rows, classes, filterClassId, search }: Props) {
-  const [localSearch, setLocalSearch] = useState(search);
-  const [localClass, setLocalClass] = useState(filterClassId);
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+export function StudentLedgerTable({ rows, classes, filterClassId, search, schoolName, schoolCode }: Props) {
+  const [localSearch, setLocalSearch]   = useState(search);
+  const [localClass, setLocalClass]     = useState(filterClassId);
+  const [collapsed, setCollapsed]       = useState<Set<string>>(new Set());
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
@@ -145,6 +183,10 @@ export function StudentLedgerTable({ rows, classes, filterClassId, search }: Pro
       return next;
     });
   }
+
+  const grandDue     = filtered.reduce((s, r) => s + r.totalObligation, 0);
+  const grandPaid    = filtered.reduce((s, r) => s + r.totalPaid, 0);
+  const grandBalance = filtered.reduce((s, r) => s + r.totalBalance, 0);
 
   return (
     <div className="space-y-4">
@@ -166,15 +208,31 @@ export function StudentLedgerTable({ rows, classes, filterClassId, search }: Pro
         >
           <option value="">All Classes</option>
           {classes.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
-
         </select>
         <button
           onClick={() => downloadCSV(filtered)}
-          className="h-9 px-3 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-1.5"
+          className="h-9 px-3 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-1.5 whitespace-nowrap"
         >
           <FileDown className="w-4 h-4" /> Export CSV
         </button>
       </div>
+
+      {/* Summary row */}
+      {filtered.length > 0 && (
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: "Annual Due",  value: grandDue,     color: "text-gray-800" },
+            { label: "Total Paid",  value: grandPaid,    color: "text-green-600" },
+            { label: "Outstanding", value: grandBalance, color: grandBalance > 0 ? "text-red-600" : "text-gray-400" },
+          ].map((s) => (
+            <div key={s.label} className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+              <p className="text-xs text-gray-400">{s.label}</p>
+              <p className={`text-lg font-bold ${s.color}`}>₹{s.value.toLocaleString("en-IN")}</p>
+              <p className="text-xs text-gray-400">{filtered.length} students</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {filtered.length === 0 && (
         <p className="text-sm text-gray-400 text-center py-12">No students found.</p>
@@ -187,15 +245,18 @@ export function StudentLedgerTable({ rows, classes, filterClassId, search }: Pro
           : 0;
 
         return (
-          <Card key={row.studentId} className="border-0 shadow-sm">
+          <Card key={row.studentId} className="border-0 shadow-sm overflow-hidden">
             <CardContent className="p-0">
               {/* Student header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50 rounded-t-xl">
+              <div className={`flex items-center gap-3 px-4 py-3 border-b ${isCollapsed ? "bg-white" : "bg-gray-50"}`}>
                 <button
                   onClick={() => toggleCollapse(row.studentId)}
                   className="flex items-center gap-2 text-left flex-1 min-w-0"
                 >
-                  {isCollapsed ? <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" /> : <ChevronUp className="w-4 h-4 text-gray-400 shrink-0" />}
+                  {isCollapsed
+                    ? <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />
+                    : <ChevronUp className="w-4 h-4 text-gray-400 shrink-0" />
+                  }
                   <div className="min-w-0">
                     <p className="font-semibold text-gray-900 text-sm">{row.studentName}</p>
                     <p className="text-xs text-gray-500">
@@ -205,31 +266,35 @@ export function StudentLedgerTable({ rows, classes, filterClassId, search }: Pro
                 </button>
 
                 {/* Progress bar */}
-                <div className="hidden sm:flex items-center gap-2 mx-4">
-                  <div className="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-500 rounded-full" style={{ width: `${pct}%` }} />
+                <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+                  <div className="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${pct >= 100 ? "bg-green-500" : pct >= 50 ? "bg-yellow-400" : "bg-red-400"}`}
+                      style={{ width: `${pct}%` }}
+                    />
                   </div>
-                  <span className="text-xs text-gray-400 w-8">{pct}%</span>
+                  <span className="text-xs text-gray-400 w-8 text-right">{pct}%</span>
                 </div>
 
-                <div className="flex items-center gap-4">
+                {/* Amounts */}
+                <div className="flex items-center gap-3 flex-shrink-0">
                   <div className="text-right">
-                    <p className="text-xs text-gray-400">Annual Due</p>
+                    <p className="text-[10px] text-gray-400 leading-none mb-0.5">Due</p>
                     <p className="text-sm font-semibold text-gray-800">₹{row.totalObligation.toLocaleString("en-IN")}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-gray-400">Paid</p>
+                    <p className="text-[10px] text-gray-400 leading-none mb-0.5">Paid</p>
                     <p className="text-sm font-semibold text-green-600">₹{row.totalPaid.toLocaleString("en-IN")}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-gray-400">Balance</p>
-                    <p className={`text-sm font-semibold ${row.totalBalance > 0 ? "text-red-600" : "text-gray-400"}`}>
+                    <p className="text-[10px] text-gray-400 leading-none mb-0.5">Balance</p>
+                    <p className={`text-sm font-bold ${row.totalBalance > 0 ? "text-red-600" : "text-gray-400"}`}>
                       ₹{row.totalBalance.toLocaleString("en-IN")}
                     </p>
                   </div>
                   <button
-                    onClick={() => downloadStudentPDF(row)}
-                    className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-500 hover:text-gray-800 transition-colors"
+                    onClick={() => downloadStudentPDF(row, schoolName, schoolCode)}
+                    className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 hover:text-gray-800 transition-colors"
                     title="Download PDF ledger"
                   >
                     <Download className="w-4 h-4" />
@@ -242,26 +307,28 @@ export function StudentLedgerTable({ rows, classes, filterClassId, search }: Pro
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b bg-gray-50/50">
-                      <th className="text-left px-4 py-2 font-medium text-gray-400">Fee Type</th>
-                      <th className="text-left px-4 py-2 font-medium text-gray-400">Frequency</th>
-                      <th className="text-right px-4 py-2 font-medium text-gray-400">Annual Due</th>
-                      <th className="text-right px-4 py-2 font-medium text-gray-400">Paid</th>
-                      <th className="text-right px-4 py-2 font-medium text-gray-400">Balance</th>
-                      <th className="text-right px-4 py-2 font-medium text-gray-400">Action</th>
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-400">Fee Type</th>
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-400">Frequency</th>
+                      <th className="text-right px-4 py-2.5 font-medium text-gray-400">Annual Due</th>
+                      <th className="text-right px-4 py-2.5 font-medium text-gray-400">Paid</th>
+                      <th className="text-right px-4 py-2.5 font-medium text-gray-400">Balance</th>
+                      <th className="text-right px-4 py-2.5 font-medium text-gray-400 pr-4">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y">
+                  <tbody className="divide-y divide-gray-50">
                     {row.lines.map((l, i) => (
-                      <tr key={i} className={`hover:bg-gray-50 ${l.balance > 0 ? "" : "opacity-60"}`}>
-                        <td className="px-4 py-2.5 text-gray-700 font-medium">{l.feeType}</td>
-                        <td className="px-4 py-2.5 text-gray-500">{l.frequency.charAt(0) + l.frequency.slice(1).toLowerCase().replace(/_/g, " ")}</td>
+                      <tr key={i} className={`hover:bg-indigo-50/30 transition-colors ${l.balance === 0 ? "opacity-60" : ""}`}>
+                        <td className="px-4 py-2.5 font-medium text-gray-700">{l.feeType}</td>
+                        <td className="px-4 py-2.5 text-gray-500 capitalize">
+                          {l.frequency.toLowerCase().replace(/_/g, " ")}
+                        </td>
                         <td className="px-4 py-2.5 text-right text-gray-700">₹{l.obligation.toLocaleString("en-IN")}</td>
                         <td className="px-4 py-2.5 text-right text-green-600 font-medium">₹{l.paid.toLocaleString("en-IN")}</td>
                         <td className={`px-4 py-2.5 text-right font-semibold ${l.balance > 0 ? "text-red-600" : "text-gray-400"}`}>
                           ₹{l.balance.toLocaleString("en-IN")}
                         </td>
                         <td className="px-4 py-2.5 text-right">
-                          {l.balance > 0 && (
+                          {l.balance > 0 ? (
                             <QuickPayDialog
                               studentId={row.studentId}
                               studentName={row.studentName}
@@ -271,10 +338,11 @@ export function StudentLedgerTable({ rows, classes, filterClassId, search }: Pro
                               frequency={l.frequency}
                               installments={l.installments}
                               monthlyDueDay={l.monthlyDueDay}
+                              schoolName={schoolName}
+                              schoolCode={schoolCode}
                             />
-                          )}
-                          {l.balance === 0 && (
-                            <span className="text-xs text-green-600 font-medium">✓ Paid</span>
+                          ) : (
+                            <span className="text-green-600 font-medium">✓ Paid</span>
                           )}
                         </td>
                       </tr>
