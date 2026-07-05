@@ -3,8 +3,9 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { QuickPayDialog } from "@/components/fees/quick-pay-dialog";
-import { Download, FileDown, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Download, FileDown, Printer, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
+import { expandDueEntries, buildPaymentEntries, ledgerTotals, type LedgerStructure, type LedgerPayment } from "@/lib/student-ledger";
 
 interface FeeLine {
   feeStructureId: string;
@@ -18,14 +19,16 @@ interface FeeLine {
 }
 
 interface StudentRow {
-  studentId:       string;
-  studentName:     string;
-  className:       string;
-  sectionName:     string | null;
-  totalObligation: number;
-  totalPaid:       number;
-  totalBalance:    number;
-  lines:           FeeLine[];
+  studentId:        string;
+  studentName:      string;
+  className:        string;
+  sectionName:      string | null;
+  totalObligation:  number;
+  totalPaid:        number;
+  totalBalance:     number;
+  lines:            FeeLine[];
+  ledgerStructures: LedgerStructure[];
+  ledgerPayments:   LedgerPayment[];
 }
 
 interface Props {
@@ -163,6 +166,86 @@ async function downloadStudentPDF(row: StudentRow, schoolName: string, schoolCod
   toast.success("PDF downloaded");
 }
 
+/** Two-column day-wise passbook ledger: due-date fee lines vs. payment
+ * transactions, side by side, with a running "balance as on date" footer —
+ * the register format schools traditionally hand out to parents. */
+async function printStudentLedgerPassbook(row: StudentRow, schoolName: string) {
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF();
+  const marginX = 10;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const tableWidth = pageWidth - marginX * 2;
+  const colRatios = [0.13, 0.20, 0.11, 0.13, 0.20, 0.11, 0.12];
+  const cols = colRatios.map((r) => r * tableWidth);
+  const xs: number[] = [];
+  let acc = marginX;
+  for (const w of cols) { xs.push(acc); acc += w; }
+  const rowH = 7;
+
+  const asOf = new Date();
+  const due = expandDueEntries(row.ledgerStructures, asOf);
+  const paid = buildPaymentEntries(row.ledgerPayments, asOf);
+  const { totalDue, totalPaid, balance } = ledgerTotals(due, paid);
+  const fmtDate = (d: Date) => d.toLocaleDateString("en-GB");
+
+  let y = 20;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  doc.text(schoolName.toUpperCase(), pageWidth / 2, y, { align: "center" });
+  y += 7;
+  doc.setFontSize(11);
+  doc.text(`LEDGER FOR STUDENT ${row.studentName.toUpperCase()}`, pageWidth / 2, y, { align: "center" });
+  y += 8;
+
+  const drawRow = (cells: string[], opts?: { bold?: boolean; fill?: boolean }) => {
+    if (y + rowH > 285) { doc.addPage(); y = 20; }
+    if (opts?.fill) {
+      doc.setFillColor(235, 235, 245);
+      doc.rect(marginX, y, tableWidth, rowH, "F");
+    }
+    doc.setFont("helvetica", opts?.bold ? "bold" : "normal");
+    doc.setFontSize(8);
+    cells.forEach((c, i) => {
+      doc.rect(xs[i], y, cols[i], rowH);
+      doc.text(c, xs[i] + 1.5, y + 4.8, { maxWidth: cols[i] - 3 });
+    });
+    y += rowH;
+  };
+
+  drawRow(["DUE DATE", "FEES TYPE", "AMOUNT", "PAYMENT DATE", "FEES TYPE", "AMOUNT", "PAYMENT MODE"], { bold: true, fill: true });
+
+  const maxRows = Math.max(due.length, paid.length);
+  for (let i = 0; i < maxRows; i++) {
+    const d = due[i];
+    const p = paid[i];
+    drawRow([
+      d ? fmtDate(d.date) : "",
+      d ? d.feeType : "",
+      d ? String(d.amount) : "",
+      p ? fmtDate(p.date) : "",
+      p ? p.feeType : "",
+      p ? String(p.amount) : "",
+      p ? p.paymentMode.charAt(0) + p.paymentMode.slice(1).toLowerCase() : "",
+    ]);
+  }
+
+  drawRow(["", "TOTAL", String(totalDue), "", "TOTAL", String(totalPaid), ""], { bold: true, fill: true });
+
+  if (y + rowH * 2 > 285) { doc.addPage(); y = 20; }
+  doc.setFillColor(255, 247, 230);
+  doc.rect(marginX, y, tableWidth, rowH, "F");
+  doc.rect(marginX, y, tableWidth, rowH);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.text(`BALANCE TO BE PAID AS ON DATE ${fmtDate(asOf)}`, pageWidth / 2, y + 4.8, { align: "center" });
+  y += rowH;
+  doc.rect(marginX, y, tableWidth, rowH);
+  doc.text(String(balance), pageWidth / 2, y + 4.8, { align: "center" });
+
+  doc.save(`ledger-passbook-${row.studentName.replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.pdf`);
+  toast.success("Ledger PDF downloaded");
+}
+
 export function StudentLedgerTable({ rows, classes, filterClassId, search, schoolName, schoolCode }: Props) {
   const [localSearch, setLocalSearch]   = useState(search);
   const [localClass, setLocalClass]     = useState(filterClassId);
@@ -295,9 +378,16 @@ export function StudentLedgerTable({ rows, classes, filterClassId, search, schoo
                   <button
                     onClick={() => downloadStudentPDF(row, schoolName, schoolCode)}
                     className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 hover:text-gray-800 transition-colors"
-                    title="Download PDF ledger"
+                    title="Download summary PDF"
                   >
                     <Download className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => printStudentLedgerPassbook(row, schoolName)}
+                    className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 hover:text-gray-800 transition-colors"
+                    title="Print day-wise ledger"
+                  >
+                    <Printer className="w-4 h-4" />
                   </button>
                 </div>
               </div>

@@ -54,7 +54,7 @@ export default async function FeesPage({ searchParams }: Props) {
   const [structures, classesRaw, allStudents, allPaymentsRaw, school] = await Promise.all([
     prisma.feeStructure.findMany({
       where: { schoolId },
-      include: { class: { select: { name: true } } },
+      include: { class: { select: { name: true } }, academicYear: { select: { startDate: true } } },
       orderBy: { feeType: "asc" },
     }),
     prisma.class.findMany({ where: { schoolId }, select: { id: true, name: true } }),
@@ -70,7 +70,7 @@ export default async function FeesPage({ searchParams }: Props) {
     }),
     prisma.feePayment.findMany({
       where: { schoolId },
-      select: { id: true, studentId: true, feeStructureId: true, amountPaid: true, status: true },
+      select: { id: true, studentId: true, feeStructureId: true, amountPaid: true, status: true, paymentDate: true, paymentMode: true },
     }),
     prisma.school.findUnique({ where: { id: schoolId }, select: { name: true, code: true } }),
   ]);
@@ -331,6 +331,25 @@ export default async function FeesPage({ searchParams }: Props) {
               monthlyDueDay: s.monthlyDueDay,
             };
           });
+          const ledgerStructures = applicable.map((s) => ({
+            feeType: s.feeType,
+            amount: Number(s.amount),
+            frequency: s.frequency,
+            dueDate: s.dueDate,
+            monthlyDueDay: s.monthlyDueDay,
+            installments: s.installments as { period: string; dueDate?: string }[] | null,
+            academicYearStart: s.academicYear?.startDate ?? null,
+          }));
+          const applicableIds = new Set(applicable.map((s) => s.id));
+          const ledgerPayments = allPaymentsRaw
+            .filter((p) => p.studentId === student.id && applicableIds.has(p.feeStructureId))
+            .map((p) => ({
+              feeType: structureById.get(p.feeStructureId)?.feeType ?? "—",
+              amountPaid: Number(p.amountPaid),
+              paymentDate: p.paymentDate,
+              paymentMode: p.paymentMode,
+              status: p.status,
+            }));
           return {
             studentId: student.id,
             studentName: studentName(student),
@@ -340,6 +359,8 @@ export default async function FeesPage({ searchParams }: Props) {
             totalPaid: lines.reduce((sum, l) => sum + l.paid, 0),
             totalBalance: lines.reduce((sum, l) => sum + l.balance, 0),
             lines,
+            ledgerStructures,
+            ledgerPayments,
           };
         });
 
