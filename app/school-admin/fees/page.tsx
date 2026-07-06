@@ -327,8 +327,9 @@ export default async function FeesPage({ searchParams }: Props) {
               obligation,
               paid,
               balance,
-              installments: s.installments as { period: string }[] | null,
+              installments: s.installments as { period: string; dueDate?: string }[] | null,
               monthlyDueDay: s.monthlyDueDay,
+              dueDate: s.dueDate ? s.dueDate.toISOString() : null,
             };
           });
           const ledgerStructures = applicable.map((s) => ({

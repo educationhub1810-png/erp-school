@@ -14,8 +14,35 @@ interface FeeLine {
   obligation:     number;
   paid:           number;
   balance:        number;
-  installments?:  { period: string }[] | null;
+  installments?:  { period: string; dueDate?: string }[] | null;
   monthlyDueDay?: number | null;
+  dueDate?:       string | null;
+}
+
+const ORDINAL_SUFFIX = (n: number) => {
+  if (n % 10 === 1 && n % 100 !== 11) return "st";
+  if (n % 10 === 2 && n % 100 !== 12) return "nd";
+  if (n % 10 === 3 && n % 100 !== 13) return "rd";
+  return "th";
+};
+
+function formatShortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+/** Human-readable due date for a fee line: a fixed date for one-time/annual
+ * fees, "Nth of every month" for monthly fees, or the installment dates for
+ * quarterly/half-yearly fees. */
+function dueDateLabel(l: FeeLine): string {
+  if (l.frequency === "MONTHLY") {
+    const day = l.monthlyDueDay ?? 1;
+    return `${day}${ORDINAL_SUFFIX(day)} of every month`;
+  }
+  if (l.frequency === "QUARTERLY" || l.frequency === "HALF_YEARLY") {
+    const dates = (l.installments ?? []).filter((i) => i.dueDate).map((i) => formatShortDate(i.dueDate!));
+    return dates.length ? dates.join(", ") : "—";
+  }
+  return l.dueDate ? formatShortDate(l.dueDate) : "—";
 }
 
 interface StudentRow {
@@ -41,7 +68,7 @@ interface Props {
 }
 
 function downloadCSV(rows: StudentRow[]) {
-  const headers = ["Student", "Class", "Fee Type", "Frequency", "Annual Due (Rs)", "Paid (Rs)", "Balance (Rs)"];
+  const headers = ["Student", "Class", "Fee Type", "Frequency", "Due Date", "Annual Due (Rs)", "Paid (Rs)", "Balance (Rs)"];
   const csvRows: string[][] = [headers];
   for (const r of rows) {
     for (const l of r.lines) {
@@ -50,12 +77,13 @@ function downloadCSV(rows: StudentRow[]) {
         r.className + (r.sectionName ? ` - ${r.sectionName}` : ""),
         l.feeType,
         l.frequency,
+        dueDateLabel(l),
         String(l.obligation),
         String(l.paid),
         String(l.balance),
       ]);
     }
-    csvRows.push([r.studentName, "", "TOTAL", "", String(r.totalObligation), String(r.totalPaid), String(r.totalBalance)]);
+    csvRows.push([r.studentName, "", "TOTAL", "", "", String(r.totalObligation), String(r.totalPaid), String(r.totalBalance)]);
     csvRows.push([]);
   }
   const csv = csvRows.map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -175,12 +203,34 @@ async function printStudentLedgerPassbook(row: StudentRow, schoolName: string) {
   const marginX = 10;
   const pageWidth = doc.internal.pageSize.getWidth();
   const tableWidth = pageWidth - marginX * 2;
-  const colRatios = [0.13, 0.20, 0.11, 0.13, 0.20, 0.11, 0.12];
+  // Widths sized so common cell values (dates, fee names, "PAYMENT MODE") fit
+  // on one line at the base font size — see fitCellText for the fallback
+  // that shrinks/truncates unusually long fee-type names.
+  const colRatios = [20 / 190, 38 / 190, 18 / 190, 27 / 190, 38 / 190, 18 / 190, 31 / 190];
   const cols = colRatios.map((r) => r * tableWidth);
   const xs: number[] = [];
   let acc = marginX;
   for (const w of cols) { xs.push(acc); acc += w; }
   const rowH = 7;
+
+  /** Shrinks the font (down to a floor) and, failing that, truncates with an
+   * ellipsis so a cell's text always renders on a single line within its
+   * column — jsPDF's `maxWidth` text option wraps instead of clipping, which
+   * overflowed the row height and overlapped the row below it. */
+  const fitCellText = (text: string, maxWidth: number, baseSize: number): string => {
+    let size = baseSize;
+    doc.setFontSize(size);
+    while (size > 5.5 && doc.getTextWidth(text) > maxWidth) {
+      size -= 0.5;
+      doc.setFontSize(size);
+    }
+    if (doc.getTextWidth(text) <= maxWidth) return text;
+    let truncated = text;
+    while (truncated.length > 1 && doc.getTextWidth(truncated + "…") > maxWidth) {
+      truncated = truncated.slice(0, -1);
+    }
+    return truncated + "…";
+  };
 
   const asOf = new Date();
   const due = expandDueEntries(row.ledgerStructures, asOf);
@@ -204,10 +254,10 @@ async function printStudentLedgerPassbook(row: StudentRow, schoolName: string) {
       doc.rect(marginX, y, tableWidth, rowH, "F");
     }
     doc.setFont("helvetica", opts?.bold ? "bold" : "normal");
-    doc.setFontSize(8);
     cells.forEach((c, i) => {
       doc.rect(xs[i], y, cols[i], rowH);
-      doc.text(c, xs[i] + 1.5, y + 4.8, { maxWidth: cols[i] - 3 });
+      const fitted = fitCellText(c, cols[i] - 3, 8);
+      doc.text(fitted, xs[i] + 1.5, y + 4.8);
     });
     y += rowH;
   };
@@ -399,6 +449,7 @@ export function StudentLedgerTable({ rows, classes, filterClassId, search, schoo
                     <tr className="border-b bg-gray-50/50">
                       <th className="text-left px-4 py-2.5 font-medium text-gray-400">Fee Type</th>
                       <th className="text-left px-4 py-2.5 font-medium text-gray-400">Frequency</th>
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-400">Due Date</th>
                       <th className="text-right px-4 py-2.5 font-medium text-gray-400">Annual Due</th>
                       <th className="text-right px-4 py-2.5 font-medium text-gray-400">Paid</th>
                       <th className="text-right px-4 py-2.5 font-medium text-gray-400">Balance</th>
@@ -412,6 +463,7 @@ export function StudentLedgerTable({ rows, classes, filterClassId, search, schoo
                         <td className="px-4 py-2.5 text-gray-500 capitalize">
                           {l.frequency.toLowerCase().replace(/_/g, " ")}
                         </td>
+                        <td className="px-4 py-2.5 text-gray-500">{dueDateLabel(l)}</td>
                         <td className="px-4 py-2.5 text-right text-gray-700">₹{l.obligation.toLocaleString("en-IN")}</td>
                         <td className="px-4 py-2.5 text-right text-green-600 font-medium">₹{l.paid.toLocaleString("en-IN")}</td>
                         <td className={`px-4 py-2.5 text-right font-semibold ${l.balance > 0 ? "text-red-600" : "text-gray-400"}`}>
