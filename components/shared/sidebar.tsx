@@ -54,7 +54,7 @@ export function Sidebar({ role }: SidebarProps) {
         collapsed ? "flex-col gap-3 px-0 justify-center" : "flex-row justify-between px-3"
       )}>
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 bg-indigo-500 rounded-lg flex items-center justify-center shrink-0">
+          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
             <GraduationCap className="w-4 h-4 text-white" />
           </div>
           {!collapsed && (
