@@ -4,6 +4,22 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Brand color: overrides Tailwind's default indigo-* palette (anchored on
+   #4F46E5 at indigo-600) so every bg/text/border-indigo-* utility across the
+   app uses the brand blue (#261EFC) instead, with matching tints/shades. */
+@theme {
+  --color-indigo-50: #f4f4ff;
+  --color-indigo-100: #e5e4ff;
+  --color-indigo-200: #c7c5fe;
+  --color-indigo-300: #a4a0fe;
+  --color-indigo-400: #6b66fd;
+  --color-indigo-500: #4740fc;
+  --color-indigo-600: #261efc;
+  --color-indigo-700: #2019d4;
+  --color-indigo-800: #1a14ab;
+  --color-indigo-900: #151088;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
