@@ -75,7 +75,7 @@ describe("AddStudentDialog (school-admin)", () => {
     expect(screen.queryByText("Medical Notes")).not.toBeInTheDocument();
   });
 
-  it("walks through all 3 steps and submits split address fields with schoolId, showing the student code + DOB password", async () => {
+  it("walks through all 4 steps and submits split address fields plus parent details, showing the student code + DOB password", async () => {
     const user = userEvent.setup();
     render(<AddStudentDialog classes={classes} schoolId="school-1" schoolName="Vidyapeeth School" />);
     await user.click(screen.getByRole("button", { name: /^add student$/i }));
@@ -94,6 +94,11 @@ describe("AddStudentDialog (school-admin)", () => {
     await user.type(inputForLabel("Address Line 1"), "221B Baker Street");
     await user.type(inputForLabel("City"), "New Delhi");
     await user.type(inputForLabel("Zip Code"), "110001");
+    await user.click(nextButton());
+
+    // Step 4: Parents
+    await screen.findByText("Father's Name");
+    await user.type(inputForLabel("Father's Name"), "Ramesh Rao");
     await user.click(screen.getByRole("button", { name: /save student/i }));
 
     await waitFor(() => expect(global.fetch).toHaveBeenCalledOnce());
@@ -110,11 +115,32 @@ describe("AddStudentDialog (school-admin)", () => {
     expect(body.country).toBe("India");
     expect(body.house).toBeUndefined();
     expect(body.medicalNotes).toBeUndefined();
-    expect(body.fatherName).toBeUndefined();
+    expect(body.fatherName).toBe("Ramesh Rao");
 
     expect(await screen.findByText(/student added successfully/i)).toBeInTheDocument();
     const credentialsDialog = screen.getByRole("dialog", { name: /student added successfully/i });
     expect(within(credentialsDialog).getByText("V-STD00001")).toBeInTheDocument();
+  }, 15000);
+
+  it("does not require any Parents step field to submit", async () => {
+    const user = userEvent.setup();
+    render(<AddStudentDialog classes={classes} schoolId="school-1" schoolName="Vidyapeeth School" />);
+    await user.click(screen.getByRole("button", { name: /^add student$/i }));
+
+    await fillPersonalStep(user);
+    await user.click(nextButton());
+    await screen.findByText("Roll Number");
+    await selectOnlyClass(user);
+    await user.click(nextButton());
+    await screen.findByText("Address Line 1");
+    await user.click(nextButton());
+
+    await screen.findByText("Father's Name");
+    await user.click(screen.getByRole("button", { name: /save student/i }));
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledOnce());
+    const body = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body as string);
+    expect(body.fatherName).toBeFalsy();
   }, 15000);
 
   it("rejects a malformed mobile number on the Contact step", async () => {
@@ -130,6 +156,8 @@ describe("AddStudentDialog (school-admin)", () => {
     await screen.findByText("Address Line 1");
 
     await user.type(inputForLabel("Mobile"), "12345");
+    await user.click(nextButton());
+    await screen.findByText("Father's Name");
     await user.click(screen.getByRole("button", { name: /save student/i }));
 
     expect(await screen.findByText(/valid 10-digit mobile number/i)).toBeInTheDocument();
@@ -149,9 +177,31 @@ describe("AddStudentDialog (school-admin)", () => {
     await screen.findByText("Address Line 1");
 
     await user.type(inputForLabel("Zip Code"), "123");
+    await user.click(nextButton());
+    await screen.findByText("Father's Name");
     await user.click(screen.getByRole("button", { name: /save student/i }));
 
     expect(await screen.findByText(/valid 6-digit pin code/i)).toBeInTheDocument();
+    expect(global.fetch).not.toHaveBeenCalled();
+  }, 15000);
+
+  it("rejects a malformed father's mobile number on the Parents step", async () => {
+    const user = userEvent.setup();
+    render(<AddStudentDialog classes={classes} schoolId="school-1" schoolName="Vidyapeeth School" />);
+    await user.click(screen.getByRole("button", { name: /^add student$/i }));
+
+    await fillPersonalStep(user);
+    await user.click(nextButton());
+    await screen.findByText("Roll Number");
+    await selectOnlyClass(user);
+    await user.click(nextButton());
+    await screen.findByText("Address Line 1");
+    await user.click(nextButton());
+
+    await user.type(inputForLabel("Father's Mobile"), "12345");
+    await user.click(screen.getByRole("button", { name: /save student/i }));
+
+    expect(await screen.findByText(/valid 10-digit mobile number/i)).toBeInTheDocument();
     expect(global.fetch).not.toHaveBeenCalled();
   }, 15000);
 });

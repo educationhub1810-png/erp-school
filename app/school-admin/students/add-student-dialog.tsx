@@ -51,20 +51,36 @@ const schema = z.object({
   city: optionalTextField("City"),
   state: z.string().optional(),
   country: optionalTextField("Country"),
+  // Step 4: Parents
+  fatherName: optionalTextField("Father's name"),
+  fatherMobile: mobileField(),
+  fatherEmail: emailField(),
+  fatherOccupation: optionalTextField("Father's occupation"),
+  motherName: optionalTextField("Mother's name"),
+  motherMobile: mobileField(),
+  motherEmail: emailField(),
+  motherOccupation: optionalTextField("Mother's occupation"),
+  guardianName: optionalTextField("Guardian's name"),
+  guardianMobile: mobileField(),
+  guardianRelation: optionalTextField("Guardian's relation"),
 });
 
 type FormValues = z.infer<typeof schema>;
 
-const STEPS = ["Personal", "Academic", "Contact"];
+const STEPS = ["Personal", "Academic", "Contact", "Parents"];
 const FIELD_STEP: Partial<Record<keyof FormValues, number>> = {
   firstName: 0, lastName: 0, gender: 0, dob: 0,
   classId: 1,
   email: 2, mobile: 2, addressLine1: 2, addressLine2: 2, zipCode: 2, city: 2, state: 2, country: 2,
+  fatherName: 3, fatherMobile: 3, fatherEmail: 3, fatherOccupation: 3,
+  motherName: 3, motherMobile: 3, motherEmail: 3, motherOccupation: 3,
+  guardianName: 3, guardianMobile: 3, guardianRelation: 3,
 };
 const STEP_FIELDS: (keyof FormValues)[][] = [
   ["firstName", "lastName", "gender", "dob"],
   ["classId"],
   ["email"],
+  [],
 ];
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const CATEGORIES = ["General", "OBC", "SC", "ST", "EWS", "Other"];
@@ -450,6 +466,76 @@ export function AddStudentDialog({ classes, schoolId, schoolName }: Props) {
                     <Label>Country</Label>
                     <Input maxLength={FIELD_MAX.shortText} {...register("country")} />
                     {errors.country && <p className="text-xs text-red-500">{errors.country.message}</p>}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Step 4: Parents */}
+            {step === 3 && (
+              <>
+                <p className="text-xs text-gray-400">All fields on this step are optional.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Father&apos;s Name</Label>
+                    <Input maxLength={FIELD_MAX.name} {...register("fatherName")} />
+                    {errors.fatherName && <p className="text-xs text-red-500">{errors.fatherName.message}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Father&apos;s Mobile</Label>
+                    <Input type="tel" inputMode="numeric" placeholder="9876543210" maxLength={FIELD_MAX.mobile} onKeyDown={digitsOnlyKeyDown} {...register("fatherMobile")} />
+                    {errors.fatherMobile && <p className="text-xs text-red-500">{errors.fatherMobile.message}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Father&apos;s Email</Label>
+                    <Input type="email" maxLength={FIELD_MAX.email} {...register("fatherEmail")} />
+                    {errors.fatherEmail && <p className="text-xs text-red-500">{errors.fatherEmail.message}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Father&apos;s Occupation</Label>
+                    <Input maxLength={FIELD_MAX.shortText} {...register("fatherOccupation")} />
+                    {errors.fatherOccupation && <p className="text-xs text-red-500">{errors.fatherOccupation.message}</p>}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Mother&apos;s Name</Label>
+                    <Input maxLength={FIELD_MAX.name} {...register("motherName")} />
+                    {errors.motherName && <p className="text-xs text-red-500">{errors.motherName.message}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Mother&apos;s Mobile</Label>
+                    <Input type="tel" inputMode="numeric" placeholder="9876543210" maxLength={FIELD_MAX.mobile} onKeyDown={digitsOnlyKeyDown} {...register("motherMobile")} />
+                    {errors.motherMobile && <p className="text-xs text-red-500">{errors.motherMobile.message}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Mother&apos;s Email</Label>
+                    <Input type="email" maxLength={FIELD_MAX.email} {...register("motherEmail")} />
+                    {errors.motherEmail && <p className="text-xs text-red-500">{errors.motherEmail.message}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Mother&apos;s Occupation</Label>
+                    <Input maxLength={FIELD_MAX.shortText} {...register("motherOccupation")} />
+                    {errors.motherOccupation && <p className="text-xs text-red-500">{errors.motherOccupation.message}</p>}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Guardian&apos;s Name</Label>
+                    <Input maxLength={FIELD_MAX.name} {...register("guardianName")} />
+                    {errors.guardianName && <p className="text-xs text-red-500">{errors.guardianName.message}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Guardian&apos;s Mobile</Label>
+                    <Input type="tel" inputMode="numeric" placeholder="9876543210" maxLength={FIELD_MAX.mobile} onKeyDown={digitsOnlyKeyDown} {...register("guardianMobile")} />
+                    {errors.guardianMobile && <p className="text-xs text-red-500">{errors.guardianMobile.message}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Guardian&apos;s Relation</Label>
+                    <Input placeholder="e.g. Uncle, Grandparent" maxLength={FIELD_MAX.shortText} {...register("guardianRelation")} />
+                    {errors.guardianRelation && <p className="text-xs text-red-500">{errors.guardianRelation.message}</p>}
                   </div>
                 </div>
               </>
