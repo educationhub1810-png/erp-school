@@ -22,8 +22,8 @@ function Calendar({
       captionLayout={captionLayout}
       className={cn("rdp-theme p-1", className)}
       style={{
-        "--rdp-accent-color": "#261efc",
-        "--rdp-accent-background-color": "#f4f4ff",
+        "--rdp-accent-color": "#3b32fa",
+        "--rdp-accent-background-color": "#f5f5ff",
       } as React.CSSProperties}
       classNames={{
         caption_label: "text-sm font-semibold",
