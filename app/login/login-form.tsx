@@ -295,7 +295,7 @@ export function LoginForm() {
 
       <div className="relative w-full max-w-5xl flex flex-col lg:flex-row rounded-3xl shadow-2xl overflow-hidden bg-white ring-1 ring-black/5">
         {/* Left: branded hero panel — hidden below lg, form-only on smaller screens */}
-        <div className="hidden lg:flex flex-col w-[44%] shrink-0 relative bg-gradient-to-br from-indigo-600 via-indigo-700 to-blue-800 p-8 text-white overflow-hidden">
+        <div className="hidden lg:flex flex-col w-[44%] shrink-0 relative bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-900 p-8 text-white overflow-hidden">
           {/* decorative glow blobs */}
           <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute -bottom-20 -left-10 w-64 h-64 rounded-full bg-blue-400/20 blur-3xl" />
