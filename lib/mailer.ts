@@ -1,8 +1,14 @@
 import nodemailer, { type Transporter } from "nodemailer";
+import { randomUUID } from "node:crypto";
 
 // Lazily-built singleton Gmail SMTP transport. Built from GMAIL_USER and
 // GMAIL_APP_PASSWORD (a Google "App password", not the account password — needs
 // 2-Step Verification enabled on the Google account to mint one).
+//
+// Rate-limited (1 msg/sec, 1 connection) because bursts of near-identical
+// automated mail from a personal Gmail account are what Gmail's spam
+// classifier treats as bulk/abuse — this is the biggest lever available
+// without moving to a dedicated sending domain.
 let transporter: Transporter | null = null;
 
 function getTransport(): Transporter {
@@ -17,6 +23,10 @@ function getTransport(): Transporter {
     transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user, pass },
+      pool: true,
+      maxConnections: 1,
+      rateLimit: 1,
+      rateDelta: 1000,
     });
   }
   return transporter;
@@ -46,6 +56,7 @@ export async function sendDemoRequestEmail(details: DemoRequestDetails): Promise
     from: `"EduERP Website" <${from}>`,
     to,
     replyTo: details.email,
+    headers: { "X-Entity-Ref-ID": randomUUID() },
     subject: `New demo request — ${details.schoolName}`,
     text: [
       `Name: ${details.name}`,
@@ -75,6 +86,7 @@ export async function sendOtpEmail(to: string, code: string): Promise<void> {
   await getTransport().sendMail({
     from: `"EduERP" <${from}>`,
     to,
+    headers: { "X-Entity-Ref-ID": randomUUID() },
     subject: "Your EduERP login code",
     text: `Your EduERP login code is ${code}. It expires in 10 minutes.\n\nIf you did not try to sign in, you can ignore this email.`,
     html: `
