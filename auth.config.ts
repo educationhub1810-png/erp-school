@@ -36,7 +36,9 @@ export const authConfig = {
       // API routes handle their own auth via requireAuth — don't role-check them here
       if (pathname.startsWith("/api/")) return true;
 
-      const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+      // "/" is the marketing landing page — public, but matched exactly (not via
+      // startsWith) since every path starts with "/" and that would open everything.
+      const isPublic = pathname === "/" || PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 
       if (isPublic) {
         if (auth?.user) {

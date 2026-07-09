@@ -84,6 +84,20 @@ describe("authConfig.authorized — routing & RBAC", () => {
     expect(res!.headers.get("location")).toContain("/student/dashboard");
   });
 
+  it("lets a signed-out visitor see the landing page at /", () => {
+    expect(authorized({ auth: null, request: makeRequest("/") })).toBe(true);
+  });
+
+  it("redirects a signed-in user away from / to their dashboard", () => {
+    const res = asResponse(authorized({ auth: sessionWith("STUDENT"), request: makeRequest("/") }));
+    expect(res!.headers.get("location")).toContain("/student/dashboard");
+  });
+
+  it("does not treat / as a prefix match for every route (e.g. /teacher/dashboard still requires auth)", () => {
+    const res = asResponse(authorized({ auth: null, request: makeRequest("/teacher/dashboard") }));
+    expect(res!.headers.get("location")).toContain("/login");
+  });
+
   it("allows a role into its own area", () => {
     expect(authorized({ auth: sessionWith("TEACHER"), request: makeRequest("/teacher/classes") })).toBe(true);
   });
