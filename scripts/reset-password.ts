@@ -6,7 +6,7 @@ import { prisma } from "../lib/prisma";
 // set, so point it at the right environment:
 //
 //   npx tsx scripts/reset-password.ts <email> <newPassword>
-//   DATABASE_URL="<prod url>" npx tsx scripts/reset-password.ts yagyanm@gmail.com admin123
+//   DATABASE_URL="<prod url>" npx tsx scripts/reset-password.ts you@example.com admin123
 async function main() {
   const [email, newPassword] = process.argv.slice(2);
   if (!email || !newPassword) {

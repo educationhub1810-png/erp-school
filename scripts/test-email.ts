@@ -7,7 +7,7 @@ import { sendOtpEmail } from "../lib/mailer";
 //
 //   GMAIL_USER="educationhub1810@gmail.com" \
 //   GMAIL_APP_PASSWORD="abcdefghijklmnop" \
-//   npx tsx scripts/test-email.ts yagyanm@gmail.com
+//   npx tsx scripts/test-email.ts you@example.com
 async function main() {
   const to = process.argv[2];
   if (!to) {
