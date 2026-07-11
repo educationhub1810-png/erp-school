@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, LogOut, User } from "lucide-react";
+import { Bell, LogOut, Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ROLE_LABELS, ROLE_PROFILE_PATHS } from "@/lib/constants";
 import type { AppRole as Role } from "@/lib/roles";
@@ -22,9 +22,11 @@ interface HeaderProps {
     role: Role;
   };
   school?: { name: string; logo: string | null } | null;
+  /** Opens the mobile sidebar drawer; the trigger is hidden at md: and above. */
+  onMenuClick?: () => void;
 }
 
-export function Header({ user, school }: HeaderProps) {
+export function Header({ user, school, onMenuClick }: HeaderProps) {
   const router = useRouter();
   const initials = user.name
     .split(" ")
@@ -42,28 +44,38 @@ export function Header({ user, school }: HeaderProps) {
     .slice(0, 2) ?? "";
 
   return (
-    <header className="h-14 bg-white border-b flex items-center justify-between px-6 sticky top-0 z-30">
-      {school ? (
-        <div className="flex items-center gap-2.5 min-w-0">
-          {school.logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={school.logo}
-              alt={school.name}
-              className="w-9 h-9 rounded-md object-cover flex-shrink-0"
-            />
-          ) : (
-            <div className="w-9 h-9 rounded-md bg-indigo-600 flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-sm font-bold">{schoolInitials}</span>
-            </div>
-          )}
-          <span className="text-lg font-bold text-gray-900 truncate max-w-[280px]">
-            {school.name}
-          </span>
-        </div>
-      ) : (
-        <div />
-      )}
+    <header className="h-14 bg-white border-b flex items-center justify-between gap-2 px-3 sm:px-6 sticky top-0 z-30">
+      <div className="flex items-center gap-1 min-w-0">
+        <button
+          onClick={onMenuClick}
+          className="md:hidden p-2 -ml-1 rounded-md text-gray-500 hover:bg-gray-100 shrink-0"
+          title="Open menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        {school ? (
+          <div className="flex items-center gap-2.5 min-w-0">
+            {school.logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={school.logo}
+                alt={school.name}
+                className="w-9 h-9 rounded-md object-cover flex-shrink-0"
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-md bg-indigo-600 flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-sm font-bold">{schoolInitials}</span>
+              </div>
+            )}
+            <span className="text-lg font-bold text-gray-900 truncate max-w-[160px] sm:max-w-[280px]">
+              {school.name}
+            </span>
+          </div>
+        ) : (
+          <div />
+        )}
+      </div>
 
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" className="relative">

@@ -50,4 +50,13 @@ describe("Header", () => {
 
     expect(signOutMock).toHaveBeenCalledWith({ callbackUrl: "/login" });
   });
+
+  it("calls onMenuClick when the mobile hamburger button is pressed", async () => {
+    const user = userEvent.setup();
+    const onMenuClick = vi.fn();
+    render(<Header user={{ name: "Jane Doe", role: "TEACHER" }} onMenuClick={onMenuClick} />);
+
+    await user.click(screen.getByTitle("Open menu"));
+    expect(onMenuClick).toHaveBeenCalledOnce();
+  });
 });
