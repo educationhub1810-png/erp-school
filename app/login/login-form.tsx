@@ -36,7 +36,6 @@ import {
   Compass,
 } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/roles";
-import { SchoolIllustration } from "./school-illustration";
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -307,13 +306,14 @@ export function LoginForm() {
           </div>
 
           <div className="relative">
-            <h2 className="text-2xl font-bold mb-1">Welcome Back! 👋</h2>
+            <h2 className="text-2xl font-bold mb-1">Welcome</h2>
             <p className="text-sm text-indigo-200">Sign in to continue to your account</p>
           </div>
 
           <div className="relative flex-1 flex items-center justify-center min-h-0 py-6">
-            <div className="bg-white rounded-2xl shadow-xl p-4 w-full max-h-[260px] flex items-center justify-center">
-              <SchoolIllustration />
+            <div className="bg-white rounded-2xl shadow-xl p-2 w-full h-[260px] overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/school-illustration.jpg" alt="Students walking into school" className="w-full h-full object-cover rounded-xl" />
             </div>
           </div>
 
@@ -349,7 +349,7 @@ export function LoginForm() {
                 <ShieldCheck className="w-4 h-4 text-indigo-600" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Welcome Back! 👋</h2>
+                <h2 className="text-lg font-bold text-gray-900">Welcome</h2>
                 <p className="text-sm text-gray-500">Sign in to continue to your account</p>
               </div>
             </div>
