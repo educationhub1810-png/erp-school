@@ -305,7 +305,7 @@ export function LoginForm() {
               <GraduationCap className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold leading-tight">EduERP</h1>
+              <h1 className="text-xl font-bold leading-tight">iSMS</h1>
               <p className="text-xs text-indigo-200">Smart School Management System</p>
             </div>
           </div>
@@ -343,7 +343,7 @@ export function LoginForm() {
             <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mb-2 shadow-lg">
               <GraduationCap className="w-7 h-7 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-gray-900">EduERP</h1>
+            <h1 className="text-xl font-bold text-gray-900">iSMS</h1>
             <p className="text-xs text-gray-500 mt-1">Smart School Management System</p>
           </div>
 
@@ -570,7 +570,7 @@ export function LoginForm() {
             </div>
 
             <p className="text-center text-xs text-gray-400 mt-3">
-              © {new Date().getFullYear()} EduERP. All rights reserved.
+              © {new Date().getFullYear()} iSMS. All rights reserved.
             </p>
           </div>
         </div>

@@ -218,7 +218,7 @@ describe("LoginForm", () => {
 
   it("renders the branded hero panel with all four feature badges", () => {
     render(<LoginForm />);
-    expect(screen.getAllByText("EduERP").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("iSMS").length).toBeGreaterThan(0);
     expect(screen.getByText("Secure Platform")).toBeInTheDocument();
     expect(screen.getByText("Multi Role Access")).toBeInTheDocument();
     expect(screen.getByText("Real-time Analytics")).toBeInTheDocument();

@@ -53,7 +53,7 @@ export async function sendDemoRequestEmail(details: DemoRequestDetails): Promise
   const from = process.env.GMAIL_USER!;
   const to = process.env.DEMO_REQUEST_EMAIL || from;
   await getTransport().sendMail({
-    from: `"EduERP Website" <${from}>`,
+    from: `"iSMS Website" <${from}>`,
     to,
     replyTo: details.email,
     headers: { "X-Entity-Ref-ID": randomUUID() },
@@ -84,14 +84,14 @@ export async function sendDemoRequestEmail(details: DemoRequestDetails): Promise
 export async function sendOtpEmail(to: string, code: string): Promise<void> {
   const from = process.env.GMAIL_USER!;
   await getTransport().sendMail({
-    from: `"EduERP" <${from}>`,
+    from: `"iSMS" <${from}>`,
     to,
     headers: { "X-Entity-Ref-ID": randomUUID() },
-    subject: "Your EduERP login code",
-    text: `Your EduERP login code is ${code}. It expires in 10 minutes.\n\nIf you did not try to sign in, you can ignore this email.`,
+    subject: "Your iSMS login code",
+    text: `Your iSMS login code is ${code}. It expires in 10 minutes.\n\nIf you did not try to sign in, you can ignore this email.`,
     html: `
       <div style="font-family:system-ui,Segoe UI,Arial,sans-serif;max-width:480px;margin:0 auto">
-        <h2 style="color:#3b32fa;margin:0 0 8px">EduERP login code</h2>
+        <h2 style="color:#3b32fa;margin:0 0 8px">iSMS login code</h2>
         <p style="color:#374151;margin:0 0 16px">Use this code to finish signing in:</p>
         <p style="font-size:32px;font-weight:700;letter-spacing:6px;color:#111827;margin:0 0 16px">${code}</p>
         <p style="color:#6b7280;font-size:13px;margin:0">It expires in 10 minutes. If you did not try to sign in, you can ignore this email.</p>

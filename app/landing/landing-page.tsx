@@ -46,7 +46,7 @@ export function LandingPage() {
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
               <GraduationCap className="w-4.5 h-4.5 text-white" />
             </div>
-            <span className="text-lg font-bold text-gray-900">EduERP</span>
+            <span className="text-lg font-bold text-gray-900">iSMS</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <a
@@ -72,7 +72,7 @@ export function LandingPage() {
             Run your entire school from one platform
           </h1>
           <p className="text-base sm:text-lg text-gray-500 mb-7 max-w-lg">
-            EduERP brings admissions, attendance, fees, exams, transport, hostel and communication
+            iSMS brings admissions, attendance, fees, exams, transport, hostel and communication
             together — with a dedicated dashboard for every role in your school.
           </p>
           <div className="flex flex-wrap items-center gap-3">
@@ -126,7 +126,7 @@ export function LandingPage() {
       {/* Request a demo */}
       <section id="request-demo" className="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
         <div className="text-center mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">See EduERP in action</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">See iSMS in action</h2>
           <p className="text-gray-500">
             Tell us about your school and we&apos;ll set up a personalized demo.
           </p>
@@ -143,9 +143,9 @@ export function LandingPage() {
             <div className="w-6 h-6 bg-indigo-600 rounded-md flex items-center justify-center shrink-0">
               <GraduationCap className="w-3.5 h-3.5 text-white" />
             </div>
-            <span className="text-sm font-bold text-gray-900">EduERP</span>
+            <span className="text-sm font-bold text-gray-900">iSMS</span>
           </div>
-          <p className="text-xs text-gray-400">© {new Date().getFullYear()} EduERP. All rights reserved.</p>
+          <p className="text-xs text-gray-400">© {new Date().getFullYear()} iSMS. All rights reserved.</p>
         </div>
       </footer>
     </div>

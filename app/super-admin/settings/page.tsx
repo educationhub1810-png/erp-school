@@ -13,7 +13,7 @@ export default async function SuperAdminSettingsPage() {
   const twoFactorPolicies = await getTwoFactorPolicies();
 
   const info = [
-    { label: "Platform",      value: "EduERP v1.0",              icon: Globe   },
+    { label: "Platform",      value: "iSMS v1.0",                icon: Globe   },
     { label: "Database",      value: "Neon PostgreSQL",           icon: Database },
     { label: "Auth",          value: "NextAuth v5",               icon: Key     },
     { label: "Framework",     value: "Next.js 16 (Turbopack)",    icon: Settings },

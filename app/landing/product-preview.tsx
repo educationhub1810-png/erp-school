@@ -47,7 +47,7 @@ export function ProductPreview() {
             <div className="w-6 h-6 bg-indigo-600 rounded-md flex items-center justify-center shrink-0">
               <GraduationCap className="w-3.5 h-3.5 text-white" />
             </div>
-            <span className="text-xs font-bold">EduERP</span>
+            <span className="text-xs font-bold">iSMS</span>
           </div>
           <div className="space-y-1">
             {NAV_ITEMS.map((item) => (

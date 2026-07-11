@@ -85,7 +85,7 @@ export function Sidebar({ role, mobileOpen = false, onMobileClose }: SidebarProp
             </div>
             {showLabels && (
               <div className="overflow-hidden">
-                <p className="text-sm font-bold text-white leading-tight">EduERP</p>
+                <p className="text-sm font-bold text-white leading-tight">iSMS</p>
                 <p className="text-[10px] text-gray-400 capitalize truncate">
                   {role.toLowerCase().replace(/_/g, " ")}
                 </p>

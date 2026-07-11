@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "EduERP — School Management System",
+  title: "iSMS — School Management System",
   description: "Complete school management platform",
 };
 
