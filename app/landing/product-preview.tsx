@@ -1,5 +1,4 @@
 import {
-  GraduationCap,
   LayoutDashboard,
   Users,
   IndianRupee,
@@ -43,11 +42,9 @@ export function ProductPreview() {
       <div className="flex h-[280px] sm:h-[320px]">
         {/* sidebar */}
         <div className="hidden sm:flex w-40 shrink-0 flex-col bg-gray-900 text-white p-3">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-6 h-6 bg-indigo-600 rounded-md flex items-center justify-center shrink-0">
-              <GraduationCap className="w-3.5 h-3.5 text-white" />
-            </div>
-            <span className="text-xs font-bold">iSMS</span>
+          <div className="flex items-center mb-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/isms-wordmark-white.svg" alt="iSMS" className="h-4 w-auto" />
           </div>
           <div className="space-y-1">
             {NAV_ITEMS.map((item) => (

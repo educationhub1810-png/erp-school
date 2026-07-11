@@ -80,13 +80,15 @@ export function Sidebar({ role, mobileOpen = false, onMobileClose }: SidebarProp
           showLabels ? "flex-row justify-between px-3" : "flex-col gap-3 px-0 justify-center"
         )}>
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
-              <GraduationCap className="w-4 h-4 text-white" />
-            </div>
-            {showLabels && (
+            {!showLabels ? (
+              <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
+                <GraduationCap className="w-4 h-4 text-white" />
+              </div>
+            ) : (
               <div className="overflow-hidden">
-                <p className="text-sm font-bold text-white leading-tight">iSMS</p>
-                <p className="text-[10px] text-gray-400 capitalize truncate">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/isms-wordmark-white.svg" alt="iSMS" className="h-5 w-auto" />
+                <p className="text-[10px] text-gray-400 capitalize truncate mt-1">
                   {role.toLowerCase().replace(/_/g, " ")}
                 </p>
               </div>

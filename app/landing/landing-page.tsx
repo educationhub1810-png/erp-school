@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  GraduationCap,
   Users,
   ClipboardList,
   IndianRupee,
@@ -42,11 +41,9 @@ export function LandingPage() {
       {/* Nav */}
       <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-gray-100">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 py-3.5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
-              <GraduationCap className="w-4.5 h-4.5 text-white" />
-            </div>
-            <span className="text-lg font-bold text-gray-900">iSMS</span>
+          <div className="bg-indigo-600 rounded-lg px-3 py-1.5 flex items-center shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/isms-wordmark-white.svg" alt="iSMS" className="h-5 w-auto" />
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <a
@@ -139,11 +136,9 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-indigo-600 rounded-md flex items-center justify-center shrink-0">
-              <GraduationCap className="w-3.5 h-3.5 text-white" />
-            </div>
-            <span className="text-sm font-bold text-gray-900">iSMS</span>
+          <div className="bg-indigo-600 rounded-md px-2.5 py-1 flex items-center shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/isms-wordmark-white.svg" alt="iSMS" className="h-3.5 w-auto" />
           </div>
           <p className="text-xs text-gray-400">© {new Date().getFullYear()} iSMS. All rights reserved.</p>
         </div>

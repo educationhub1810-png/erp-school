@@ -300,14 +300,10 @@ export function LoginForm() {
           <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute -bottom-20 -left-10 w-64 h-64 rounded-full bg-blue-400/20 blur-3xl" />
 
-          <div className="relative flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-white/15 ring-1 ring-white/30 rounded-xl flex items-center justify-center shrink-0">
-              <GraduationCap className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold leading-tight">iSMS</h1>
-              <p className="text-xs text-indigo-200">Smart School Management System</p>
-            </div>
+          <div className="relative mb-6">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/isms-wordmark-white.svg" alt="iSMS" className="h-9 w-auto" />
+            <p className="text-xs text-indigo-200 mt-1.5">The Power of Integration, Built for Education</p>
           </div>
 
           <div className="relative">
@@ -340,11 +336,11 @@ export function LoginForm() {
         <div className="flex-1 flex flex-col justify-center p-6 sm:p-10">
           {/* Compact logo shown only when the hero panel is hidden (mobile/tablet) */}
           <div className="lg:hidden flex flex-col items-center mb-5">
-            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mb-2 shadow-lg">
-              <GraduationCap className="w-7 h-7 text-white" />
+            <div className="bg-indigo-600 rounded-2xl shadow-lg px-4 py-2.5 mb-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/isms-wordmark-white.svg" alt="iSMS" className="h-8 w-auto" />
             </div>
-            <h1 className="text-xl font-bold text-gray-900">iSMS</h1>
-            <p className="text-xs text-gray-500 mt-1">Smart School Management System</p>
+            <p className="text-xs text-gray-500 mt-1 text-center">The Power of Integration, Built for Education</p>
           </div>
 
           <div className="w-full max-w-sm mx-auto">
