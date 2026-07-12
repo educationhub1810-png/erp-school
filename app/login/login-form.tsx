@@ -292,36 +292,36 @@ export function LoginForm() {
         ))}
       </div>
 
-      <div className="relative w-full max-w-5xl flex flex-col lg:flex-row rounded-3xl shadow-2xl overflow-hidden bg-white ring-1 ring-black/5">
+      <div className="relative w-full max-w-3xl flex flex-col lg:flex-row rounded-3xl shadow-2xl overflow-hidden bg-white ring-1 ring-black/5">
         {/* Left: branded hero panel — hidden below lg, form-only on smaller screens */}
-        <div className="hidden lg:flex flex-col w-[44%] shrink-0 relative bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-900 p-8 text-white overflow-hidden">
+        <div className="hidden lg:flex flex-col w-[44%] shrink-0 relative bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-900 p-6 text-white overflow-hidden">
           {/* decorative glow blobs */}
           <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute -bottom-20 -left-10 w-64 h-64 rounded-full bg-blue-400/20 blur-3xl" />
 
-          <div className="relative mb-6">
+          <div className="relative mb-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/isms-wordmark-white.svg" alt="iSMS" className="h-9 w-auto" />
-            <p className="text-xs text-indigo-200 mt-1.5">The Power of Integration, Built for Education</p>
+            <img src="/isms-wordmark-white.svg" alt="iSMS" className="h-8 w-auto" />
+            <p className="text-xs text-indigo-200 mt-1">The Power of Integration, Built for Education</p>
           </div>
 
           <div className="relative">
-            <h2 className="text-2xl font-bold mb-1">Welcome</h2>
+            <h2 className="text-xl font-bold mb-1">Welcome</h2>
             <p className="text-sm text-indigo-200">Sign in to continue to your account</p>
           </div>
 
-          <div className="relative flex-1 flex items-center justify-center min-h-0 py-6">
-            <div className="bg-white rounded-2xl shadow-xl p-2 w-full h-[260px] overflow-hidden">
+          <div className="relative flex-1 flex items-center justify-center min-h-0 py-3">
+            <div className="rounded-2xl shadow-xl w-full h-[190px] overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/school-illustration.jpg" alt="Students walking into school" className="w-full h-full object-cover rounded-xl" />
+              <img src="/school-illustration.jpg" alt="Students walking into school" className="w-full h-full object-cover brightness-110" />
             </div>
           </div>
 
-          <div className="relative grid grid-cols-2 gap-2.5">
+          <div className="relative grid grid-cols-2 gap-2">
             {FEATURES.map((f) => (
               <div
                 key={f.label}
-                className="flex items-center gap-2 rounded-xl bg-white/10 ring-1 ring-white/15 px-3 py-2.5"
+                className="flex items-center gap-2 rounded-xl bg-white/10 ring-1 ring-white/15 px-3 py-2"
               >
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${f.color}`}>
                   <f.icon className="w-3.5 h-3.5 text-white" />
