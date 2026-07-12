@@ -41,9 +41,9 @@ export function LandingPage() {
       {/* Nav */}
       <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-gray-100">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 py-3.5">
-          <div className="bg-indigo-600 rounded-lg px-3 py-1.5 flex items-center shrink-0">
+          <div className="flex items-center shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/isms-wordmark-white.svg" alt="iSMS" className="h-5 w-auto" />
+            <img src="/isms-logo-blue.png" alt="iSMS" className="h-7 w-auto" />
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <a
@@ -136,9 +136,9 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="bg-indigo-600 rounded-md px-2.5 py-1 flex items-center shrink-0">
+          <div className="flex items-center shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/isms-wordmark-white.svg" alt="iSMS" className="h-3.5 w-auto" />
+            <img src="/isms-logo-blue.png" alt="iSMS" className="h-5 w-auto" />
           </div>
           <p className="text-xs text-gray-400">© {new Date().getFullYear()} iSMS. All rights reserved.</p>
         </div>
