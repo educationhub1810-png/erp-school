@@ -336,10 +336,8 @@ export function LoginForm() {
         <div className="flex-1 flex flex-col justify-center p-6 sm:p-10">
           {/* Compact logo shown only when the hero panel is hidden (mobile/tablet) */}
           <div className="lg:hidden flex flex-col items-center mb-5">
-            <div className="bg-indigo-600 rounded-2xl shadow-lg px-4 py-2.5 mb-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/isms-wordmark-white.svg" alt="iSMS" className="h-8 w-auto" />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/isms-logo-blue.png" alt="iSMS" className="h-12 w-auto mb-2" />
             <p className="text-xs text-gray-500 mt-1 text-center">The Power of Integration, Built for Education</p>
           </div>
 
