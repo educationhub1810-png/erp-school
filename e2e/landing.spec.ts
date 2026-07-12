@@ -37,7 +37,8 @@ test.describe("landing page", () => {
   test("redirects a signed-in user away from / to their dashboard", async ({ page }) => {
     // Reuses the login helper's flow inline to avoid an extra import cycle.
     await page.goto("/login");
-    await page.selectOption("#role", "SCHOOL_ADMIN");
+    await page.getByRole("combobox", { name: /role/i }).click();
+    await page.getByRole("option", { name: "School Admin" }).click();
     await page.fill("#username", "admin@sch001.com");
     await page.fill("#password", "Admin@123");
     await page.getByRole("button", { name: /login to dashboard/i }).click();

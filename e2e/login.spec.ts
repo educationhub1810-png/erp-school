@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { CREDENTIALS, SCHOOL_CODE, byRole } from "./credentials";
 import { login } from "./helpers";
 
@@ -11,7 +11,26 @@ const ROLES_HIDDEN_FROM_LOGIN = new Set([
   "HR_MANAGER",
   "WARDEN_MANAGER",
   "MESS_MANAGER",
+  "PARENT",
 ]);
+
+const HIDDEN_ROLE_LABELS = [
+  "Accountant",
+  "Librarian",
+  "Transport Manager",
+  "HR Manager",
+  "Warden Manager",
+  "Mess Manager",
+  "Parent",
+];
+
+// The role field is a custom (non-native) Select, so it's driven by opening
+// the popup and clicking the option rather than Playwright's selectOption
+// (which only works on a native <select>).
+async function selectRole(page: Page, label: string) {
+  await page.getByRole("combobox", { name: /role/i }).click();
+  await page.getByRole("option", { name: label }).click();
+}
 
 // Every seeded, selectable role should sign in and land on its own dashboard.
 test.describe("login → role dashboard", () => {
@@ -26,34 +45,27 @@ test.describe("login → role dashboard", () => {
 test.describe("login → role dashboard (hidden roles)", () => {
   test("the role dropdown does not offer the hidden roles at all", async ({ page }) => {
     await page.goto("/login");
-    for (const role of ROLES_HIDDEN_FROM_LOGIN) {
-      expect(await page.locator(`#role option[value="${role}"]`).count()).toBe(0);
+    await page.getByRole("combobox", { name: /role/i }).click();
+    await expect(page.getByRole("option").first()).toBeVisible();
+    for (const label of HIDDEN_ROLE_LABELS) {
+      await expect(page.getByRole("option", { name: label })).toHaveCount(0);
     }
   });
 });
 
-test.describe("code + DOB login (Principal, Teacher, Parent)", () => {
-  // Student already logs in with studentCode + DOB. Principal, Teacher and
-  // Parent now use the same pattern via their own code (Staff.employeeId,
-  // Teacher.employeeId, ParentProfile.parentCode) — see the matching lookup
-  // paths in auth.ts. These accounts can still log in with email/mobile +
-  // their real password instead, if they have one on file.
+test.describe("code + DOB login (Principal, Teacher)", () => {
+  // Student already logs in with studentCode + DOB. Principal and Teacher
+  // now use the same pattern via their own code (Staff.employeeId,
+  // Teacher.employeeId) — see the matching lookup paths in auth.ts. These
+  // accounts can still log in with email/mobile + their real password
+  // instead, if they have one on file.
   test("a teacher logs in via employee code + DOB password", async ({ page }) => {
     await page.goto("/login");
-    await page.selectOption("#role", "TEACHER");
+    await selectRole(page, "Teacher");
     await page.fill("#username", "D-TCH00001");
     await page.fill("#password", "12031990");
     await page.getByRole("button", { name: /login to dashboard/i }).click();
     await expect(page).toHaveURL(/\/teacher\/dashboard/, { timeout: 30_000 });
-  });
-
-  test("a parent logs in via parent code + DOB password", async ({ page }) => {
-    await page.goto("/login");
-    await page.selectOption("#role", "PARENT");
-    await page.fill("#username", "D-PAR00001");
-    await page.fill("#password", "10051982");
-    await page.getByRole("button", { name: /login to dashboard/i }).click();
-    await expect(page).toHaveURL(/\/parent\/dashboard/, { timeout: 30_000 });
   });
 
   // Regression test for a real incident: a Principal created with no email
@@ -86,7 +98,7 @@ test.describe("code + DOB login (Principal, Teacher, Parent)", () => {
     // dashboard (auth.config.ts), so drop the Super Admin session first.
     await page.context().clearCookies();
     await page.goto("/login");
-    await page.selectOption("#role", "PRINCIPAL");
+    await selectRole(page, "Principal");
     await page.fill("#username", created.employeeId);
     await page.fill("#password", "15041980");
     await page.getByRole("button", { name: /login to dashboard/i }).click();
@@ -98,7 +110,7 @@ test.describe("login failures", () => {
   test("rejects a wrong password for Super Admin with an inline error", async ({ page }) => {
     await page.goto("/login");
     await expect(page.getByRole("button", { name: /login to dashboard/i })).toBeVisible();
-    await page.selectOption("#role", "SUPER_ADMIN");
+    await selectRole(page, "Super Admin");
     await page.fill("#username", "superadmin");
     await page.fill("#password", "wrong-password");
     await page.getByRole("button", { name: /login to dashboard/i }).click();
@@ -109,7 +121,7 @@ test.describe("login failures", () => {
     await page.goto("/login");
     await expect(page.getByRole("button", { name: /login to dashboard/i })).toBeVisible();
     // Real super-admin credentials, but the user picked the Teacher role.
-    await page.selectOption("#role", "TEACHER");
+    await selectRole(page, "Teacher");
     await page.fill("#username", "superadmin");
     await page.fill("#password", "admin123");
     await page.getByRole("button", { name: /login to dashboard/i }).click();

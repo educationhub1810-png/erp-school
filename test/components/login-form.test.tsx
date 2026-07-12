@@ -19,6 +19,14 @@ function mockOtpRequest(requires2fa: boolean, status = 200) {
   } as Response);
 }
 
+// The role field is a custom (non-native) Select, so it's driven by opening
+// the popup and clicking the option rather than testing-library's
+// selectOptions (which only works on a native <select>).
+async function selectRole(user: ReturnType<typeof userEvent.setup>, label: string) {
+  await user.click(screen.getByRole("combobox", { name: /role/i }));
+  await user.click(await screen.findByRole("option", { name: label }));
+}
+
 describe("LoginForm", () => {
   beforeEach(() => {
     signInMock.mockReset();
@@ -29,19 +37,32 @@ describe("LoginForm", () => {
     } as Response) as typeof fetch;
   });
 
-  it("renders the role dropdown, username and password fields", () => {
+  it("renders the role dropdown, username and password fields", async () => {
+    const user = userEvent.setup();
     render(<LoginForm />);
-    expect(screen.getByLabelText(/role/i)).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /role/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/email or mobile/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     // the role dropdown lists the known roles
-    expect(screen.getByRole("option", { name: "Teacher" })).toBeInTheDocument();
+    await user.click(screen.getByRole("combobox", { name: /role/i }));
+    expect(await screen.findByRole("option", { name: "Teacher" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Super Admin" })).toBeInTheDocument();
   });
 
-  it("does not offer Accountant, Librarian, Transport/HR/Warden/Mess Manager in the role dropdown", () => {
+  it("displays the selected role's human label, not its raw enum value", async () => {
+    const user = userEvent.setup();
     render(<LoginForm />);
-    for (const name of ["Accountant", "Librarian", "Transport Manager", "HR Manager", "Warden Manager", "Mess Manager"]) {
+    await selectRole(user, "Super Admin");
+    expect(screen.getByRole("combobox", { name: /role/i })).toHaveTextContent("Super Admin");
+    expect(screen.queryByText("SUPER_ADMIN")).not.toBeInTheDocument();
+  });
+
+  it("does not offer Accountant, Librarian, Transport/HR/Warden/Mess Manager, or Parent in the role dropdown", async () => {
+    const user = userEvent.setup();
+    render(<LoginForm />);
+    await user.click(screen.getByRole("combobox", { name: /role/i }));
+    await screen.findByRole("option", { name: "Teacher" }); // wait for the popup to render
+    for (const name of ["Accountant", "Librarian", "Transport Manager", "HR Manager", "Warden Manager", "Mess Manager", "Parent"]) {
       expect(screen.queryByRole("option", { name })).not.toBeInTheDocument();
     }
   });
@@ -60,7 +81,7 @@ describe("LoginForm", () => {
     const user = userEvent.setup();
     render(<LoginForm />);
 
-    await user.selectOptions(screen.getByLabelText(/role/i), "TEACHER");
+    await selectRole(user, "Teacher");
     await user.type(screen.getByLabelText(/teacher code/i), "teacher@sch001.com");
     await user.type(screen.getByLabelText(/password/i), "Admin@123");
     await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
@@ -80,17 +101,17 @@ describe("LoginForm", () => {
   it("shows the student hint when the Student role is selected", async () => {
     const user = userEvent.setup();
     render(<LoginForm />);
-    await user.selectOptions(screen.getByLabelText(/role/i), "STUDENT");
+    await selectRole(user, "Student");
     expect(screen.getByText(/student code/i)).toBeInTheDocument();
     expect(screen.getByText(/DOB as DDMMYYYY/i)).toBeInTheDocument();
   });
 
-  it("shows the DOB-password hint for Principal, Teacher and Parent too", async () => {
+  it("shows the DOB-password hint for Principal and Teacher too", async () => {
     const user = userEvent.setup();
     render(<LoginForm />);
     expect(screen.queryByText(/DOB as DDMMYYYY/i)).not.toBeInTheDocument();
-    for (const role of ["PRINCIPAL", "TEACHER", "PARENT"]) {
-      await user.selectOptions(screen.getByLabelText(/role/i), role);
+    for (const role of ["Principal", "Teacher"]) {
+      await selectRole(user, role);
       expect(screen.getByText(/DOB as DDMMYYYY/i)).toBeInTheDocument();
     }
   });
@@ -102,18 +123,15 @@ describe("LoginForm", () => {
     expect(screen.getByText("Email or Mobile")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Enter email or mobile")).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/role/i), "TEACHER");
+    await selectRole(user, "Teacher");
     expect(screen.getByLabelText("Teacher Code")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Enter teacher code")).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/role/i), "PRINCIPAL");
+    await selectRole(user, "Principal");
     expect(screen.getByLabelText("Principal Code")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Enter principal code")).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/role/i), "PARENT");
-    expect(screen.getByLabelText("Parent Code")).toBeInTheDocument();
-
-    await user.selectOptions(screen.getByLabelText(/role/i), "STUDENT");
+    await selectRole(user, "Student");
     expect(screen.getByLabelText("Student Code")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Enter student code")).toBeInTheDocument();
   });
@@ -124,12 +142,12 @@ describe("LoginForm", () => {
     // the authenticator field no longer exists for any role
     expect(screen.queryByLabelText(/authenticator code/i)).not.toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
+    await selectRole(user, "Super Admin");
     expect(screen.getByLabelText(/email or mobile/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/authenticator code/i)).not.toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/role/i), "SCHOOL_ADMIN");
+    await selectRole(user, "School Admin");
     expect(screen.getByLabelText(/email or mobile/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
   });
@@ -137,7 +155,7 @@ describe("LoginForm", () => {
   it("requires username + password before submitting for Super Admin", async () => {
     const user = userEvent.setup();
     render(<LoginForm />);
-    await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
+    await selectRole(user, "Super Admin");
     await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
 
     expect(await screen.findByText(/username is required/i)).toBeInTheDocument();
@@ -150,7 +168,7 @@ describe("LoginForm", () => {
     const user = userEvent.setup();
     render(<LoginForm />);
 
-    await user.selectOptions(screen.getByLabelText(/role/i), "SCHOOL_ADMIN");
+    await selectRole(user, "School Admin");
     await user.type(screen.getByLabelText(/email or mobile/i), "admin@sch001.com");
     await user.type(screen.getByLabelText(/^password/i), "Admin@123");
     await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
@@ -190,7 +208,7 @@ describe("LoginForm", () => {
     const user = userEvent.setup();
     render(<LoginForm />);
 
-    await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
+    await selectRole(user, "Super Admin");
     await user.type(screen.getByLabelText(/email or mobile/i), "superadmin");
     await user.type(screen.getByLabelText(/^password/i), "wrong");
     await user.click(screen.getByRole("button", { name: /login to dashboard/i }));
@@ -204,7 +222,7 @@ describe("LoginForm", () => {
     const user = userEvent.setup();
     render(<LoginForm />);
 
-    await user.selectOptions(screen.getByLabelText(/role/i), "SUPER_ADMIN");
+    await selectRole(user, "Super Admin");
     await user.type(screen.getByLabelText(/email or mobile/i), "admin@sch001.com");
     await user.type(screen.getByLabelText(/^password/i), "Admin@123");
     await user.click(screen.getByRole("button", { name: /login to dashboard/i }));

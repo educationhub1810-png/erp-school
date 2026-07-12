@@ -10,12 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Eye,
   EyeOff,
   GraduationCap,
   Loader2,
-  ChevronDown,
   Mail,
   Lock,
   User,
@@ -48,6 +48,7 @@ const HIDDEN_ROLES = new Set([
   "HR_MANAGER",
   "WARDEN_MANAGER",
   "MESS_MANAGER",
+  "PARENT",
 ]);
 
 // Order roles are presented in the dropdown.
@@ -132,8 +133,9 @@ export function LoginForm() {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { role: "" } });
 
   const selectedRole = watch("role");
   const usesDobPassword = DOB_PASSWORD_ROLES.has(selectedRole);
@@ -364,23 +366,19 @@ export function LoginForm() {
               <div className="space-y-1.5">
                 <Label htmlFor="role">Select Your Role</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                  <select
-                    id="role"
-                    {...register("role")}
-                    defaultValue=""
-                    className="w-full h-9 rounded-md border border-input bg-background pl-10 pr-8 py-1 text-sm shadow-sm appearance-none focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
-                  >
-                    <option value="" disabled>
-                      Choose your role
-                    </option>
-                    {ROLE_OPTIONS.map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+                  <Select onValueChange={(v) => setValue("role", v as string, { shouldValidate: true })}>
+                    <SelectTrigger id="role" className="w-full h-9 pl-10">
+                      <SelectValue placeholder="Choose your role">
+                        {(value: string) => ROLE_LABELS[value as keyof typeof ROLE_LABELS] ?? "Choose your role"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ROLE_OPTIONS.map(([value, label]) => (
+                        <SelectItem key={value} value={value}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 {errors.role && <p className="text-xs text-red-500">{errors.role.message}</p>}
               </div>
