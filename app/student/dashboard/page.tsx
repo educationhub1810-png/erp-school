@@ -4,7 +4,7 @@ import { DashboardHero } from "@/components/shared/dashboard-hero";
 import { TwoValueDonutChart } from "@/components/dashboard/two-value-donut-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, Calendar, BookOpen, FileText, Megaphone } from "lucide-react";
+import { Calendar, BookOpen, FileText, Megaphone } from "lucide-react";
 import { format, startOfMonth } from "date-fns";
 
 const QUICK_LINKS = [
@@ -46,10 +46,9 @@ export default async function StudentDashboard() {
   return (
     <div className="space-y-6">
       <DashboardHero
-        gradient="from-emerald-600 to-green-700"
+        gradient="from-indigo-600 to-indigo-800"
         title={`Welcome, ${student?.firstName ?? session?.user.name ?? "Student"}`}
         subtitle={student?.class ? `${student.class.name}${student.section ? ` - ${student.section.name}` : ""}` : ""}
-        icon={<GraduationCap className="w-10 h-10" />}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
