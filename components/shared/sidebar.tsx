@@ -49,7 +49,7 @@ export function Sidebar({ role, mobileOpen = false, onMobileClose }: SidebarProp
     ? new Date(buildTime).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
     : null;
 
-  if (!mounted) return <aside className="hidden md:block w-16 bg-gray-900 min-h-screen" />;
+  if (!mounted) return <aside className="hidden md:block w-16 bg-[#f7f8fa] border-r border-gray-200 min-h-screen" />;
 
   // Inside the mobile drawer, always show full labels (it's an intentional
   // overlay, not the constrained desktop rail) regardless of the persisted
@@ -68,7 +68,7 @@ export function Sidebar({ role, mobileOpen = false, onMobileClose }: SidebarProp
 
       <aside
         className={cn(
-          "flex flex-col bg-gray-900 text-white transition-all duration-200 shrink-0",
+          "flex flex-col bg-[#f7f8fa] text-gray-900 border-r border-gray-200 transition-all duration-200 shrink-0",
           "fixed inset-y-0 left-0 z-50 w-64 md:static md:z-auto md:min-h-screen",
           mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           collapsed ? "md:w-16" : "md:w-60"
@@ -76,7 +76,7 @@ export function Sidebar({ role, mobileOpen = false, onMobileClose }: SidebarProp
       >
         {/* Logo + toggle */}
         <div className={cn(
-          "flex items-center border-b border-gray-700/60 py-4",
+          "flex items-center border-b border-gray-200 py-4",
           showLabels ? "flex-row justify-between px-3" : "flex-col gap-3 px-0 justify-center"
         )}>
           <div className="flex items-center gap-2.5">
@@ -87,8 +87,8 @@ export function Sidebar({ role, mobileOpen = false, onMobileClose }: SidebarProp
             ) : (
               <div className="overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/isms-wordmark-white.svg" alt="iSMS" className="h-5 w-auto" />
-                <p className="text-[10px] text-gray-400 capitalize truncate mt-1">
+                <img src="/isms-logo-blue.png" alt="iSMS" className="h-6 w-auto" />
+                <p className="text-[10px] text-gray-500 capitalize truncate mt-1">
                   {role.toLowerCase().replace(/_/g, " ")}
                 </p>
               </div>
@@ -96,7 +96,7 @@ export function Sidebar({ role, mobileOpen = false, onMobileClose }: SidebarProp
           </div>
           <button
             onClick={toggle}
-            className="hidden md:block p-1 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition-colors shrink-0"
+            className="hidden md:block p-1 rounded-md text-gray-400 hover:text-gray-900 hover:bg-gray-200 transition-colors shrink-0"
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed
@@ -106,7 +106,7 @@ export function Sidebar({ role, mobileOpen = false, onMobileClose }: SidebarProp
           </button>
           <button
             onClick={onMobileClose}
-            className="md:hidden p-1 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition-colors shrink-0"
+            className="md:hidden p-1 rounded-md text-gray-400 hover:text-gray-900 hover:bg-gray-200 transition-colors shrink-0"
             title="Close menu"
           >
             <X className="w-4 h-4" />
@@ -128,7 +128,7 @@ export function Sidebar({ role, mobileOpen = false, onMobileClose }: SidebarProp
                   "flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm transition-colors",
                   isActive
                     ? "bg-indigo-600 text-white"
-                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                    : "text-gray-600 hover:bg-gray-200/70 hover:text-gray-900"
                 )}
               >
                 <Icon className="w-4 h-4 shrink-0" />
@@ -140,15 +140,15 @@ export function Sidebar({ role, mobileOpen = false, onMobileClose }: SidebarProp
 
         {/* Last updated (build time) */}
         {lastUpdated && (
-          <div className="border-t border-gray-700/60 px-3 py-2.5">
+          <div className="border-t border-gray-200 px-3 py-2.5">
             {!showLabels ? (
-              <p className="text-center text-[9px] leading-tight text-gray-500" title={`Last updated ${lastUpdated}`}>
+              <p className="text-center text-[9px] leading-tight text-gray-400" title={`Last updated ${lastUpdated}`}>
                 upd.
               </p>
             ) : (
               <>
-                <p className="text-[10px] uppercase tracking-wide text-gray-500">Last updated</p>
-                <p className="text-[11px] text-gray-400">{lastUpdated}</p>
+                <p className="text-[10px] uppercase tracking-wide text-gray-400">Last updated</p>
+                <p className="text-[11px] text-gray-500">{lastUpdated}</p>
               </>
             )}
           </div>
