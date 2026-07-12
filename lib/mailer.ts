@@ -67,7 +67,7 @@ export async function sendDemoRequestEmail(details: DemoRequestDetails): Promise
     ].filter(Boolean).join("\n"),
     html: `
       <div style="font-family:system-ui,Segoe UI,Arial,sans-serif;max-width:480px;margin:0 auto">
-        <h2 style="color:#3b32fa;margin:0 0 8px">New demo request</h2>
+        <h2 style="color:#0066cc;margin:0 0 8px">New demo request</h2>
         <p style="color:#374151;margin:0 0 4px"><strong>Name:</strong> ${escapeHtml(details.name)}</p>
         <p style="color:#374151;margin:0 0 4px"><strong>Email:</strong> ${escapeHtml(details.email)}</p>
         <p style="color:#374151;margin:0 0 4px"><strong>Phone:</strong> ${escapeHtml(details.phone)}</p>
@@ -91,7 +91,7 @@ export async function sendOtpEmail(to: string, code: string): Promise<void> {
     text: `Your iSMS login code is ${code}. It expires in 10 minutes.\n\nIf you did not try to sign in, you can ignore this email.`,
     html: `
       <div style="font-family:system-ui,Segoe UI,Arial,sans-serif;max-width:480px;margin:0 auto">
-        <h2 style="color:#3b32fa;margin:0 0 8px">iSMS login code</h2>
+        <h2 style="color:#0066cc;margin:0 0 8px">iSMS login code</h2>
         <p style="color:#374151;margin:0 0 16px">Use this code to finish signing in:</p>
         <p style="font-size:32px;font-weight:700;letter-spacing:6px;color:#111827;margin:0 0 16px">${code}</p>
         <p style="color:#6b7280;font-size:13px;margin:0">It expires in 10 minutes. If you did not try to sign in, you can ignore this email.</p>
