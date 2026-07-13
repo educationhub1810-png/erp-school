@@ -237,7 +237,7 @@ describe("LoginForm", () => {
   it("renders the branded hero panel with all four feature badges", () => {
     render(<LoginForm />);
     expect(screen.getAllByAltText("iSMS").length).toBeGreaterThan(0);
-    expect(screen.getByText("Secure Platform")).toBeInTheDocument();
+    expect(screen.getByText("Secure & Reliable")).toBeInTheDocument();
     expect(screen.getByText("Multi Role Access")).toBeInTheDocument();
     expect(screen.getByText("Real-time Analytics")).toBeInTheDocument();
     expect(screen.getByText("Cloud Based")).toBeInTheDocument();

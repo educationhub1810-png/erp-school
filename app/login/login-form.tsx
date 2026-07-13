@@ -57,10 +57,10 @@ const ROLE_OPTIONS = (Object.entries(ROLE_LABELS) as [keyof typeof ROLE_LABELS, 
 );
 
 const FEATURES = [
-  { icon: ShieldCheck, label: "Secure Platform", color: "bg-blue-500" },
+  { icon: ShieldCheck, label: "Secure & Reliable", color: "bg-blue-500" },
   { icon: Users, label: "Multi Role Access", color: "bg-violet-500" },
-  { icon: BarChart3, label: "Real-time Analytics", color: "bg-orange-500" },
-  { icon: Cloud, label: "Cloud Based", color: "bg-green-500" },
+  { icon: BarChart3, label: "Real-time Analytics", color: "bg-green-500" },
+  { icon: Cloud, label: "Cloud Based", color: "bg-orange-500" },
 ];
 
 // Small decorative icons that gently float in the page background.
@@ -296,39 +296,35 @@ export function LoginForm() {
 
       <div className="relative w-full max-w-3xl flex flex-col lg:flex-row rounded-3xl shadow-2xl overflow-hidden bg-white ring-1 ring-black/5">
         {/* Left: branded hero panel — hidden below lg, form-only on smaller screens */}
-        <div className="hidden lg:flex flex-col w-[44%] shrink-0 relative bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-900 p-6 text-white overflow-hidden">
+        <div className="hidden lg:flex flex-col w-[44%] shrink-0 relative bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-6 text-gray-900 overflow-hidden">
           {/* decorative glow blobs */}
-          <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -bottom-20 -left-10 w-64 h-64 rounded-full bg-blue-400/20 blur-3xl" />
+          <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/40 blur-3xl" />
+          <div className="absolute -bottom-20 -left-10 w-64 h-64 rounded-full bg-blue-200/40 blur-3xl" />
 
-          <div className="relative mb-4">
+          <div className="relative mb-5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/isms-wordmark-white.svg" alt="iSMS" className="h-8 w-auto" />
-            <p className="text-xs text-indigo-200 mt-1">The Power of Integration, Built for Education</p>
+            <img src="/isms-logo-blue.png" alt="iSMS" className="h-8 w-auto" />
+            <p className="text-xs text-gray-500 mt-1">The Power of Integration, Built for Education</p>
           </div>
 
           <div className="relative">
-            <h2 className="text-xl font-bold mb-1">Welcome</h2>
-            <p className="text-sm text-indigo-200">Sign in to continue to your account</p>
+            <h2 className="text-lg font-bold text-gray-900 leading-tight mb-2">Welcome</h2>
           </div>
 
-          <div className="relative flex-1 flex items-center justify-center min-h-0 py-3">
-            <div className="rounded-2xl shadow-xl w-full h-[190px] overflow-hidden">
+          <div className="relative flex-1 min-h-0 py-4">
+            <div className="rounded-2xl shadow-xl w-full h-full overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/school-illustration.jpg" alt="Students walking into school" className="w-full h-full object-cover brightness-110" />
             </div>
           </div>
 
-          <div className="relative grid grid-cols-2 gap-2">
+          <div className="relative -mt-8 z-10 grid grid-cols-4 gap-1.5 bg-white rounded-2xl shadow-lg ring-1 ring-black/5 p-3">
             {FEATURES.map((f) => (
-              <div
-                key={f.label}
-                className="flex items-center gap-2 rounded-xl bg-white/10 ring-1 ring-white/15 px-3 py-2"
-              >
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${f.color}`}>
-                  <f.icon className="w-3.5 h-3.5 text-white" />
+              <div key={f.label} className="flex flex-col items-center text-center gap-1">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${f.color}`}>
+                  <f.icon className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-xs font-medium leading-tight">{f.label}</span>
+                <span className="text-[10px] font-semibold text-gray-900 leading-tight">{f.label}</span>
               </div>
             ))}
           </div>
@@ -346,7 +342,7 @@ export function LoginForm() {
           <div className="w-full max-w-sm mx-auto">
             <div className="flex items-center gap-2 mb-5">
               <div className="hidden lg:flex w-8 h-8 rounded-full bg-indigo-50 items-center justify-center shrink-0">
-                <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                <User className="w-4 h-4 text-indigo-600" />
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Welcome</h2>
@@ -442,7 +438,7 @@ export function LoginForm() {
 
               <Button
                 type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-700"
+                className="w-full bg-gradient-to-r from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800"
                 disabled={loading}
               >
                 {loading ? (
@@ -496,7 +492,7 @@ export function LoginForm() {
                 <Button
                   type="button"
                   onClick={handleVerifyOtp}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700"
+                  className="w-full bg-gradient-to-r from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800"
                   disabled={loading || otp.trim().length === 0}
                 >
                   {loading ? (
