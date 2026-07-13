@@ -12,6 +12,9 @@ import {
   ShieldCheck,
   Cloud,
   ArrowRight,
+  School,
+  Baby,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductPreview } from "./product-preview";
@@ -35,12 +38,25 @@ const TRUST_POINTS = [
   { icon: Users, label: "Role-based access for every stakeholder" },
 ];
 
+const STATS = [
+  { value: "12", label: "Role-based dashboards" },
+  { value: "9", label: "Integrated modules" },
+  { value: "100%", label: "Cloud based" },
+  { value: "0", label: "Setup required" },
+];
+
+const SCHOOL_TYPES = [
+  { icon: Baby, label: "Preschools & Daycares", desc: "Simple attendance, parent updates and fee tracking built for young learners." },
+  { icon: School, label: "K-12 Schools", desc: "Full academic-year management — admissions, exams, results and everything between." },
+  { icon: BookOpen, label: "Coaching & Institutes", desc: "Batch scheduling, test series and progress tracking for focused programs." },
+];
+
 export function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Nav */}
-      <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-gray-100">
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 py-3.5">
+      <header className="sticky top-0 z-20 bg-indigo-50/90 backdrop-blur border-b border-gray-100">
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 py-6">
           <div className="flex items-center shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/isms-logo-blue.png" alt="iSMS" className="h-7 w-auto" />
@@ -65,7 +81,7 @@ export function LandingPage() {
           <span className="inline-block text-xs font-semibold tracking-wide text-indigo-600 bg-indigo-50 rounded-full px-3 py-1 mb-4">
             SMART SCHOOL MANAGEMENT SYSTEM
           </span>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mb-4">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight tracking-tight mb-5">
             Run your entire school from one platform
           </h1>
           <p className="text-base sm:text-lg text-gray-500 mb-7 max-w-lg">
@@ -95,6 +111,41 @@ export function LandingPage() {
           </div>
         </div>
         <ProductPreview />
+      </section>
+
+      {/* Stat strip */}
+      <section className="border-y border-gray-100 bg-gray-50/60">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+          {STATS.map((s) => (
+            <div key={s.label}>
+              <p className="text-2xl sm:text-3xl font-bold text-indigo-600">{s.value}</p>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Who it's for */}
+      <section className="py-16 sm:py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Built for every kind of school</h2>
+            <p className="text-gray-500 max-w-xl mx-auto">
+              Whichever stage your institution is at, iSMS adapts to how you run it.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-5">
+            {SCHOOL_TYPES.map((s) => (
+              <div key={s.label} className="rounded-2xl ring-1 ring-gray-100 shadow-sm p-6 text-center hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center mx-auto mb-4">
+                  <s.icon className="w-6 h-6 text-indigo-600" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-1.5">{s.label}</h3>
+                <p className="text-sm text-gray-500">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* Features */}
