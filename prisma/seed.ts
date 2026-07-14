@@ -33,6 +33,7 @@ async function main() {
   const school = await prisma.school.upsert({
     where: { code: "SCH001" },
     update: {
+      name: "Demo School",
       logo: "/uploads/schools/sch001-logo.png",
       regNumber: "REG-DL-2005-00123",
       affiliationNumber: "CBSE-AFF-2310456",
@@ -45,7 +46,7 @@ async function main() {
       state: "Delhi",
     },
     create: {
-      name: "Delhi Public School",
+      name: "Demo School",
       code: "SCH001",
       logo: "/uploads/schools/sch001-logo.png",
       regNumber: "REG-DL-2005-00123",
