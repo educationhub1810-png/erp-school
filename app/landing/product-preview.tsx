@@ -28,7 +28,7 @@ const STATS = [
 // of the actual product screen without embedding a live/authenticated frame.
 export function ProductPreview() {
   return (
-    <div className="rounded-2xl shadow-2xl ring-1 ring-black/10 overflow-hidden bg-white">
+    <div className="rounded-2xl shadow-2xl shadow-indigo-900/20 ring-1 ring-black/10 overflow-hidden bg-white">
       {/* browser chrome */}
       <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-2 border-b border-gray-200">
         <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
@@ -41,7 +41,7 @@ export function ProductPreview() {
 
       <div className="flex h-[280px] sm:h-[320px]">
         {/* sidebar */}
-        <div className="hidden sm:flex w-40 shrink-0 flex-col bg-gray-900 text-white p-3">
+        <div className="hidden sm:flex w-40 shrink-0 flex-col bg-gradient-to-b from-gray-900 to-gray-950 text-white p-3">
           <div className="flex items-center mb-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/isms-wordmark-white.svg" alt="iSMS" className="h-4 w-auto" />
@@ -51,7 +51,9 @@ export function ProductPreview() {
               <div
                 key={item.label}
                 className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] ${
-                  item.active ? "bg-indigo-600 text-white" : "text-gray-400"
+                  item.active
+                    ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-sm shadow-indigo-900/40"
+                    : "text-gray-400"
                 }`}
               >
                 <item.icon className="w-3 h-3 shrink-0" />
@@ -68,7 +70,7 @@ export function ProductPreview() {
             <div className="flex items-center gap-2 text-gray-400">
               <Search className="w-3.5 h-3.5" />
               <Bell className="w-3.5 h-3.5" />
-              <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 text-[9px] font-bold flex items-center justify-center">
+              <span className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 text-white text-[9px] font-bold flex items-center justify-center">
                 A
               </span>
             </div>
@@ -86,7 +88,7 @@ export function ProductPreview() {
 
           <div className="bg-white rounded-lg ring-1 ring-gray-100 p-3 shadow-sm h-[110px] sm:h-[140px] flex items-end gap-1.5">
             {[40, 65, 50, 80, 55, 90, 70, 60, 85, 45, 75, 95].map((h, i) => (
-              <div key={i} className="flex-1 rounded-t bg-indigo-500/80" style={{ height: `${h}%` }} />
+              <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-indigo-600 to-blue-400" style={{ height: `${h}%` }} />
             ))}
           </div>
         </div>
