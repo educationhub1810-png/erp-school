@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -24,7 +25,7 @@ import {
   ArrowLeft,
   Users,
   BarChart3,
-  Cloud,
+  Globe,
   BookOpen,
   PenLine,
   Star,
@@ -38,6 +39,9 @@ import {
 import { ROLE_LABELS } from "@/lib/roles";
 
 const RESEND_COOLDOWN_SECONDS = 60;
+
+// Temporarily hidden per request — flip back on when support access is ready.
+const SHOW_SUPPORT_ACCESS = false;
 
 // Temporarily not selectable from the login dropdown — accounts with these
 // roles cannot sign in via this form while hidden here.
@@ -60,7 +64,7 @@ const FEATURES = [
   { icon: ShieldCheck, label: "Secure & Reliable", color: "bg-blue-500" },
   { icon: Users, label: "Multi Role Access", color: "bg-violet-500" },
   { icon: BarChart3, label: "Real-time Analytics", color: "bg-green-500" },
-  { icon: Cloud, label: "Cloud Based", color: "bg-orange-500" },
+  { icon: Globe, label: "Access Anywhere", color: "bg-orange-500" },
 ];
 
 // Small decorative icons that gently float in the page background.
@@ -318,7 +322,7 @@ export function LoginForm() {
             </div>
           </div>
 
-          <div className="relative -mt-8 z-10 grid grid-cols-4 gap-1.5 bg-white rounded-2xl shadow-lg ring-1 ring-black/5 p-3">
+          <div className="relative -mt-8 z-10 grid grid-cols-4 gap-1.5 bg-white/40 backdrop-blur-md rounded-2xl shadow-lg ring-1 ring-black/5 p-3">
             {FEATURES.map((f) => (
               <div key={f.label} className="flex flex-col items-center text-center gap-1">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${f.color}`}>
@@ -389,7 +393,7 @@ export function LoginForm() {
                     placeholder={`Enter ${usernameLabel.toLowerCase()}`}
                     maxLength={254}
                     {...register("username")}
-                    autoComplete="username"
+                    autoComplete="off"
                     className="pl-10"
                   />
                 </div>
@@ -415,7 +419,7 @@ export function LoginForm() {
                     placeholder={usesDobPassword ? "e.g. 15082005" : "Enter your password"}
                     maxLength={72}
                     {...register("password")}
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                     className="pl-10 pr-10"
                   />
                   <button
@@ -449,6 +453,22 @@ export function LoginForm() {
                 Login to Dashboard
               </Button>
             </form>
+            )}
+
+            {!otpStep && (
+              <div className="mt-4">
+                <div className="flex items-center gap-3">
+                  <span className="h-px flex-1 bg-gray-200" />
+                  <span className="text-xs text-gray-400">or</span>
+                  <span className="h-px flex-1 bg-gray-200" />
+                </div>
+                <p className="text-center text-xs text-gray-500 mt-3">
+                  Don&apos;t have an account?{" "}
+                  <Link href="/#request-demo" className="font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-2">
+                    Contact to Admin
+                  </Link>
+                </p>
+              </div>
             )}
 
             {/* Step 2 — emailed code entry (Super Admin / School Admin) */}
@@ -523,39 +543,41 @@ export function LoginForm() {
               </div>
             )}
 
-            {/* Support access — intentionally low-profile */}
-            <div className="mt-3 text-center">
-              {!adminCode && !adminError ? (
-                <button
-                  onClick={() => setAdminCode(" ")}
-                  className="text-xs text-gray-300 hover:text-gray-400 transition-colors"
-                >
-                  Support
-                </button>
-              ) : (
-                <div className="flex flex-col items-center gap-1.5">
-                  <input
-                    type="password"
-                    value={adminCode.trim()}
-                    onChange={(e) => setAdminCode(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleAdminAccess()}
-                    placeholder="Access code"
-                    autoFocus
-                    className="w-44 h-7 rounded border border-gray-200 bg-white px-2.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-gray-300"
-                  />
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleAdminAccess}
-                      disabled={adminLoading || !adminCode.trim()}
-                      className="h-7 px-3 rounded border border-gray-200 text-gray-400 text-xs hover:text-gray-600 disabled:opacity-40"
-                    >
-                      {adminLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Go"}
-                    </button>
-                    {adminError && <span className="text-xs text-red-400">{adminError}</span>}
+            {/* Support access — intentionally low-profile, hidden for now */}
+            {SHOW_SUPPORT_ACCESS && (
+              <div className="mt-3 text-center">
+                {!adminCode && !adminError ? (
+                  <button
+                    onClick={() => setAdminCode(" ")}
+                    className="text-xs text-gray-300 hover:text-gray-400 transition-colors"
+                  >
+                    Support
+                  </button>
+                ) : (
+                  <div className="flex flex-col items-center gap-1.5">
+                    <input
+                      type="password"
+                      value={adminCode.trim()}
+                      onChange={(e) => setAdminCode(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleAdminAccess()}
+                      placeholder="Access code"
+                      autoFocus
+                      className="w-44 h-7 rounded border border-gray-200 bg-white px-2.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-gray-300"
+                    />
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleAdminAccess}
+                        disabled={adminLoading || !adminCode.trim()}
+                        className="h-7 px-3 rounded border border-gray-200 text-gray-400 text-xs hover:text-gray-600 disabled:opacity-40"
+                      >
+                        {adminLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Go"}
+                      </button>
+                      {adminError && <span className="text-xs text-red-400">{adminError}</span>}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             <p className="text-center text-xs text-gray-400 mt-3">
               © {new Date().getFullYear()} iSMS. All rights reserved.

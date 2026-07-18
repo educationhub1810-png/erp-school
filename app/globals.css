@@ -147,6 +147,13 @@ html, body {
   overflow-x: hidden;
 }
 
+/* Hide Edge/IE's built-in password reveal & clear icons — every password
+   field ships its own Eye/EyeOff toggle, so the native one just duplicates it. */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
 body {
   letter-spacing: -0.011em;
 }
