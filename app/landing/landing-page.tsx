@@ -26,7 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ProductPreview } from "./product-preview";
 import { DemoRequestForm } from "./demo-request-form";
-import { CursorBubble } from "./cursor-bubble";
+import { CursorPen } from "./cursor-pen";
 
 // Cycled across feature/solution icon tiles so the grid reads as colorful
 // and modern rather than a wall of repeated brand-indigo squares.
@@ -109,7 +109,7 @@ const DEMO_BENEFITS = [
 export function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
-      <CursorBubble />
+      <CursorPen />
 
       {/* Nav */}
       <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-lg border-b border-gray-100">
