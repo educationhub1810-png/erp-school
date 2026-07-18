@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ProductPreview } from "./product-preview";
 import { DemoRequestForm } from "./demo-request-form";
+import { CursorBubble } from "./cursor-bubble";
 
 // Cycled across feature/solution icon tiles so the grid reads as colorful
 // and modern rather than a wall of repeated brand-indigo squares.
@@ -76,7 +77,7 @@ const SCHOOL_TYPES = [
 const HERO_ICONS = [
   { icon: GraduationCap, className: "top-[10%] left-[4%] w-8 h-8 text-indigo-300/40 animate-float-1" },
   { icon: Star, className: "top-[65%] left-[8%] w-5 h-5 text-amber-300/50 animate-float-3" },
-  { icon: PenLine, className: "top-[20%] right-[6%] w-6 h-6 text-violet-300/40 animate-float-2" },
+  { icon: PenLine, className: "top-[20%] right-[6%] w-6 h-6 text-navy-300/40 animate-float-2" },
   { icon: Sparkles, className: "bottom-[12%] right-[10%] w-6 h-6 text-blue-300/50 animate-float-1" },
 ];
 
@@ -86,9 +87,23 @@ const NAV_LINKS = [
   { href: "#request-demo", label: "Demo" },
 ];
 
+// Drifting glass bubbles scattered behind the hero, in a mix of sizes so the
+// field doesn't read as a repeating tile. Sizes are in pixels.
+const HERO_BUBBLES = [
+  { size: 120, className: "top-[6%] left-[14%] from-blue-300/40 animate-bubble-1" },
+  { size: 44, className: "top-[52%] left-[4%] from-indigo-300/40 animate-bubble-2" },
+  { size: 170, className: "top-[10%] left-[78%] from-navy-300/30 animate-bubble-3" },
+  { size: 60, className: "top-[78%] left-[86%] from-sky-300/40 animate-bubble-4" },
+  { size: 28, className: "top-[36%] left-[68%] from-blue-200/50 animate-bubble-2" },
+  { size: 80, className: "top-[82%] left-[36%] from-indigo-200/40 animate-bubble-1" },
+  { size: 36, className: "top-[22%] left-[46%] from-navy-200/40 animate-bubble-4" },
+];
+
 export function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
+      <CursorBubble />
+
       {/* Nav */}
       <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-lg border-b border-gray-100">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 py-4">
@@ -120,12 +135,19 @@ export function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-indigo-50/70 via-white to-white">
+      <section className="relative bg-gradient-to-b from-indigo-50/70 via-white to-white">
         {/* Ambient drifting background blobs + floating icons */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="animate-blob-1 absolute -top-32 -left-20 w-[26rem] h-[26rem] rounded-full bg-indigo-300/30 blur-3xl" />
           <div className="animate-blob-2 absolute top-10 -right-24 w-[30rem] h-[30rem] rounded-full bg-blue-300/25 blur-3xl" />
-          <div className="animate-blob-3 absolute bottom-0 left-1/3 w-80 h-80 rounded-full bg-violet-200/25 blur-3xl" />
+          <div className="animate-blob-3 absolute bottom-0 left-1/3 w-80 h-80 rounded-full bg-navy-200/25 blur-3xl" />
+          {HERO_BUBBLES.map((b, i) => (
+            <span
+              key={i}
+              className={`absolute rounded-full bg-gradient-to-br to-white/5 ring-1 ring-white/60 backdrop-blur-sm ${b.className}`}
+              style={{ width: b.size, height: b.size }}
+            />
+          ))}
           {HERO_ICONS.map(({ icon: Icon, className }, i) => (
             <Icon key={i} className={`absolute ${className}`} />
           ))}
@@ -139,7 +161,7 @@ export function LandingPage() {
             </span>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight tracking-tight mb-5">
               Run your entire school from{" "}
-              <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-violet-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-navy-600 bg-clip-text text-transparent">
                 one platform
               </span>
             </h1>
@@ -173,7 +195,7 @@ export function LandingPage() {
             </div>
           </div>
           <div className="relative animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150">
-            <div className="absolute -inset-6 -z-10 rounded-[2rem] bg-gradient-to-br from-indigo-200/50 via-blue-200/40 to-violet-200/40 blur-2xl" />
+            <div className="absolute -inset-6 -z-10 rounded-[2rem] bg-gradient-to-br from-indigo-200/50 via-blue-200/40 to-navy-200/40 blur-2xl" />
             <ProductPreview />
           </div>
         </div>
@@ -268,7 +290,7 @@ export function LandingPage() {
       {/* CTA banner */}
       <section className="relative overflow-hidden py-16 sm:py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-blue-600 to-violet-600 px-6 sm:px-14 py-12 sm:py-16 text-center shadow-2xl shadow-indigo-600/25">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-blue-600 to-navy-600 px-6 sm:px-14 py-12 sm:py-16 text-center shadow-2xl shadow-indigo-600/25">
             <div className="pointer-events-none absolute -top-16 -left-10 w-64 h-64 rounded-full bg-white/10 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-20 -right-10 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
             <h2 className="relative text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3">
@@ -308,7 +330,7 @@ export function LandingPage() {
         </div>
         <div className="relative">
           <div className="pointer-events-none absolute -top-10 -left-10 w-40 h-40 rounded-full bg-indigo-100/60 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-violet-100/60 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-navy-100/60 blur-3xl" />
           <div className="relative bg-white rounded-2xl ring-1 ring-gray-100 shadow-xl shadow-gray-900/5 p-6 sm:p-8">
             <DemoRequestForm />
           </div>
