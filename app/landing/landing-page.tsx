@@ -21,6 +21,7 @@ import {
   GraduationCap,
   Star,
   PenLine,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductPreview } from "./product-preview";
@@ -97,6 +98,12 @@ const HERO_BUBBLES = [
   { size: 28, className: "top-[36%] left-[68%] from-blue-200/50 animate-bubble-2" },
   { size: 80, className: "top-[82%] left-[36%] from-indigo-200/40 animate-bubble-1" },
   { size: 36, className: "top-[22%] left-[46%] from-navy-200/40 animate-bubble-4" },
+];
+
+const DEMO_BENEFITS = [
+  { icon: Users, title: "Personalized walkthrough", desc: "See exactly how iSMS fits your school's day-to-day workflow." },
+  { icon: Clock, title: "Fast response", desc: "Our team reaches out within 24 hours to schedule a time." },
+  { icon: ShieldCheck, title: "No commitment", desc: "Explore the full platform with zero obligation." },
 ];
 
 export function LandingPage() {
@@ -318,21 +325,47 @@ export function LandingPage() {
       </section>
 
       {/* Request a demo */}
-      <section id="request-demo" className="relative max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-10 pb-20">
-        <div className="text-center mb-8">
-          <span className="inline-block text-xs font-semibold tracking-wide text-indigo-600 bg-indigo-50 rounded-full px-3 py-1 mb-3">
-            GET STARTED
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">See iSMS in action</h2>
-          <p className="text-gray-500">
-            Tell us about your school and we&apos;ll set up a personalized demo.
-          </p>
-        </div>
-        <div className="relative">
-          <div className="pointer-events-none absolute -top-10 -left-10 w-40 h-40 rounded-full bg-indigo-100/60 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-navy-100/60 blur-3xl" />
-          <div className="relative bg-white rounded-2xl ring-1 ring-gray-100 shadow-xl shadow-gray-900/5 p-6 sm:p-8">
-            <DemoRequestForm />
+      <section id="request-demo" className="relative max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+        <div className="pointer-events-none absolute top-10 left-[10%] w-64 h-64 rounded-full bg-indigo-100/50 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 right-[10%] w-64 h-64 rounded-full bg-navy-100/40 blur-3xl" />
+
+        <div className="relative grid lg:grid-cols-[0.85fr_1.15fr] gap-10 lg:gap-16 items-center">
+          {/* Left: pitch + what to expect */}
+          <div>
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-indigo-600 bg-indigo-50 ring-1 ring-indigo-100 rounded-full px-3 py-1.5 mb-4">
+              <Sparkles className="w-3.5 h-3.5" />
+              GET STARTED
+            </span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 leading-tight">
+              See iSMS in action
+            </h2>
+            <p className="text-gray-500 mb-9 max-w-md">
+              Tell us about your school and we&apos;ll set up a personalized demo — no pressure,
+              just a walkthrough of what fits.
+            </p>
+            <div className="space-y-6">
+              {DEMO_BENEFITS.map((b, i) => (
+                <div key={b.title} className="flex items-start gap-3.5">
+                  <div
+                    className={`w-10 h-10 rounded-xl bg-gradient-to-br ${ICON_COLORS[i % ICON_COLORS.length]} flex items-center justify-center shrink-0 shadow-md shadow-black/10`}
+                  >
+                    <b.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 text-sm mb-0.5">{b.title}</h3>
+                    <p className="text-sm text-gray-500">{b.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: form card */}
+          <div className="relative">
+            <div className="absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-br from-indigo-200/40 via-blue-200/30 to-navy-200/30 blur-2xl" />
+            <div className="relative bg-white rounded-2xl ring-1 ring-gray-100 shadow-xl shadow-gray-900/10 p-6 sm:p-8">
+              <DemoRequestForm />
+            </div>
           </div>
         </div>
       </section>
