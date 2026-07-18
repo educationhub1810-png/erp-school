@@ -256,6 +256,36 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Product video */}
+      <section className="py-16 sm:py-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <span className="inline-block text-xs font-semibold tracking-wide text-indigo-600 bg-indigo-50 rounded-full px-3 py-1 mb-3">
+              WATCH
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">See iSMS in motion</h2>
+            <p className="text-gray-500 max-w-xl mx-auto">
+              A quick walkthrough of admissions, attendance, fees and more — all from one dashboard.
+            </p>
+          </div>
+          <div className="relative">
+            <div className="pointer-events-none absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-br from-indigo-200/40 via-blue-200/30 to-navy-200/30 blur-2xl" />
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+            <video
+              className="w-full rounded-2xl shadow-2xl shadow-indigo-900/20 ring-1 ring-black/10 bg-black"
+              src="/hero-demo.mp4"
+              poster="/dashboard-screenshot.png"
+              controls
+              controlsList="nodownload noplaybackrate noremoteplayback"
+              disablePictureInPicture
+              loop
+              playsInline
+              preload="metadata"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Features */}
       <section
         id="features"
