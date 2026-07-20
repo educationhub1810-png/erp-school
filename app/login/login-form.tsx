@@ -40,8 +40,9 @@ import { ROLE_LABELS } from "@/lib/roles";
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
-// Temporarily hidden per request — flip back on when support access is ready.
-const SHOW_SUPPORT_ACCESS = false;
+// Controlled via NEXT_PUBLIC_SHOW_SUPPORT_ACCESS (client-visible env var) —
+// off unless explicitly enabled, since this exposes the admin-access entry point.
+const SHOW_SUPPORT_ACCESS = process.env.NEXT_PUBLIC_SHOW_SUPPORT_ACCESS === "true";
 
 // Temporarily not selectable from the login dropdown — accounts with these
 // roles cannot sign in via this form while hidden here.

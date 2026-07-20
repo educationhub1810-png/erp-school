@@ -5,12 +5,11 @@ import { prisma } from "@/lib/prisma";
 const schema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
   email: z.string().trim().email("Enter a valid email").max(254),
-  phone: z.string().trim().min(7, "Enter a valid phone number").max(20),
-  schoolName: z.string().trim().min(1, "School/institution name is required").max(150),
-  message: z.string().trim().max(2000).optional(),
+  phone: z.string().trim().max(20).optional(),
+  message: z.string().trim().min(1, "Message is required").max(2000),
 });
 
-// Public "Request a demo" form on the landing page. Pre-auth, no session — see
+// Public "Contact us" form on the landing page. Pre-auth, no session — see
 // OPEN_PATHS in auth.config.ts for the /api/public exemption. Lands in the
 // in-app mailbox for Super Admin review (see app/super-admin/mailbox).
 export async function POST(req: Request) {
@@ -28,7 +27,7 @@ export async function POST(req: Request) {
 
   try {
     await prisma.mailboxMessage.create({
-      data: { source: "DEMO_REQUEST", ...parsed.data },
+      data: { source: "CONTACT", schoolName: null, ...parsed.data },
     });
   } catch (e) {
     return serverError(e);

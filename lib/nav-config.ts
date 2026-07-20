@@ -26,6 +26,7 @@ import {
   FlaskConical,
   ShieldAlert,
   ShieldCheck,
+  Mail,
 } from "lucide-react";
 
 export type NavItem = {
@@ -51,6 +52,7 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: "Users", href: "/super-admin/users", icon: Users },
     { label: "Fees", href: "/super-admin/fees", icon: IndianRupee },
     { label: "Reports", href: "/super-admin/reports", icon: BarChart3 },
+    { label: "Mailbox", href: "/super-admin/mailbox", icon: Mail },
     { label: "Audit & Security", href: "/super-admin/audit", icon: ShieldAlert },
     { label: "Bug Board", href: "/super-admin/bugs", icon: Bug },
     { label: "Tests", href: "/super-admin/tests", icon: FlaskConical },

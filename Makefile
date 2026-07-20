@@ -4,7 +4,7 @@ LOG  := .dev.log
 # (`true`) elsewhere (e.g. Windows/Git Bash with a single global Node install).
 NODE := if [ -s "$$HOME/.nvm/nvm.sh" ]; then export NVM_DIR="$$HOME/.nvm" && \. "$$NVM_DIR/nvm.sh"; else true; fi
 
-.PHONY: run stop logs test test-watch test-ui test-cov e2e test-db-setup
+.PHONY: run stop kill logs test test-watch test-ui test-cov e2e test-db-setup
 
 run: stop
 	@printf "Starting Next.js dev on port $(PORT)...\n"
@@ -25,6 +25,10 @@ stop:
 	@-fuser -k $(PORT)/tcp   2>/dev/null; true
 	@-powershell.exe -NoProfile -Command 'Get-NetTCPConnection -LocalPort $(PORT) -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $$_ -Force -ErrorAction SilentlyContinue }' 2>/dev/null; true
 	@printf "Old processes stopped.\n"
+
+# Alias for `stop` — kills every running instance of the app (dev server +
+# anything still bound to $(PORT)).
+kill: stop
 
 logs:
 	@tail -f $(LOG)

@@ -80,6 +80,22 @@ export function makeUser(over: Partial<Record<string, unknown>> = {}) {
   };
 }
 
+export function makeMailboxMessage(over: Partial<Record<string, unknown>> = {}) {
+  return {
+    id: id("mailbox"),
+    source: "DEMO_REQUEST",
+    name: "Jane Doe",
+    email: "jane@example.com",
+    phone: "9876543210",
+    schoolName: "Greenwood High",
+    message: "Interested in a demo.",
+    status: "UNREAD",
+    createdAt: new Date("2026-01-01T00:00:00Z"),
+    updatedAt: new Date("2026-01-01T00:00:00Z"),
+    ...over,
+  };
+}
+
 export function makeLeaveRequest(over: Partial<Record<string, unknown>> = {}) {
   return {
     id: id("leave"),

@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ProductPreview } from "./product-preview";
 import { DemoRequestForm } from "./demo-request-form";
+import { ContactForm } from "./contact-form";
 import { CursorPen } from "./cursor-pen";
 import { MobileNav } from "./mobile-nav";
 
@@ -90,6 +91,7 @@ const NAV_LINKS = [
   { href: "#solutions", label: "Solutions" },
   { href: "#features", label: "Features" },
   { href: "#request-demo", label: "Demo" },
+  { href: "#contact", label: "Contact" },
 ];
 
 // Drifting glass bubbles scattered behind the hero, in a mix of sizes so the
@@ -404,6 +406,38 @@ export function LandingPage() {
             <div className="absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-br from-indigo-200/40 via-blue-200/30 to-navy-200/30 blur-2xl" />
             <div className="relative bg-white rounded-2xl ring-1 ring-gray-100 shadow-xl shadow-gray-900/10 p-6 sm:p-8">
               <DemoRequestForm />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact us */}
+      <section id="contact" className="relative bg-gray-50/60 border-t border-gray-100">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+          <div className="grid lg:grid-cols-[0.85fr_1.15fr] gap-10 lg:gap-16 items-center">
+            <div>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-indigo-600 bg-indigo-50 ring-1 ring-indigo-100 rounded-full px-3 py-1.5 mb-4">
+                <MessageSquare className="w-3.5 h-3.5" />
+                GET IN TOUCH
+              </span>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 leading-tight">
+                Have a question?
+              </h2>
+              <p className="text-gray-500 max-w-md">
+                Send us a message and our team will get back to you. Prefer email? Reach
+                us directly at{" "}
+                <a href="mailto:contact@isms.com" className="font-medium text-indigo-600 hover:text-indigo-700">
+                  contact@isms.com
+                </a>
+                .
+              </p>
+            </div>
+
+            <div className="relative">
+              <div className="absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-br from-indigo-200/40 via-blue-200/30 to-navy-200/30 blur-2xl" />
+              <div className="relative bg-white rounded-2xl ring-1 ring-gray-100 shadow-xl shadow-gray-900/10 p-6 sm:p-8">
+                <ContactForm />
+              </div>
             </div>
           </div>
         </div>
