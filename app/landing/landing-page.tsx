@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { ProductPreview } from "./product-preview";
 import { DemoRequestForm } from "./demo-request-form";
 import { CursorPen } from "./cursor-pen";
+import { MobileNav } from "./mobile-nav";
 
 // A distinct accent font for the nav menu items only — the rest of the app
 // keeps Inter (set globally in app/layout.tsx).
@@ -59,9 +60,21 @@ const STATS = [
 ];
 
 const SCHOOL_TYPES = [
-  { icon: Baby, label: "Preschools & Daycares", desc: "Simple attendance, parent updates and fee tracking built for young learners." },
-  { icon: School, label: "K-12 Schools", desc: "Full academic-year management — admissions, exams, results and everything between." },
-  { icon: BookOpen, label: "Coaching & Institutes", desc: "Batch scheduling, test series and progress tracking for focused programs." },
+  {
+    icon: Baby,
+    label: "Preschools & Daycares",
+    desc: "Give parents peace of mind with real-time updates and easy fee tracking.",
+  },
+  {
+    icon: School,
+    label: "K-12 Schools",
+    desc: "One system for the entire school year — admissions, exams, and results, sorted.",
+  },
+  {
+    icon: BookOpen,
+    label: "Coaching & Institutes",
+    desc: "Keep every batch, test, and student on track — without the spreadsheets.",
+  },
 ];
 
 // Small decorative icons drifting behind the hero — echoes the login page's
@@ -104,7 +117,7 @@ export function LandingPage() {
 
       {/* Nav */}
       <header className="sticky top-3 sm:top-4 z-30 px-3 sm:px-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 rounded-2xl bg-white/80 backdrop-blur-lg ring-1 ring-gray-100 shadow-lg shadow-gray-900/5 px-4 sm:px-6 py-3">
+        <div className="relative max-w-6xl mx-auto flex items-center justify-between gap-4 rounded-2xl bg-white/80 backdrop-blur-lg ring-1 ring-gray-100 shadow-lg shadow-gray-900/5 px-4 sm:px-6 py-3">
           <div className="flex items-center shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/isms-logo-blue.png" alt="iSMS" className="h-7 w-auto" />
@@ -131,6 +144,7 @@ export function LandingPage() {
                 Login
               </Button>
             </Link>
+            <MobileNav links={NAV_LINKS} />
           </div>
         </div>
       </header>
@@ -167,8 +181,8 @@ export function LandingPage() {
               </span>
             </h1>
             <p className="text-base sm:text-lg text-gray-500 mb-7 max-w-lg">
-              iSMS brings admissions, attendance, fees, exams, transport, hostel and communication
-              together — with a dedicated dashboard for every role in your school.
+              One dashboard for everything — admissions, attendance, fees, exams, transport, and
+              more. Built for every role in your school.
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <Link href="/login">
@@ -222,17 +236,27 @@ export function LandingPage() {
           </div>
           <div className="grid sm:grid-cols-3 gap-5">
             {SCHOOL_TYPES.map((s, i) => (
-              <div
-                key={s.label}
-                className="group rounded-2xl ring-1 ring-gray-100 shadow-sm p-6 text-center hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1 hover:ring-indigo-100 transition-all"
-              >
-                <div
-                  className={`w-12 h-12 rounded-xl bg-gradient-to-br ${ICON_COLORS[i % ICON_COLORS.length]} flex items-center justify-center mx-auto mb-4 shadow-md shadow-black/10 group-hover:scale-110 transition-transform`}
-                >
-                  <s.icon className="w-6 h-6 text-white" />
+              <div key={s.label} className="group h-64 [perspective:1200px]">
+                <div className="relative w-full h-full transition-transform duration-500 ease-out [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
+                  {/* Front */}
+                  <div className="absolute inset-0 [backface-visibility:hidden] rounded-2xl ring-1 ring-gray-100 shadow-sm p-6 flex flex-col items-center justify-center text-center bg-white">
+                    <div
+                      className={`w-14 h-14 rounded-xl bg-gradient-to-br ${ICON_COLORS[i % ICON_COLORS.length]} flex items-center justify-center mb-4 shadow-md shadow-black/10`}
+                    >
+                      <s.icon className="w-7 h-7 text-white" />
+                    </div>
+                    <h3 className="font-semibold text-gray-900">{s.label}</h3>
+                    <p className="text-xs text-gray-400 mt-2">Hover to learn more</p>
+                  </div>
+                  {/* Back */}
+                  <div
+                    className={`absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl shadow-lg p-6 flex flex-col items-center justify-center text-center bg-gradient-to-br ${ICON_COLORS[i % ICON_COLORS.length]}`}
+                  >
+                    <s.icon className="w-7 h-7 text-white/80 mb-3" />
+                    <h3 className="font-semibold text-white mb-1.5">{s.label}</h3>
+                    <p className="text-sm text-white/90">{s.desc}</p>
+                  </div>
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-1.5">{s.label}</h3>
-                <p className="text-sm text-gray-500">{s.desc}</p>
               </div>
             ))}
           </div>
