@@ -158,8 +158,11 @@
 html, body {
   /* Belt-and-suspenders: no page should ever produce a document-level
      horizontal scrollbar. Tables/carousels that need horizontal scroll
-     use their own overflow-x wrapper, so this never hides real content. */
-  overflow-x: hidden;
+     use their own overflow-x wrapper, so this never hides real content.
+     `clip` (not `hidden`) — `overflow-x: hidden` on the root makes body/html
+     the scrolling box, which breaks `position: sticky` for descendants in
+     Chromium; `clip` prevents the same overflow without that side effect. */
+  overflow-x: clip;
 }
 
 /* Hide Edge/IE's built-in password reveal & clear icons — every password

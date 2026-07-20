@@ -1,32 +1,32 @@
 import Link from "next/link";
+import { Poppins } from "next/font/google";
 import {
   Users,
   ClipboardList,
   IndianRupee,
-  Library,
-  Bus,
-  Building2,
   Video,
   MessageSquare,
   BarChart3,
   ShieldCheck,
-  Cloud,
   ArrowRight,
   School,
   Baby,
   BookOpen,
-  LayoutGrid,
-  Zap,
   Sparkles,
   GraduationCap,
   Star,
   PenLine,
   Clock,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductPreview } from "./product-preview";
 import { DemoRequestForm } from "./demo-request-form";
 import { CursorPen } from "./cursor-pen";
+
+// A distinct accent font for the nav menu items only — the rest of the app
+// keeps Inter (set globally in app/layout.tsx).
+const navFont = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
 // Cycled across feature/solution icon tiles so the grid reads as colorful
 // and modern rather than a wall of repeated brand-indigo squares.
@@ -46,25 +46,16 @@ const FEATURES = [
   { icon: Users, label: "Student & Staff Management", desc: "Admissions, profiles, classes, sections — all in one place." },
   { icon: ClipboardList, label: "Attendance", desc: "Daily student & staff attendance with real-time tracking." },
   { icon: IndianRupee, label: "Fees & Accounting", desc: "Fee structures, collection, receipts and expense tracking." },
-  { icon: Library, label: "Library", desc: "Book catalog, issue/return workflows and fine management." },
-  { icon: Bus, label: "Transport", desc: "Routes, vehicles and student transport assignments." },
-  { icon: Building2, label: "Hostel", desc: "Room allocation and hostel attendance for boarders." },
   { icon: Video, label: "LMS & Homework", desc: "Course content, assignments and homework submissions." },
   { icon: MessageSquare, label: "Communication", desc: "Announcements and messaging between school and parents." },
   { icon: BarChart3, label: "Reports & Analytics", desc: "Real-time dashboards across every module." },
 ];
 
-const TRUST_POINTS = [
-  { icon: ShieldCheck, label: "Secure by design" },
-  { icon: Cloud, label: "Cloud based, zero setup" },
-  { icon: Users, label: "Role-based access for every stakeholder" },
-];
-
 const STATS = [
-  { icon: LayoutGrid, value: "12", label: "Role-based dashboards" },
-  { icon: Sparkles, value: "9", label: "Integrated modules" },
-  { icon: Cloud, value: "100%", label: "Cloud based" },
-  { icon: Zap, value: "0", label: "Setup required" },
+  { icon: ShieldCheck, label: "Secure & Reliable", color: "bg-blue-500" },
+  { icon: Users, label: "Multi Role Access", color: "bg-violet-500" },
+  { icon: BarChart3, label: "Real-time Analytics", color: "bg-green-500" },
+  { icon: Globe, label: "Access Anywhere", color: "bg-orange-500" },
 ];
 
 const SCHOOL_TYPES = [
@@ -112,28 +103,31 @@ export function LandingPage() {
       <CursorPen />
 
       {/* Nav */}
-      <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-lg border-b border-gray-100">
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 py-4">
+      <header className="sticky top-3 sm:top-4 z-30 px-3 sm:px-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 rounded-2xl bg-white/80 backdrop-blur-lg ring-1 ring-gray-100 shadow-lg shadow-gray-900/5 px-4 sm:px-6 py-3">
           <div className="flex items-center shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/isms-logo-blue.png" alt="iSMS" className="h-7 w-auto" />
           </div>
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+          <nav className={`${navFont.className} hidden md:flex items-center gap-1 text-sm font-medium tracking-wide text-gray-700`}>
             {NAV_LINKS.map((link) => (
-              <a key={link.href} href={link.href} className="hover:text-indigo-600 transition-colors">
+              <a
+                key={link.href}
+                href={link.href}
+                className="rounded-full px-4 py-1.5 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+              >
                 {link.label}
               </a>
             ))}
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
-            <a
-              href="#request-demo"
-              className="hidden sm:inline-block text-sm font-medium text-gray-600 hover:text-gray-900"
-            >
-              Request a Demo
+            <a href="#request-demo" className="hidden sm:block">
+              <Button variant="outline" className="rounded-full">
+                Request a Demo
+              </Button>
             </a>
             <Link href="/login">
-              <Button className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-md shadow-indigo-600/20">
+              <Button className="rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-md shadow-indigo-600/20">
                 Login
               </Button>
             </Link>
@@ -164,7 +158,7 @@ export function LandingPage() {
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-indigo-600 bg-indigo-50 ring-1 ring-indigo-100 rounded-full px-3 py-1.5 mb-5">
               <Sparkles className="w-3.5 h-3.5" />
-              SMART SCHOOL MANAGEMENT SYSTEM
+              The Power of Integration, Built for Education
             </span>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight tracking-tight mb-5">
               Run your entire school from{" "}
@@ -192,14 +186,6 @@ export function LandingPage() {
                 </Button>
               </a>
             </div>
-            <div className="flex flex-wrap gap-x-5 gap-y-2 mt-8">
-              {TRUST_POINTS.map((t) => (
-                <div key={t.label} className="flex items-center gap-1.5 text-xs text-gray-500">
-                  <t.icon className="w-3.5 h-3.5 text-indigo-600" />
-                  {t.label}
-                </div>
-              ))}
-            </div>
           </div>
           <div className="relative animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150">
             <div className="absolute -inset-6 -z-10 rounded-[2rem] bg-gradient-to-br from-indigo-200/50 via-blue-200/40 to-navy-200/40 blur-2xl" />
@@ -211,14 +197,11 @@ export function LandingPage() {
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 -mb-16 sm:-mb-14">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 rounded-2xl bg-white shadow-xl shadow-gray-900/5 ring-1 ring-gray-100 p-4 sm:p-6">
             {STATS.map((s) => (
-              <div key={s.label} className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
-                  <s.icon className="w-4.5 h-4.5 text-indigo-600" />
+              <div key={s.label} className="flex flex-col items-center text-center gap-2">
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 shadow-md shadow-black/10 ${s.color}`}>
+                  <s.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-lg sm:text-2xl font-bold text-gray-900 leading-none">{s.value}</p>
-                  <p className="text-[11px] sm:text-xs text-gray-500 mt-1 truncate">{s.label}</p>
-                </div>
+                <p className="text-xs sm:text-sm font-semibold text-gray-900 leading-tight">{s.label}</p>
               </div>
             ))}
           </div>
@@ -305,19 +288,21 @@ export function LandingPage() {
               One system for administrators, principals, teachers, students, parents and staff.
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 gap-5">
             {FEATURES.map((f, i) => (
               <div
                 key={f.label}
-                className="group bg-white rounded-xl ring-1 ring-gray-100 p-5 shadow-sm hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1 hover:ring-indigo-100 transition-all"
+                className="group flex items-start gap-4 bg-white rounded-xl ring-1 ring-gray-100 p-5 shadow-sm hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1 hover:ring-indigo-100 transition-all"
               >
                 <div
-                  className={`w-10 h-10 rounded-lg bg-gradient-to-br ${ICON_COLORS[i % ICON_COLORS.length]} flex items-center justify-center mb-3 shadow-md shadow-black/10 group-hover:scale-110 transition-transform`}
+                  className={`w-12 h-12 rounded-xl bg-gradient-to-br ${ICON_COLORS[i % ICON_COLORS.length]} flex items-center justify-center shrink-0 shadow-md shadow-black/10 group-hover:scale-110 transition-transform`}
                 >
-                  <f.icon className="w-5 h-5 text-white" />
+                  <f.icon className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-1">{f.label}</h3>
-                <p className="text-sm text-gray-500">{f.desc}</p>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">{f.label}</h3>
+                  <p className="text-sm text-gray-500">{f.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -424,11 +409,13 @@ export function LandingPage() {
           </div>
           <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-xs text-gray-500">© {new Date().getFullYear()} iSMS. All rights reserved.</p>
-            <div className="flex items-center gap-4 text-xs text-gray-500">
-              {TRUST_POINTS.map((t) => (
-                <span key={t.label} className="flex items-center gap-1.5">
-                  <t.icon className="w-3.5 h-3.5 text-indigo-400" />
-                  {t.label}
+            <div className="flex items-center gap-4 text-xs text-gray-400">
+              {STATS.map((s) => (
+                <span key={s.label} className="flex items-center gap-1.5">
+                  <span className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${s.color}`}>
+                    <s.icon className="w-3 h-3 text-white" />
+                  </span>
+                  {s.label}
                 </span>
               ))}
             </div>
