@@ -35,12 +35,16 @@ const VALUES = [
   { icon: ShieldCheck, label: "Built to last", desc: "Products we run and support for years, not quarters." },
 ];
 
+// "/" on isms.study is this same company page, so links into the product
+// go straight to its login rather than looping back here.
+const ISMS_LOGIN_URL = "https://isms.study/login";
+
 const PRODUCTS = [
   {
     name: "iSMS",
     tagline: "School Management System",
     desc: "One dashboard for admissions, attendance, fees, exams, transport, and everything else a school runs on.",
-    href: "https://isms.study",
+    href: ISMS_LOGIN_URL,
     features: [
       { icon: Users, label: "Student & Staff Management", desc: "Admissions, profiles, classes, sections — all in one place." },
       { icon: ClipboardList, label: "Attendance", desc: "Daily student & staff attendance with real-time tracking." },
@@ -70,11 +74,11 @@ export function CompanyPage() {
             <a href="#contact" className="rounded-full px-4 py-1.5 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
               Contact
             </a>
-            <a href="https://isms.study" className="rounded-full px-4 py-1.5 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+            <a href={ISMS_LOGIN_URL} className="rounded-full px-4 py-1.5 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
               iSMS
             </a>
           </nav>
-          <a href="https://isms.study">
+          <a href={ISMS_LOGIN_URL}>
             <Button className="rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-md shadow-indigo-600/20">
               Open iSMS
               <ArrowRight className="w-4 h-4 ml-1" />
@@ -188,7 +192,7 @@ export function CompanyPage() {
                     <p className="text-sm text-gray-500 mt-1">{p.desc}</p>
                   </div>
                   <span className="flex items-center gap-1 text-sm font-medium text-indigo-600 shrink-0 group-hover:translate-x-0.5 transition-transform">
-                    Visit isms.study
+                    Login to iSMS
                     <ArrowRight className="w-4 h-4" />
                   </span>
                 </a>
