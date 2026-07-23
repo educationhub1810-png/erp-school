@@ -1,7 +1,7 @@
 import type { NextAuthConfig } from "next-auth";
 import { ROLE_DASHBOARDS, ROLE_ALLOWED_PREFIXES, type AppRole } from "@/lib/roles";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password"];
+const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/isms"];
 // These paths are accessible to everyone regardless of session state
 const OPEN_PATHS = ["/api/public", "/api/admin-access", "/admin-access", "/api/auth/otp"];
 
