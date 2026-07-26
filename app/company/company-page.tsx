@@ -26,6 +26,7 @@ import { MobileNav } from "./mobile-nav";
 import { NetworkGraphic } from "./network-graphic";
 import { Reveal } from "./reveal";
 import { SectionNav } from "./section-nav";
+import { ServicesSection } from "./services-section";
 import { SplitHeading } from "./split-heading";
 import { StatCounter } from "./stat-counter";
 
@@ -214,19 +215,21 @@ export function CompanyPage() {
             </div>
           </Reveal>
           <Reveal delay={150} className="hover:-translate-y-1 transition-transform duration-300">
-            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#151E3D] to-[#0A3D91] min-h-[420px] flex items-center justify-center p-10 shadow-2xl shadow-blue-900/10">
-              <div className="pointer-events-none absolute -top-10 -left-10 w-64 h-64 rounded-full bg-[#00A5FD]/25 blur-3xl" />
+            <div className="relative rounded-3xl overflow-hidden bg-white ring-1 ring-gray-100 min-h-[420px] flex items-center justify-center p-10 shadow-2xl shadow-gray-900/10">
+              <div className="pointer-events-none absolute -top-10 -left-10 w-64 h-64 rounded-full bg-[#00A5FD]/10 blur-3xl" />
               <Image
-                src="/kretech-logo-white-crop.png"
+                src="/kretech-logo-crop.png"
                 alt="KreTech"
                 width={600}
-                height={127}
+                height={130}
                 className="relative w-full max-w-sm h-auto"
               />
             </div>
           </Reveal>
         </div>
       </section>
+
+      <ServicesSection />
 
       {/* Tech stack */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-24">
