@@ -6,8 +6,8 @@ import type { AppRole } from "@/lib/roles";
 import { CompanyPage } from "./company/company-page";
 
 export const metadata: Metadata = {
-  title: "VSkreative",
-  description: "VSkreative is a product-based technology company. iSMS, our school management platform, is live at isms.study.",
+  title: "KreTech",
+  description: "KreTech is a product-based technology company. iSMS, our school management platform, is live at isms.study.",
 };
 
 export default async function Home() {

@@ -12,7 +12,7 @@ const { auth } = NextAuth(authConfig);
 // proxy = auth` (the `args[0] instanceof Request` branch in next-auth).
 const authProxy = auth as unknown as NextMiddleware;
 
-// "/" already renders the VSkreative company page for every host (see
+// "/" already renders the KreTech company page for every host (see
 // app/page.tsx). On kretech.in specifically, every other path (login,
 // dashboards, ...) bounces to the same path on isms.study instead of
 // serving the product app — kretech.in stays a thin company front door.
