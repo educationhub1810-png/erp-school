@@ -53,21 +53,22 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
           </div>
         </div>
 
-        {/* Visual fills the entire right half, edge to edge — same fixed box
-            for every slide so switching slides never resizes the layout. A
-            white backdrop matches the images' own canvas color so the
-            unfilled letterbox area (object-contain, nothing cropped) reads
-            as one continuous surface instead of a visible seam. */}
-        <div className="relative h-[320px] sm:h-[420px] lg:h-[560px] overflow-hidden bg-white">
-          <div key={`visual-${index}`} className="absolute inset-0 animate-in fade-in duration-500">
-            <Image
-              src={slide.image.src}
-              alt={slide.image.alt}
-              fill
-              unoptimized={slide.image.unoptimized}
-              className="object-contain"
-              priority={index === 0}
-            />
+        {/* Visual sits as an inset, rounded card — padding on every side so
+            the page background shows around it, rather than a full-bleed
+            edge-to-edge panel. Same fixed box for every slide so switching
+            slides never resizes the layout. */}
+        <div className="p-6 sm:p-10 lg:pr-0">
+          <div className="relative h-[280px] sm:h-[380px] lg:h-[500px] rounded-3xl overflow-hidden bg-white shadow-xl shadow-gray-900/5">
+            <div key={`visual-${index}`} className="absolute inset-0 animate-in fade-in duration-500">
+              <Image
+                src={slide.image.src}
+                alt={slide.image.alt}
+                fill
+                unoptimized={slide.image.unoptimized}
+                className="object-contain"
+                priority={index === 0}
+              />
+            </div>
           </div>
         </div>
       </div>

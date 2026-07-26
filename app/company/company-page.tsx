@@ -91,12 +91,6 @@ export function CompanyPage() {
           <Image src="/kretech-logo-crop.png" alt="KreTech" width={600} height={130} className="h-7 w-auto" priority />
           <SectionNav />
           <div className="flex items-center gap-2">
-            <button
-              aria-label="Search"
-              className="hidden sm:flex w-9 h-9 rounded-full items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-950 transition-colors"
-            >
-              <Search className="w-4 h-4" />
-            </button>
             <a href={ISMS_HOME_URL}>
               <Button className="rounded-full bg-indigo-600 text-white hover:bg-indigo-700 font-mono text-[11px] tracking-[0.15em] px-4">
                 OPEN ISMS

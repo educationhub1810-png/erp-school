@@ -2,15 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-// Numbered section nav (01/02/03/04) — structural pattern borrowed from
-// editorial studio sites: a small mono index next to each label, with the
-// current in-view section highlighted via IntersectionObserver as the user
-// scrolls. Copy, layout and visuals below are KreTech's own.
+// Plain text section nav — current in-view section highlighted via
+// IntersectionObserver as the user scrolls.
 const SECTIONS = [
-  { id: "intro", num: "01", label: "INTRO" },
-  { id: "work", num: "02", label: "WORK" },
-  { id: "process", num: "03", label: "PROCESS" },
-  { id: "contact", num: "04", label: "CONTACT" },
+  { id: "intro", label: "Home" },
+  { id: "work", label: "Work" },
+  { id: "process", label: "Process" },
+  { id: "contact", label: "Contact" },
 ];
 
 export function SectionNav() {
@@ -31,16 +29,18 @@ export function SectionNav() {
   }, []);
 
   return (
-    <nav className="hidden sm:flex items-center gap-1 font-mono text-[11px] font-medium tracking-[0.15em]">
+    <nav className="hidden sm:flex items-center gap-7 text-[13px] font-semibold tracking-wide uppercase">
       {SECTIONS.map((s) => (
         <a
           key={s.id}
           href={`#${s.id}`}
-          className={`rounded-full px-4 py-1.5 transition-colors ${
-            active === s.id ? "bg-indigo-600 text-white" : "text-gray-500 hover:bg-gray-100 hover:text-gray-950"
+          className={`relative py-1.5 transition-colors after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-[2px] after:rounded-full after:transition-transform after:duration-300 ${
+            active === s.id
+              ? "text-gray-950 after:bg-indigo-600 after:scale-x-100"
+              : "text-gray-500 hover:text-gray-950 after:bg-gray-950 after:scale-x-0 hover:after:scale-x-100"
           }`}
         >
-          <span className={active === s.id ? "text-indigo-200" : "text-gray-300"}>{s.num}</span> {s.label}
+          {s.label}
         </a>
       ))}
     </nav>
