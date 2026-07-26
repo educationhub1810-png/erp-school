@@ -48,10 +48,9 @@ const VALUES = [
   { icon: ShieldCheck, label: "Built to last", desc: "Products we run and support for years, not quarters." },
 ];
 
-// "/" on isms.study is this same company page, so links into the product
-// go to its own marketing home (app/isms) — visitors log in from there
-// themselves, same as the old isms.study root used to work.
-const ISMS_HOME_URL = "https://isms.study/isms";
+// "/" on isms.study is the iSMS marketing page, so links into the product
+// go there — visitors log in from there themselves.
+const ISMS_HOME_URL = "https://isms.study";
 
 const PRODUCTS = [
   {
