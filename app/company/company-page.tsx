@@ -22,6 +22,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { DemoRequestForm } from "@/app/landing/demo-request-form";
 import { HeroSlider } from "./hero-slider";
+import { IndustriesSection } from "./industries-section";
 import { MobileNav } from "./mobile-nav";
 import { NetworkGraphic } from "./network-graphic";
 import { Reveal } from "./reveal";
@@ -130,6 +131,8 @@ export function CompanyPage() {
           ]}
         />
       </section>
+
+      <IndustriesSection />
 
       {/* Stats band */}
       <section className="bg-gray-950 border-t border-white/5">
