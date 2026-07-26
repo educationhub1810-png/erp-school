@@ -69,32 +69,46 @@ export function ServicesSection() {
           {SERVICES.map((s, i) => (
             <Reveal key={s.name} delay={i * 60}>
               <div
-                className={`h-full rounded-2xl p-7 transition-all duration-300 hover:-translate-y-1 ${
+                className={`group h-full rounded-2xl p-7 transition-all duration-300 hover:-translate-y-1 ${
                   s.featured
                     ? "bg-gradient-to-br from-[#151E3D] to-[#0A3D91] shadow-xl shadow-blue-900/20"
-                    : "bg-white ring-1 ring-gray-100 shadow-sm hover:shadow-lg hover:shadow-gray-900/5"
+                    : "bg-white ring-1 ring-gray-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/20 hover:bg-gradient-to-br hover:from-[#151E3D] hover:to-[#0A3D91]"
                 }`}
               >
-                <span className="text-sm font-bold text-[#035BD8]">{s.num}</span>
+                <span
+                  className={`text-sm font-bold transition-colors ${
+                    s.featured ? "text-blue-300" : "text-[#035BD8] group-hover:text-blue-300"
+                  }`}
+                >
+                  {s.num}
+                </span>
                 <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center mt-4 mb-5 shadow-md ${
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center mt-4 mb-5 shadow-md transition-colors ${
                     s.featured
                       ? "bg-white/10 shadow-black/10"
-                      : "bg-gradient-to-br from-[#00A5FD] to-[#035BD8] shadow-blue-900/10"
+                      : "bg-gradient-to-br from-[#00A5FD] to-[#035BD8] shadow-blue-900/10 group-hover:bg-white/10"
                   }`}
                 >
                   <s.icon className="w-6 h-6 text-white" />
                 </div>
-                <h3 className={`text-lg font-bold mb-2 ${s.featured ? "text-white" : "text-gray-900"}`}>
+                <h3
+                  className={`text-lg font-bold mb-2 transition-colors ${
+                    s.featured ? "text-white" : "text-gray-900 group-hover:text-white"
+                  }`}
+                >
                   {s.name}
                 </h3>
-                <p className={`text-sm leading-relaxed mb-5 ${s.featured ? "text-gray-300" : "text-gray-500"}`}>
+                <p
+                  className={`text-sm leading-relaxed mb-5 transition-colors ${
+                    s.featured ? "text-gray-300" : "text-gray-500 group-hover:text-gray-300"
+                  }`}
+                >
                   {s.desc}
                 </p>
                 <a
                   href="#contact"
-                  className={`inline-flex items-center gap-1.5 text-sm font-semibold transition-transform hover:translate-x-0.5 ${
-                    s.featured ? "text-white" : "text-[#035BD8]"
+                  className={`inline-flex items-center gap-1.5 text-sm font-semibold transition-all hover:translate-x-0.5 ${
+                    s.featured ? "text-white" : "text-[#035BD8] group-hover:text-white"
                   }`}
                 >
                   Learn more
