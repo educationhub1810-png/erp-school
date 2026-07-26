@@ -9,11 +9,15 @@ export function StatCounter({
   suffix = "",
   prefix = "",
   label,
+  numberClassName = "text-white",
+  labelClassName = "text-gray-400",
 }: {
   value: number;
   suffix?: string;
   prefix?: string;
   label: string;
+  numberClassName?: string;
+  labelClassName?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [display, setDisplay] = useState(0);
@@ -50,12 +54,12 @@ export function StatCounter({
 
   return (
     <div ref={ref} className="text-center">
-      <p className="font-mono text-3xl sm:text-4xl font-bold text-white tabular-nums">
+      <p className={`font-mono text-3xl sm:text-4xl font-bold tabular-nums ${numberClassName}`}>
         {prefix}
         {display}
         {suffix}
       </p>
-      <p className="mt-1.5 text-[11px] font-mono tracking-[0.15em] text-gray-400">{label}</p>
+      <p className={`mt-1.5 text-[11px] font-mono tracking-[0.15em] ${labelClassName}`}>{label}</p>
     </div>
   );
 }

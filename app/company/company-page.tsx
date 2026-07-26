@@ -14,7 +14,6 @@ import {
   Rocket,
   Search,
   ShieldCheck,
-  Target,
   Users,
   Video,
 } from "lucide-react";
@@ -29,7 +28,6 @@ import { Reveal } from "./reveal";
 import { SectionNav } from "./section-nav";
 import { SplitHeading } from "./split-heading";
 import { StatCounter } from "./stat-counter";
-import { TerminalVisual } from "./terminal-visual";
 
 // Cycled across feature tiles so the grid reads as colorful, not a wall of
 // repeated brand-indigo squares — matches the treatment on the iSMS landing page.
@@ -165,38 +163,67 @@ export function CompanyPage() {
       </section>
 
       {/* About */}
-      <section id="about" className="max-w-5xl mx-auto px-4 sm:px-6 pb-20 scroll-mt-24">
-        <div className="grid lg:grid-cols-2 gap-10 items-center">
+      <section id="about" className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28 scroll-mt-24">
+        <div className="grid lg:grid-cols-2 gap-14 items-center">
           <Reveal>
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-indigo-600 bg-indigo-50 ring-1 ring-indigo-100 rounded-full px-3 py-1.5 mb-4">
-              <Target className="w-3.5 h-3.5" />
-              WHAT WE DO
-            </span>
-            <SplitHeading className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 leading-tight">
-              We build software, not slideware
-            </SplitHeading>
-            <p className="text-gray-500 mb-6">
-              KreTech is a small, product-focused engineering team. Instead of taking on client
-              projects, we pick a problem, build a product around it, and stay with it long after
-              launch — support, iteration, and all.
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-6 h-[2px] bg-[#035BD8]" />
+              <span className="text-xs font-bold tracking-[0.15em] text-[#035BD8]">
+                ABOUT KRETECH
+              </span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-950 leading-tight mb-6">
+              Technology, built
+              <br />
+              <span className="bg-gradient-to-r from-[#00A5FD] to-[#035BD8] bg-clip-text text-transparent">
+                with purpose
+              </span>
+            </h2>
+            <p className="text-gray-500 mb-4">
+              KreTech is a technology company that builds software people actually want to use.
+              From early-stage startups to established enterprises, we partner with businesses
+              across industries to design, build, and scale digital products that solve real
+              problems.
             </p>
-            <ul className="space-y-4 text-sm text-gray-600">
-              <li className="flex gap-3">
-                <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0">1</span>
-                We own our products end to end — engineering, design, and support.
-              </li>
-              <li className="flex gap-3">
-                <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0">2</span>
-                We build for real users first — iSMS runs live schools today.
-              </li>
-              <li className="flex gap-3">
-                <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0">3</span>
-                We keep the portfolio focused rather than spread thin.
-              </li>
-            </ul>
+            <p className="text-gray-500 mb-8">
+              We don&apos;t just write code — we understand your business, your users, and what
+              success looks like for you. That&apos;s what turns a project into a product people
+              rely on.
+            </p>
+            <a href="#contact">
+              <Button className="rounded-full bg-gray-950 hover:bg-gray-800 text-white px-6 py-5 mb-10">
+                Learn More About Us
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
+            </a>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { value: 50, suffix: "+", label: "PROJECTS DELIVERED" },
+                { value: 8, suffix: "+", label: "INDUSTRIES SERVED" },
+                { value: 98, suffix: "%", label: "CLIENT SATISFACTION" },
+                { value: 24, suffix: "/7", label: "SUPPORT AVAILABLE" },
+              ].map((s) => (
+                <div key={s.label} className="rounded-2xl ring-1 ring-gray-100 shadow-sm bg-white py-5 px-3">
+                  <StatCounter
+                    {...s}
+                    numberClassName="text-[#035BD8]"
+                    labelClassName="text-gray-500 normal-case font-sans font-semibold tracking-normal"
+                  />
+                </div>
+              ))}
+            </div>
           </Reveal>
           <Reveal delay={150} className="hover:-translate-y-1 transition-transform duration-300">
-            <TerminalVisual />
+            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#151E3D] to-[#0A3D91] min-h-[420px] flex items-center justify-center p-10 shadow-2xl shadow-blue-900/10">
+              <div className="pointer-events-none absolute -top-10 -left-10 w-64 h-64 rounded-full bg-[#00A5FD]/25 blur-3xl" />
+              <Image
+                src="/kretech-logo-white-crop.png"
+                alt="KreTech"
+                width={600}
+                height={127}
+                className="relative w-full max-w-sm h-auto"
+              />
+            </div>
           </Reveal>
         </div>
       </section>
