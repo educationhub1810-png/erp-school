@@ -277,98 +277,102 @@ export function CompanyPage() {
         </div>
       </section>
 
-      {/* Products */}
+      {/* Products — product card on the left, demo-request form on the right */}
       <section id="work" className="bg-gray-50/60 border-y border-gray-100 scroll-mt-24">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-          <Reveal className="text-center">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+          <Reveal className="text-center mb-10">
             <span className="flex items-center justify-center gap-1.5 text-xs font-semibold tracking-wide text-indigo-600 mb-3">
               <Layers className="w-3.5 h-3.5" />
               OUR PRODUCTS
             </span>
-            <SplitHeading className="text-2xl sm:text-3xl font-bold text-gray-900 mb-10 leading-tight">
+            <SplitHeading className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
               What we've built
             </SplitHeading>
           </Reveal>
-          <div className="grid gap-5">
-            {PRODUCTS.map((p) => (
-              <Reveal key={p.name} delay={100}>
-                <div className="rounded-2xl ring-1 ring-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-900/5 transition-shadow bg-white overflow-hidden">
-                  <a href={p.href} className="group flex flex-col sm:flex-row sm:items-center gap-5 p-6 sm:p-8 hover:bg-indigo-50/30 transition-colors">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shrink-0 shadow-md shadow-black/10">
-                      <GraduationCap className="w-7 h-7 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-bold text-gray-900">{p.name}</h3>
-                        <span className="text-xs font-medium text-gray-400">{p.tagline}</span>
-                      </div>
-                      <p className="text-sm text-gray-500 mt-1">{p.desc}</p>
-                    </div>
-                    <span className="flex items-center gap-1 text-sm font-medium text-indigo-600 shrink-0 group-hover:translate-x-0.5 transition-transform">
-                      Visit iSMS
-                      <ArrowRight className="w-4 h-4" />
-                    </span>
-                  </a>
 
-                  {/* Product screenshot, framed as a browser window */}
-                  <div className="px-6 sm:px-8 pb-6 sm:pb-8">
-                    <div className="rounded-xl ring-1 ring-gray-100 shadow-inner overflow-hidden bg-gray-100">
-                      <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 border-b border-gray-100">
-                        <span className="w-2 h-2 rounded-full bg-red-400" />
-                        <span className="w-2 h-2 rounded-full bg-amber-400" />
-                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                        <span className="ml-2 text-[10px] font-mono text-gray-400">isms.study</span>
+          <div className="grid lg:grid-cols-2 gap-6 items-start">
+            <div className="grid gap-5">
+              {PRODUCTS.map((p) => (
+                <Reveal key={p.name} delay={100}>
+                  <div className="rounded-2xl ring-1 ring-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-900/5 transition-shadow bg-white overflow-hidden">
+                    <a href={p.href} className="group flex flex-col sm:flex-row sm:items-center gap-5 p-6 sm:p-8 hover:bg-indigo-50/30 transition-colors">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shrink-0 shadow-md shadow-black/10">
+                        <GraduationCap className="w-7 h-7 text-white" />
                       </div>
-                      <Image
-                        src="/dashboard-screenshot.png"
-                        alt="iSMS dashboard"
-                        width={1260}
-                        height={752}
-                        className="w-full h-auto"
-                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-bold text-gray-900">{p.name}</h3>
+                          <span className="text-xs font-medium text-gray-400">{p.tagline}</span>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">{p.desc}</p>
+                      </div>
+                      <span className="flex items-center gap-1 text-sm font-medium text-indigo-600 shrink-0 group-hover:translate-x-0.5 transition-transform">
+                        Visit iSMS
+                        <ArrowRight className="w-4 h-4" />
+                      </span>
+                    </a>
+
+                    {/* Product screenshot, framed as a browser window */}
+                    <div className="px-6 sm:px-8 pb-6 sm:pb-8">
+                      <div className="rounded-xl ring-1 ring-gray-100 shadow-inner overflow-hidden bg-gray-100">
+                        <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 border-b border-gray-100">
+                          <span className="w-2 h-2 rounded-full bg-red-400" />
+                          <span className="w-2 h-2 rounded-full bg-amber-400" />
+                          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                          <span className="ml-2 text-[10px] font-mono text-gray-400">isms.study</span>
+                        </div>
+                        <Image
+                          src="/dashboard-screenshot.png"
+                          alt="iSMS dashboard"
+                          width={1260}
+                          height={752}
+                          className="w-full h-auto"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid sm:grid-cols-2 gap-px bg-gray-100 border-t border-gray-100">
+                      {p.features.map((f, i) => (
+                        <div key={f.label} className="bg-white p-5 flex items-start gap-3">
+                          <div
+                            className={`w-8 h-8 rounded-lg bg-gradient-to-br ${ICON_COLORS[i % ICON_COLORS.length]} flex items-center justify-center shrink-0 shadow-sm shadow-black/10`}
+                          >
+                            <f.icon className="w-4 h-4 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">{f.label}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{f.desc}</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
+                </Reveal>
+              ))}
+            </div>
 
-                  <div className="grid sm:grid-cols-3 gap-px bg-gray-100 border-t border-gray-100">
-                    {p.features.map((f, i) => (
-                      <div key={f.label} className="bg-white p-5 flex items-start gap-3">
-                        <div
-                          className={`w-8 h-8 rounded-lg bg-gradient-to-br ${ICON_COLORS[i % ICON_COLORS.length]} flex items-center justify-center shrink-0 shadow-sm shadow-black/10`}
-                        >
-                          <f.icon className="w-4 h-4 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900">{f.label}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{f.desc}</p>
-                        </div>
-                      </div>
-                    ))}
+            <Reveal delay={150}>
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-navy-600 p-6 sm:p-8">
+                <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                  <div className="absolute -top-16 -left-16 w-56 h-56 rounded-full bg-white/10 blur-2xl animate-blob-1" />
+                  <div className="absolute -bottom-16 -right-10 w-56 h-56 rounded-full bg-white/10 blur-2xl animate-blob-3" />
+                </div>
+                <div className="relative">
+                  <h3 className="text-xl font-bold text-white mb-2 leading-tight">
+                    See iSMS running your school
+                  </h3>
+                  <p className="text-indigo-100 text-sm mb-6">
+                    Tell us a bit about your school and we&apos;ll set up a live walkthrough — no
+                    obligation, no sales script.
+                  </p>
+                  <div className="rounded-xl bg-white p-5 sm:p-6">
+                    <DemoRequestForm />
                   </div>
                 </div>
-              </Reveal>
-            ))}
+              </div>
+            </Reveal>
           </div>
         </div>
-      </section>
-
-      {/* Demo request banner */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 to-navy-600">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-16 -left-16 w-72 h-72 rounded-full bg-white/10 blur-2xl animate-blob-1" />
-          <div className="absolute -bottom-20 -right-10 w-80 h-80 rounded-full bg-white/10 blur-2xl animate-blob-3" />
-        </div>
-        <Reveal className="relative max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-20 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 leading-tight">
-            See iSMS running your school
-          </h2>
-          <p className="text-indigo-100 mb-10 max-w-md mx-auto">
-            Tell us a bit about your school and we&apos;ll set up a live walkthrough — no
-            obligation, no sales script.
-          </p>
-          <div className="max-w-lg mx-auto rounded-2xl bg-white shadow-2xl shadow-black/20 p-6 sm:p-8 text-left">
-            <DemoRequestForm />
-          </div>
-        </Reveal>
       </section>
 
       {/* Contact — dark CTA band with an animated network graphic backdrop */}
