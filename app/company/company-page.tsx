@@ -143,26 +143,6 @@ export function CompanyPage() {
         </Reveal>
       </section>
 
-      {/* Demo request banner */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 to-navy-600">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-16 -left-16 w-72 h-72 rounded-full bg-white/10 blur-2xl animate-blob-1" />
-          <div className="absolute -bottom-20 -right-10 w-80 h-80 rounded-full bg-white/10 blur-2xl animate-blob-3" />
-        </div>
-        <Reveal className="relative max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-20 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 leading-tight">
-            See iSMS running your school
-          </h2>
-          <p className="text-indigo-100 mb-10 max-w-md mx-auto">
-            Tell us a bit about your school and we&apos;ll set up a live walkthrough — no
-            obligation, no sales script.
-          </p>
-          <div className="max-w-lg mx-auto rounded-2xl bg-white shadow-2xl shadow-black/20 p-6 sm:p-8 text-left">
-            <DemoRequestForm />
-          </div>
-        </Reveal>
-      </section>
-
       {/* About */}
       <section id="about" className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28 scroll-mt-24">
         <div className="grid lg:grid-cols-2 gap-14 items-center">
@@ -369,6 +349,26 @@ export function CompanyPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* Demo request banner */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 to-navy-600">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-16 -left-16 w-72 h-72 rounded-full bg-white/10 blur-2xl animate-blob-1" />
+          <div className="absolute -bottom-20 -right-10 w-80 h-80 rounded-full bg-white/10 blur-2xl animate-blob-3" />
+        </div>
+        <Reveal className="relative max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-20 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 leading-tight">
+            See iSMS running your school
+          </h2>
+          <p className="text-indigo-100 mb-10 max-w-md mx-auto">
+            Tell us a bit about your school and we&apos;ll set up a live walkthrough — no
+            obligation, no sales script.
+          </p>
+          <div className="max-w-lg mx-auto rounded-2xl bg-white shadow-2xl shadow-black/20 p-6 sm:p-8 text-left">
+            <DemoRequestForm />
+          </div>
+        </Reveal>
       </section>
 
       {/* Contact — dark CTA band with an animated network graphic backdrop */}
