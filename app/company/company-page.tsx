@@ -25,7 +25,7 @@ import { StatCounter } from "./stat-counter";
 // Cycled across feature tiles so the grid reads as colorful, not a wall of
 // repeated brand-indigo squares — matches the treatment on the iSMS landing page.
 const ICON_COLORS = [
-  "from-indigo-500 to-indigo-600",
+  "from-[#00A5FD] to-[#035BD8]",
   "from-blue-500 to-blue-600",
   "from-violet-500 to-violet-600",
   "from-amber-500 to-amber-600",
@@ -166,7 +166,7 @@ export function CompanyPage() {
       <section id="work" className="bg-gray-50/60 border-y border-gray-100 scroll-mt-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <Reveal className="text-center mb-10">
-            <span className="flex items-center justify-center gap-1.5 text-xs font-semibold tracking-wide text-indigo-600 mb-3">
+            <span className="flex items-center justify-center gap-1.5 text-xs font-semibold tracking-wide text-[#035BD8] mb-3">
               <Layers className="w-3.5 h-3.5" />
               OUR PRODUCTS
             </span>
@@ -180,8 +180,8 @@ export function CompanyPage() {
               {PRODUCTS.map((p) => (
                 <Reveal key={p.name} delay={100}>
                   <div className="rounded-2xl ring-1 ring-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-900/5 transition-shadow bg-white overflow-hidden">
-                    <a href={p.href} className="group flex flex-col sm:flex-row sm:items-center gap-5 p-6 sm:p-8 hover:bg-indigo-50/30 transition-colors">
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shrink-0 shadow-md shadow-black/10">
+                    <a href={p.href} className="group flex flex-col sm:flex-row sm:items-center gap-5 p-6 sm:p-8 hover:bg-[#00A5FD]/5 transition-colors">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#00A5FD] to-[#035BD8] flex items-center justify-center shrink-0 shadow-md shadow-black/10">
                         <GraduationCap className="w-7 h-7 text-white" />
                       </div>
                       <div className="flex-1">
@@ -191,7 +191,7 @@ export function CompanyPage() {
                         </div>
                         <p className="text-sm text-gray-500 mt-1">{p.desc}</p>
                       </div>
-                      <span className="flex items-center gap-1 text-sm font-medium text-indigo-600 shrink-0 group-hover:translate-x-0.5 transition-transform">
+                      <span className="flex items-center gap-1 text-sm font-medium text-[#035BD8] shrink-0 group-hover:translate-x-0.5 transition-transform">
                         Visit iSMS
                         <ArrowRight className="w-4 h-4" />
                       </span>
@@ -237,7 +237,7 @@ export function CompanyPage() {
             </div>
 
             <Reveal delay={150} className="lg:sticky lg:top-24 lg:self-start">
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-navy-600 p-6 sm:p-8">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#035BD8] to-[#151E3D] p-6 sm:p-8">
                 <div className="pointer-events-none absolute inset-0 overflow-hidden">
                   <div className="absolute -top-16 -left-16 w-56 h-56 rounded-full bg-white/10 blur-2xl animate-blob-1" />
                   <div className="absolute -bottom-16 -right-10 w-56 h-56 rounded-full bg-white/10 blur-2xl animate-blob-3" />
@@ -246,7 +246,7 @@ export function CompanyPage() {
                   <h3 className="text-xl font-bold text-white mb-2 leading-tight">
                     See iSMS running your school
                   </h3>
-                  <p className="text-indigo-100 text-sm mb-6">
+                  <p className="text-blue-100 text-sm mb-6">
                     Tell us a bit about your school and we&apos;ll set up a live walkthrough — no
                     obligation, no sales script.
                   </p>

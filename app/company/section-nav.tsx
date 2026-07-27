@@ -39,8 +39,8 @@ export function SectionNav({ dark = false }: { dark?: boolean }) {
           className={`relative py-1.5 transition-colors after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-[2px] after:rounded-full after:transition-transform after:duration-300 ${
             active === s.id
               ? dark
-                ? "text-white after:bg-blue-400 after:scale-x-100"
-                : "text-gray-950 after:bg-indigo-600 after:scale-x-100"
+                ? "text-white after:bg-[#00A5FD] after:scale-x-100"
+                : "text-gray-950 after:bg-[#035BD8] after:scale-x-100"
               : dark
                 ? "text-gray-400 hover:text-white after:bg-white after:scale-x-0 hover:after:scale-x-100"
                 : "text-gray-500 hover:text-gray-950 after:bg-gray-950 after:scale-x-0 hover:after:scale-x-100"

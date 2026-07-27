@@ -79,7 +79,7 @@ export function Header() {
           <a href={ISMS_HOME_URL}>
             <Button
               className={`rounded-lg font-mono text-[11px] tracking-[0.15em] px-4 transition-colors ${
-                dark ? "bg-white text-gray-950 hover:bg-gray-200" : "bg-indigo-600 text-white hover:bg-indigo-700"
+                dark ? "bg-white text-gray-950 hover:bg-gray-200" : "bg-[#035BD8] text-white hover:bg-[#0249ad]"
               }`}
             >
               OPEN ISMS

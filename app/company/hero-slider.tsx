@@ -26,13 +26,13 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
   return (
     <div className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-24 -right-24 w-[36rem] h-[36rem] rounded-full bg-indigo-100/70 blur-2xl animate-blob-1" />
-        <div className="absolute -bottom-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-blue-100/60 blur-2xl animate-blob-2" />
+        <div className="absolute -top-24 -right-24 w-[36rem] h-[36rem] rounded-full bg-[#00A5FD]/15 blur-2xl animate-blob-1" />
+        <div className="absolute -bottom-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-[#035BD8]/10 blur-2xl animate-blob-2" />
       </div>
 
       <div className="relative max-w-6xl mx-auto grid lg:grid-cols-2 items-center">
         <div key={`text-${index}`} className="animate-in fade-in slide-in-from-left-6 duration-500 px-4 sm:px-6 py-16 sm:py-24">
-          <span className="font-mono text-[11px] font-semibold tracking-[0.2em] text-indigo-600 mb-5 block">
+          <span className="font-mono text-[11px] font-semibold tracking-[0.2em] text-[#035BD8] mb-5 block">
             {slide.eyebrow}
           </span>
           <SplitHeading as="h1" className="text-4xl sm:text-5xl font-bold text-gray-950 leading-[1.05] tracking-tight mb-6 max-w-md">
@@ -94,7 +94,7 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
             key={i}
             onClick={() => setIndex(i)}
             aria-label={`Go to slide ${i + 1}`}
-            className={`h-1.5 rounded-full transition-all ${i === index ? "w-6 bg-indigo-600" : "w-1.5 bg-gray-300"}`}
+            className={`h-1.5 rounded-full transition-all ${i === index ? "w-6 bg-[#035BD8]" : "w-1.5 bg-gray-300"}`}
           />
         ))}
       </div>
