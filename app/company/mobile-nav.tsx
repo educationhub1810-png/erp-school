@@ -11,7 +11,7 @@ const LINKS = [
 ];
 
 // Small-screen fallback for SectionNav, which is desktop-only (hidden sm:flex).
-export function MobileNav() {
+export function MobileNav({ dark = false }: { dark?: boolean }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -19,7 +19,9 @@ export function MobileNav() {
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Close menu" : "Open menu"}
-        className="w-9 h-9 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
+        className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+          dark ? "text-gray-300 hover:bg-white/10" : "text-gray-600 hover:bg-gray-100"
+        }`}
       >
         {open ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
       </button>

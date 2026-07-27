@@ -20,12 +20,11 @@ import {
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { DemoRequestForm } from "@/app/landing/demo-request-form";
+import { Header } from "./header";
 import { HeroSlider } from "./hero-slider";
 import { IndustriesSection } from "./industries-section";
-import { MobileNav } from "./mobile-nav";
 import { NetworkGraphic } from "./network-graphic";
 import { Reveal } from "./reveal";
-import { SectionNav } from "./section-nav";
 import { ServicesSection } from "./services-section";
 import { SplitHeading } from "./split-heading";
 import { StatCounter } from "./stat-counter";
@@ -80,26 +79,12 @@ const TECH_STACK = [
   "Next.js", "TypeScript", "React", "PostgreSQL", "Prisma", "Tailwind CSS", "NextAuth", "Playwright",
 ];
 
-const CONTACT_EMAIL = "educationhub1810@gmail.com";
+const CONTACT_EMAIL = "kretech.contact@gmail.com";
 
 export function CompanyPage() {
   return (
     <div className="min-h-screen bg-white">
-      <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-lg border-b border-gray-100">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 px-4 sm:px-6 py-4">
-          <Image src="/kretech-logo-crop.png" alt="KreTech" width={600} height={130} className="h-7 w-auto" priority />
-          <SectionNav />
-          <div className="flex items-center gap-2">
-            <a href={ISMS_HOME_URL}>
-              <Button className="rounded-full bg-indigo-600 text-white hover:bg-indigo-700 font-mono text-[11px] tracking-[0.15em] px-4">
-                OPEN ISMS
-                <ArrowRight className="w-3.5 h-3.5 ml-1" />
-              </Button>
-            </a>
-            <MobileNav />
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero — two-slide carousel over a soft blob backdrop */}
       <section id="intro" className="relative overflow-hidden bg-[#EAF5FF] scroll-mt-24">
@@ -134,7 +119,7 @@ export function CompanyPage() {
       <IndustriesSection />
 
       {/* Stats band */}
-      <section className="bg-gray-950 border-t border-white/5">
+      <section data-header-theme="dark" className="bg-gray-950 border-t border-white/5">
         <Reveal className="max-w-5xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-2 sm:grid-cols-4 gap-8">
           <StatCounter value={100} suffix="%" label="IN-HOUSE ENGINEERING" />
           <StatCounter value={PRODUCTS[0].features.length} label="CORE MODULES IN ISMS" />
@@ -172,27 +157,11 @@ export function CompanyPage() {
               rely on.
             </p>
             <a href="#contact">
-              <Button className="rounded-full bg-gray-950 hover:bg-gray-800 text-white px-6 py-5 mb-10">
+              <Button className="rounded-full bg-gray-950 hover:bg-gray-800 text-white px-6 py-5">
                 Learn More About Us
                 <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
             </a>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                { value: 50, suffix: "+", label: "PROJECTS DELIVERED" },
-                { value: 8, suffix: "+", label: "INDUSTRIES SERVED" },
-                { value: 98, suffix: "%", label: "CLIENT SATISFACTION" },
-                { value: 24, suffix: "/7", label: "SUPPORT AVAILABLE" },
-              ].map((s) => (
-                <div key={s.label} className="rounded-2xl ring-1 ring-gray-100 shadow-sm bg-white py-5 px-3">
-                  <StatCounter
-                    {...s}
-                    numberClassName="text-[#035BD8]"
-                    labelClassName="text-gray-500 normal-case font-sans font-semibold tracking-normal"
-                  />
-                </div>
-              ))}
-            </div>
           </Reveal>
           <Reveal delay={150} className="hover:-translate-y-1 transition-transform duration-300">
             <div className="relative rounded-3xl overflow-hidden bg-white ring-1 ring-gray-100 min-h-[420px] flex items-center justify-center p-10 shadow-2xl shadow-gray-900/10">
@@ -376,7 +345,7 @@ export function CompanyPage() {
       </section>
 
       {/* Contact — dark CTA band with an animated network graphic backdrop */}
-      <section id="contact" className="relative bg-gray-950 overflow-hidden scroll-mt-24">
+      <section id="contact" data-header-theme="dark" className="relative bg-gray-950 overflow-hidden scroll-mt-24">
         <NetworkGraphic />
         <Reveal className="relative max-w-5xl mx-auto px-4 sm:px-6 py-20 sm:py-28 text-center">
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-blue-300 bg-white/5 ring-1 ring-white/10 rounded-full px-3 py-1.5 mb-4">
@@ -398,7 +367,7 @@ export function CompanyPage() {
         </Reveal>
       </section>
 
-      <footer className="bg-gray-950 border-t border-white/5">
+      <footer data-header-theme="dark" className="bg-gray-950 border-t border-white/5">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <Image src="/kretech-logo-white-crop.png" alt="KreTech" width={600} height={127} className="h-5 w-auto" />
           <p className="text-xs text-gray-500">© {new Date().getFullYear()} KreTech. All rights reserved.</p>
