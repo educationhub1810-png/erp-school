@@ -69,7 +69,6 @@ export function CompanyPage() {
               eyebrow: "BUILDING SOFTWARE THAT BUSINESSES RUN ON.",
               heading: "We're KreTech",
               body: "Every product we ship is designed, engineered, and supported by our own team — start to finish, with nothing handed off.",
-              primaryCta: { label: "EXPLORE ISMS", href: ISMS_HOME_URL },
               secondaryCta: { label: "CONTACT", href: "#contact" },
               image: {
                 src: "/side-image.png",

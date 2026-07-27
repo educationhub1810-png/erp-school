@@ -10,7 +10,7 @@ export type HeroSlide = {
   eyebrow: string;
   heading: string;
   body: string;
-  primaryCta: { label: string; href: string };
+  primaryCta?: { label: string; href: string };
   secondaryCta: { label: string; href: string };
   image: { src: string; alt: string; unoptimized?: boolean };
 };
@@ -40,11 +40,13 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
           </SplitHeading>
           <p className="text-base text-gray-500 max-w-md mb-8">{slide.body}</p>
           <div className="flex items-center gap-3">
-            <a href={slide.primaryCta.href}>
-              <Button className="rounded-full bg-gray-950 hover:bg-gray-800 text-white font-mono text-[11px] tracking-[0.15em] px-5">
-                {slide.primaryCta.label}
-              </Button>
-            </a>
+            {slide.primaryCta && (
+              <a href={slide.primaryCta.href}>
+                <Button className="rounded-full bg-gray-950 hover:bg-gray-800 text-white font-mono text-[11px] tracking-[0.15em] px-5">
+                  {slide.primaryCta.label}
+                </Button>
+              </a>
+            )}
             <a href={slide.secondaryCta.href}>
               <Button variant="outline" className="rounded-full font-mono text-[11px] tracking-[0.15em] px-5">
                 {slide.secondaryCta.label}

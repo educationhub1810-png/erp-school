@@ -82,7 +82,7 @@ export function Header() {
                 dark ? "bg-white text-gray-950 hover:bg-gray-200" : "bg-[#035BD8] text-white hover:bg-[#0249ad]"
               }`}
             >
-              OPEN ISMS
+              EXPLORE ISMS
               <ArrowRight className="w-3.5 h-3.5 ml-1" />
             </Button>
           </a>
