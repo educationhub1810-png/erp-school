@@ -27,8 +27,8 @@ export function NetworkGraphic() {
       nodes = Array.from({ length: Math.max(14, count) }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.15 * dpr,
-        vy: (Math.random() - 0.5) * 0.15 * dpr,
+        vx: (Math.random() - 0.5) * 0.6 * dpr,
+        vy: (Math.random() - 0.5) * 0.6 * dpr,
       }));
     };
     resize();
