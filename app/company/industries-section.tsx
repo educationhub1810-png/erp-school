@@ -86,7 +86,7 @@ export function IndustriesSection() {
           {INDUSTRIES.map((ind, i) => (
             <Reveal key={ind.name} delay={i * 60}>
               <div className="h-full rounded-2xl ring-1 ring-gray-100 shadow-sm hover:shadow-lg hover:shadow-gray-900/5 hover:-translate-y-1 transition-all duration-300 bg-white p-6">
-                <div className={`w-12 h-12 rounded-xl ${BRAND_GRADIENT} flex items-center justify-center mb-5 shadow-md shadow-blue-900/10`}>
+                <div className={`w-12 h-12 rounded-xl ${BRAND_GRADIENT} flex items-center justify-center mb-5 shadow-md shadow-[#151E3D]/10`}>
                   <ind.icon className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-base font-bold text-gray-900 mb-2">{ind.name}</h3>

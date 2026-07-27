@@ -245,7 +245,7 @@ export function CompanyPage() {
                   <h3 className="text-xl font-bold text-white mb-2 leading-tight">
                     See iSMS running your school
                   </h3>
-                  <p className="text-blue-100 text-sm mb-6">
+                  <p className="text-[#B8D9FF] text-sm mb-6">
                     Tell us a bit about your school and we&apos;ll set up a live walkthrough — no
                     obligation, no sales script.
                   </p>
@@ -263,7 +263,7 @@ export function CompanyPage() {
       <section id="contact" data-header-theme="dark" className="relative bg-gray-950 overflow-hidden scroll-mt-24">
         <NetworkGraphic />
         <Reveal className="relative max-w-5xl mx-auto px-4 sm:px-6 py-20 sm:py-28 text-center">
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-blue-300 bg-white/5 ring-1 ring-white/10 rounded-full px-3 py-1.5 mb-4">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-[#00A5FD] bg-white/5 ring-1 ring-white/10 rounded-full px-3 py-1.5 mb-4">
             <Mail className="w-3.5 h-3.5" />
             GET IN TOUCH
           </span>

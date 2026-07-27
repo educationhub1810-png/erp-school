@@ -65,11 +65,11 @@ export function ServicesSection() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {SERVICES.map((s, i) => (
             <Reveal key={s.name} delay={i * 60}>
-              <div className="group h-full rounded-2xl p-7 bg-white ring-1 ring-gray-100 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/20 hover:bg-gradient-to-br hover:from-[#151E3D] hover:to-[#0A3D91]">
-                <span className="text-sm font-bold text-[#035BD8] transition-colors group-hover:text-blue-300">
+              <div className="group h-full rounded-2xl p-7 bg-white ring-1 ring-gray-100 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#151E3D]/20 hover:bg-gradient-to-br hover:from-[#151E3D] hover:to-[#0A3D91]">
+                <span className="text-sm font-bold text-[#035BD8] transition-colors group-hover:text-[#00A5FD]">
                   {s.num}
                 </span>
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mt-4 mb-5 shadow-md bg-gradient-to-br from-[#00A5FD] to-[#035BD8] shadow-blue-900/10 transition-colors group-hover:bg-white/10">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mt-4 mb-5 shadow-md bg-gradient-to-br from-[#00A5FD] to-[#035BD8] shadow-[#151E3D]/10 transition-colors group-hover:bg-white/10">
                   <s.icon className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-lg font-bold mb-2 text-gray-900 transition-colors group-hover:text-white">
