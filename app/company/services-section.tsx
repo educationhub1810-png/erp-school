@@ -44,22 +44,20 @@ export function ServicesSection() {
   return (
     <section id="services" className="bg-[#F5F8FC] py-20 sm:py-28 scroll-mt-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <Reveal className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-14">
-          <div className="max-w-xl">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-6 h-[2px] bg-[#035BD8]" />
-              <span className="text-xs font-bold tracking-[0.15em] text-[#035BD8]">
-                CHECK OUR SERVICES
-              </span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-950 leading-tight">
-              Everything you need to{" "}
-              <span className="bg-gradient-to-r from-[#00A5FD] to-[#035BD8] bg-clip-text text-transparent">
-                build and scale
-              </span>
-            </h2>
+        <Reveal className="max-w-2xl mb-14">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-6 h-[2px] bg-[#035BD8]" />
+            <span className="text-xs font-bold tracking-[0.15em] text-[#035BD8]">
+              CHECK OUR SERVICES
+            </span>
           </div>
-          <p className="text-gray-500 sm:text-right">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-950 leading-tight mb-4">
+            Everything you need to{" "}
+            <span className="bg-gradient-to-r from-[#00A5FD] to-[#035BD8] bg-clip-text text-transparent">
+              build and scale
+            </span>
+          </h2>
+          <p className="text-gray-500">
             From first prototype to full-scale product — we cover the entire journey.
           </p>
         </Reveal>
