@@ -2,18 +2,11 @@ import {
   ArrowRight,
   BarChart3,
   ClipboardList,
-  Code2,
   GraduationCap,
-  Hammer,
   IndianRupee,
   Layers,
-  LifeBuoy,
   Mail,
   MessageSquare,
-  Palette,
-  Rocket,
-  Search,
-  ShieldCheck,
   Users,
   Video,
 } from "lucide-react";
@@ -40,13 +33,6 @@ const ICON_COLORS = [
   "from-rose-500 to-rose-600",
 ];
 
-const VALUES = [
-  { icon: Code2, label: "Engineering-led", desc: "We build in-house, top to bottom — no outsourced core." },
-  { icon: Users, label: "Customer-obsessed", desc: "Real schools use iSMS daily; their feedback drives the roadmap." },
-  { icon: Rocket, label: "Ship & iterate", desc: "Small, frequent releases over big-bang launches." },
-  { icon: ShieldCheck, label: "Built to last", desc: "Products we run and support for years, not quarters." },
-];
-
 // "/" on isms.study is the iSMS marketing page, so links into the product
 // go there — visitors log in from there themselves.
 const ISMS_HOME_URL = "https://isms.study";
@@ -66,17 +52,6 @@ const PRODUCTS = [
       { icon: BarChart3, label: "Reports & Analytics", desc: "Real-time dashboards across every module." },
     ],
   },
-];
-
-const PROCESS = [
-  { icon: Search, step: "01", label: "Discover", desc: "We dig into the real workflow first — how a school actually runs day to day." },
-  { icon: Palette, step: "02", label: "Design", desc: "Interfaces built for the people using them daily, not just the demo screen." },
-  { icon: Hammer, step: "03", label: "Build", desc: "Next.js, TypeScript, Postgres — engineered in-house, shipped incrementally." },
-  { icon: LifeBuoy, step: "04", label: "Support", desc: "We stay on after launch. Bugs get fixed, roadmaps get shaped by real usage." },
-];
-
-const TECH_STACK = [
-  "Next.js", "TypeScript", "React", "PostgreSQL", "Prisma", "Tailwind CSS", "NextAuth", "Playwright",
 ];
 
 const CONTACT_EMAIL = "kretech.contact@gmail.com";
@@ -179,72 +154,6 @@ export function CompanyPage() {
       </section>
 
       <ServicesSection />
-
-      {/* Tech stack */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-24">
-        <Reveal className="text-center mb-8">
-          <span className="font-mono text-[11px] font-semibold tracking-[0.2em] text-gray-400">
-            THE STACK WE BUILD ON
-          </span>
-        </Reveal>
-        <Reveal delay={100} className="flex flex-wrap items-center justify-center gap-3">
-          {TECH_STACK.map((tech) => (
-            <span
-              key={tech}
-              className="rounded-full ring-1 ring-gray-200 px-4 py-1.5 text-xs font-mono tracking-wide text-gray-600 bg-white hover:bg-gray-950 hover:text-white hover:ring-gray-950 transition-colors"
-            >
-              {tech}
-            </span>
-          ))}
-        </Reveal>
-      </section>
-
-      {/* Values */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-24">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {VALUES.map((v, i) => (
-            <Reveal key={v.label} delay={i * 80}>
-              <div className="rounded-2xl ring-1 ring-gray-100 shadow-sm hover:shadow-lg hover:shadow-gray-900/5 hover:-translate-y-1 transition-all duration-300 p-5 bg-white h-full">
-                <div
-                  className={`w-10 h-10 rounded-xl bg-gradient-to-br ${ICON_COLORS[i % ICON_COLORS.length]} flex items-center justify-center mb-3 shadow-md shadow-black/10`}
-                >
-                  <v.icon className="w-5 h-5 text-white" />
-                </div>
-                <p className="text-sm font-semibold text-gray-900">{v.label}</p>
-                <p className="text-xs text-gray-500 mt-1">{v.desc}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Process */}
-      <section id="process" className="bg-gray-50/60 border-y border-gray-100 scroll-mt-24">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-          <Reveal className="text-center mb-12">
-            <span className="flex items-center justify-center gap-1.5 text-xs font-semibold tracking-wide text-indigo-600 mb-3">
-              <Rocket className="w-3.5 h-3.5" />
-              HOW WE WORK
-            </span>
-            <SplitHeading className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-              From idea to shipped product
-            </SplitHeading>
-          </Reveal>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
-            <div className="hidden lg:block absolute top-6 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
-            {PROCESS.map((s, i) => (
-              <Reveal key={s.label} delay={i * 120} className="relative">
-                <div className="w-12 h-12 rounded-full bg-white ring-1 ring-gray-200 shadow-sm flex items-center justify-center mb-4 relative z-10">
-                  <s.icon className="w-5 h-5 text-indigo-600" />
-                </div>
-                <span className="font-mono text-[11px] tracking-[0.15em] text-gray-400">{s.step}</span>
-                <h3 className="text-sm font-semibold text-gray-900 mt-1 mb-1.5">{s.label}</h3>
-                <p className="text-xs text-gray-500">{s.desc}</p>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Products — product card on the left, demo-request form on the right */}
       <section id="work" className="bg-gray-50/60 border-y border-gray-100 scroll-mt-24">

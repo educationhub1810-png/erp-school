@@ -61,7 +61,7 @@ const BRAND_GRADIENT = "bg-gradient-to-br from-[#00A5FD] via-[#035BD8] to-[#151E
 
 export function IndustriesSection() {
   return (
-    <section className="bg-[#F5F8FC] py-20 sm:py-28">
+    <section id="industries" className="bg-[#F5F8FC] py-20 sm:py-28 scroll-mt-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <Reveal className="max-w-2xl mb-14">
           <div className="flex items-center gap-2 mb-4">

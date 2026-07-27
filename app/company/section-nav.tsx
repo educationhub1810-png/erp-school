@@ -6,8 +6,10 @@ import { useEffect, useState } from "react";
 // IntersectionObserver as the user scrolls.
 const SECTIONS = [
   { id: "intro", label: "Home" },
+  { id: "industries", label: "Industries" },
+  { id: "about", label: "About" },
+  { id: "services", label: "Services" },
   { id: "work", label: "Work" },
-  { id: "process", label: "Process" },
   { id: "contact", label: "Contact" },
 ];
 
@@ -29,7 +31,7 @@ export function SectionNav({ dark = false }: { dark?: boolean }) {
   }, []);
 
   return (
-    <nav className="hidden sm:flex items-center gap-7 text-[13px] font-semibold tracking-wide uppercase">
+    <nav className="hidden lg:flex items-center gap-5 text-[12px] font-semibold tracking-wide uppercase">
       {SECTIONS.map((s) => (
         <a
           key={s.id}

@@ -5,17 +5,19 @@ import { useState } from "react";
 
 const LINKS = [
   { id: "intro", label: "Intro" },
+  { id: "industries", label: "Industries" },
+  { id: "about", label: "About" },
+  { id: "services", label: "Services" },
   { id: "work", label: "Work" },
-  { id: "process", label: "Process" },
   { id: "contact", label: "Contact" },
 ];
 
-// Small-screen fallback for SectionNav, which is desktop-only (hidden sm:flex).
+// Small/medium-screen fallback for SectionNav, which only shows at lg+.
 export function MobileNav({ dark = false }: { dark?: boolean }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="sm:hidden relative">
+    <div className="lg:hidden relative">
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Close menu" : "Open menu"}

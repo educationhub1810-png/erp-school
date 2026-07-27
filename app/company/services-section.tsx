@@ -42,7 +42,7 @@ const SERVICES = [
 
 export function ServicesSection() {
   return (
-    <section className="bg-[#F5F8FC] py-20 sm:py-28">
+    <section id="services" className="bg-[#F5F8FC] py-20 sm:py-28 scroll-mt-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <Reveal className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-14">
           <div className="max-w-xl">
