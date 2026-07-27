@@ -2,7 +2,6 @@ import {
   ArrowRight,
   BarChart3,
   ClipboardList,
-  GraduationCap,
   IndianRupee,
   Layers,
   Mail,
@@ -180,14 +179,9 @@ export function CompanyPage() {
                 <Reveal key={p.name} delay={100}>
                   <div className="rounded-2xl ring-1 ring-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-900/5 transition-shadow bg-white overflow-hidden">
                     <a href={p.href} className="group flex flex-col sm:flex-row sm:items-center gap-5 p-6 sm:p-8 hover:bg-[#00A5FD]/5 transition-colors">
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#00A5FD] to-[#035BD8] flex items-center justify-center shrink-0 shadow-md shadow-black/10">
-                        <GraduationCap className="w-7 h-7 text-white" />
-                      </div>
+                      <Image src="/isms-logo-blue.png" alt="iSMS" width={2092} height={731} className="h-10 w-auto shrink-0" />
                       <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-bold text-gray-900">{p.name}</h3>
-                          <span className="text-xs font-medium text-gray-400">{p.tagline}</span>
-                        </div>
+                        <span className="text-xs font-medium text-gray-400">{p.tagline}</span>
                         <p className="text-sm text-gray-500 mt-1">{p.desc}</p>
                       </div>
                       <span className="flex items-center gap-1 text-sm font-medium text-[#035BD8] shrink-0 group-hover:translate-x-0.5 transition-transform">
