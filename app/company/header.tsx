@@ -78,11 +78,11 @@ export function Header() {
         <div className="flex items-center gap-2">
           <a href={ISMS_HOME_URL}>
             <Button
-              className={`rounded-lg font-mono text-[11px] tracking-[0.15em] px-4 transition-colors ${
+              className={`rounded-lg text-sm font-semibold px-4 transition-colors ${
                 dark ? "bg-white text-gray-950 hover:bg-gray-200" : "bg-[#035BD8] text-white hover:bg-[#0249ad]"
               }`}
             >
-              EXPLORE ISMS
+              Explore iSMS
               <ArrowRight className="w-3.5 h-3.5 ml-1" />
             </Button>
           </a>
