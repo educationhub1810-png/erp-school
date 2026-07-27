@@ -68,7 +68,7 @@ export function CompanyPage() {
             {
               eyebrow: "A SOFTWARE ENGINEERING COMPANY.",
               heading: "We're KreTech",
-              body: "We design, engineer, and support our own software products end to end — no outsourced core, no client hand-offs. Built in-house, on Next.js & TypeScript.",
+              body: "Every product we ship is designed, engineered, and supported by our own team — start to finish, with nothing handed off.",
               primaryCta: { label: "EXPLORE ISMS", href: ISMS_HOME_URL },
               secondaryCta: { label: "CONTACT", href: "#contact" },
               image: {
