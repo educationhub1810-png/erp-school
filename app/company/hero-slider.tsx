@@ -13,6 +13,10 @@ export type HeroSlide = {
   primaryCta?: { label: string; href: string };
   secondaryCta: { label: string; href: string };
   image: { src: string; alt: string; unoptimized?: boolean };
+  /** "ipad" wraps the image in a tablet-style bezel with the screenshot
+   * filling it edge to edge (object-cover); omit for a plain white card
+   * with the image shown in full (object-contain). */
+  frame?: "ipad";
 };
 
 // Two-slide hero carousel — soft blob backdrop + split content/visual layout,
@@ -60,18 +64,36 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
             edge-to-edge panel. Same fixed box for every slide so switching
             slides never resizes the layout. */}
         <div className="p-6 sm:p-10 lg:pr-0">
-          <div className="relative h-[280px] sm:h-[380px] lg:h-[500px] rounded-3xl overflow-hidden bg-white shadow-xl shadow-gray-900/5">
-            <div key={`visual-${index}`} className="absolute inset-0 animate-in fade-in duration-500">
-              <Image
-                src={slide.image.src}
-                alt={slide.image.alt}
-                fill
-                unoptimized={slide.image.unoptimized}
-                className="object-contain"
-                priority={index === 0}
-              />
+          {slide.frame === "ipad" ? (
+            <div className="relative h-[280px] sm:h-[380px] lg:h-[500px] rounded-[2.25rem] bg-gray-950 p-3 sm:p-4 shadow-xl shadow-gray-900/10">
+              <div className="pointer-events-none absolute top-1.5 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full bg-white/15 z-10" />
+              <div className="relative w-full h-full rounded-2xl overflow-hidden bg-white">
+                <div key={`visual-${index}`} className="absolute inset-0 animate-in fade-in duration-500">
+                  <Image
+                    src={slide.image.src}
+                    alt={slide.image.alt}
+                    fill
+                    unoptimized={slide.image.unoptimized}
+                    className="object-cover"
+                    priority={index === 0}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="relative h-[280px] sm:h-[380px] lg:h-[500px] rounded-3xl overflow-hidden bg-white shadow-xl shadow-gray-900/5">
+              <div key={`visual-${index}`} className="absolute inset-0 animate-in fade-in duration-500">
+                <Image
+                  src={slide.image.src}
+                  alt={slide.image.alt}
+                  fill
+                  unoptimized={slide.image.unoptimized}
+                  className="object-contain"
+                  priority={index === 0}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

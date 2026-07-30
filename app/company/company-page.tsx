@@ -80,6 +80,7 @@ export function CompanyPage() {
               body: "One dashboard for admissions, attendance, fees, exams, and transport — everything a school runs on, already live in real schools today.",
               primaryCta: { label: "VISIT ISMS", href: ISMS_HOME_URL },
               secondaryCta: { label: "SEE FEATURES", href: "#work" },
+              frame: "ipad",
               image: {
                 src: "/dashboard-screenshot.png",
                 alt: "iSMS dashboard",
