@@ -13,12 +13,6 @@ export type HeroSlide = {
   primaryCta?: { label: string; href: string };
   secondaryCta: { label: string; href: string };
   image: { src: string; alt: string; unoptimized?: boolean };
-  /** "mac" wraps the image in a macOS browser-window frame (traffic-light
-   * dots + url bar), image shown in full (object-contain, never cropped).
-   * Omit for a plain white card with the image shown in full. */
-  frame?: "mac";
-  /** URL text shown in the "mac" frame's address bar. */
-  frameLabel?: string;
 };
 
 // Two-slide hero carousel — soft blob backdrop + split content/visual layout,
@@ -66,43 +60,18 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
             edge-to-edge panel. Same fixed box for every slide so switching
             slides never resizes the layout. */}
         <div className="p-6 sm:p-10 lg:pr-0">
-          {slide.frame === "mac" ? (
-            <div className="relative h-[280px] sm:h-[380px] lg:h-[500px] rounded-2xl overflow-hidden bg-white shadow-xl shadow-gray-900/10 ring-1 ring-gray-200">
-              <div className="flex items-center gap-1.5 px-4 py-2.5 bg-gray-50 border-b border-gray-100">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                {slide.frameLabel && (
-                  <span className="ml-2 text-[11px] font-mono text-gray-400">{slide.frameLabel}</span>
-                )}
-              </div>
-              <div className="relative w-full h-[calc(100%-41px)] bg-white">
-                <div key={`visual-${index}`} className="absolute inset-0 animate-in fade-in duration-500">
-                  <Image
-                    src={slide.image.src}
-                    alt={slide.image.alt}
-                    fill
-                    unoptimized={slide.image.unoptimized}
-                    className="object-contain"
-                    priority={index === 0}
-                  />
-                </div>
-              </div>
+          <div className="relative h-[280px] sm:h-[380px] lg:h-[500px] rounded-3xl overflow-hidden bg-white shadow-xl shadow-gray-900/5">
+            <div key={`visual-${index}`} className="absolute inset-0 animate-in fade-in duration-500">
+              <Image
+                src={slide.image.src}
+                alt={slide.image.alt}
+                fill
+                unoptimized={slide.image.unoptimized}
+                className="object-contain"
+                priority={index === 0}
+              />
             </div>
-          ) : (
-            <div className="relative h-[280px] sm:h-[380px] lg:h-[500px] rounded-3xl overflow-hidden bg-white shadow-xl shadow-gray-900/5">
-              <div key={`visual-${index}`} className="absolute inset-0 animate-in fade-in duration-500">
-                <Image
-                  src={slide.image.src}
-                  alt={slide.image.alt}
-                  fill
-                  unoptimized={slide.image.unoptimized}
-                  className="object-contain"
-                  priority={index === 0}
-                />
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </div>
 
