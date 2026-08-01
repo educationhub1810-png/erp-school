@@ -178,7 +178,7 @@ export function CompanyPage() {
               {PRODUCTS.map((p) => (
                 <Reveal key={p.name} delay={100}>
                   <div className="rounded-2xl ring-1 ring-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-900/5 transition-shadow bg-white overflow-hidden">
-                    <a href={p.href} className="group flex flex-col sm:flex-row sm:items-center gap-5 p-6 sm:p-8 hover:bg-[#00A5FD]/5 transition-colors">
+                    <a href={p.href} target="_blank" rel="noopener noreferrer" className="group flex flex-col sm:flex-row sm:items-center gap-5 p-6 sm:p-8 hover:bg-[#00A5FD]/5 transition-colors">
                       <Image src="/isms-logo-blue.png" alt="iSMS" width={2092} height={731} className="h-10 w-auto shrink-0" />
                       <div className="flex-1">
                         <span className="text-xs font-medium text-gray-400">{p.tagline}</span>

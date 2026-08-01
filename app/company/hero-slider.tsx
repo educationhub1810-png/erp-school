@@ -41,7 +41,7 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
           <p className="text-base text-gray-500 max-w-md mb-8">{slide.body}</p>
           <div className="flex items-center gap-3">
             {slide.primaryCta && (
-              <a href={slide.primaryCta.href}>
+              <a href={slide.primaryCta.href} target="_blank" rel="noopener noreferrer">
                 <Button className="rounded-full bg-gray-950 hover:bg-gray-800 text-white font-mono text-[11px] tracking-[0.15em] px-5">
                   {slide.primaryCta.label}
                 </Button>

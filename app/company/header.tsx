@@ -76,7 +76,7 @@ export function Header() {
         />
         <SectionNav dark={dark} />
         <div className="flex items-center gap-2">
-          <a href={ISMS_HOME_URL}>
+          <a href={ISMS_HOME_URL} target="_blank" rel="noopener noreferrer">
             <Button
               className={`rounded-lg text-sm font-semibold px-4 transition-colors ${
                 dark ? "bg-white text-gray-950 hover:bg-gray-200" : "bg-[#035BD8] text-white hover:bg-[#0249ad]"
