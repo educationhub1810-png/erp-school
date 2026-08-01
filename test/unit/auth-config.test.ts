@@ -57,6 +57,34 @@ describe("authConfig.authorized — CSRF origin check", () => {
     expect(res).toBe(true);
   });
 
+  it("allows a mutation whose Origin is a known app domain even if Host differs (reverse-proxy Host rewrite)", () => {
+    // A CDN/proxy in front of production can present an internal Host while
+    // the browser's Origin is still genuinely kretech.in — this must not 403.
+    const res = authorized({
+      auth: sessionWith("TEACHER"),
+      request: makeRequest("/api/public/demo-request", {
+        method: "POST",
+        origin: "https://kretech.in",
+        host: "internal-service.example",
+      }),
+    });
+    expect(res).toBe(true);
+  });
+
+  it("still 403s an origin that merely resembles a known app domain (e.g. a subdomain-suffix trick)", () => {
+    const res = asResponse(
+      authorized({
+        auth: sessionWith("TEACHER"),
+        request: makeRequest("/teacher/x", {
+          method: "POST",
+          origin: "https://kretech.in.evil.test",
+          host: "app.example",
+        }),
+      }),
+    );
+    expect(res?.status).toBe(403);
+  });
+
   it("never CSRF-checks the NextAuth routes", () => {
     const res = authorized({
       auth: null,

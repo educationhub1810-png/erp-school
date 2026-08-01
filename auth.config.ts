@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from "next-auth";
+import { isKnownAppHost } from "@/lib/company-domain";
 import { ROLE_DASHBOARDS, ROLE_ALLOWED_PREFIXES, type AppRole } from "@/lib/roles";
 
 const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password"];
@@ -17,16 +18,22 @@ export const authConfig = {
       const { pathname } = request.nextUrl;
 
       // CSRF defense: for state-changing requests, require the Origin header to
-      // match the host. Browsers always send Origin on POST/PUT/PATCH/DELETE, so
-      // this blocks cross-site forged requests. NextAuth's own /api/auth routes
-      // carry a dedicated CSRF token and are excluded.
+      // match the host — OR be one of this app's own known public domains.
+      // Browsers always send Origin on POST/PUT/PATCH/DELETE, so this blocks
+      // cross-site forged requests. The allowlist branch exists because a
+      // CDN/reverse proxy in front of production can rewrite the Host header
+      // to an internal value before it reaches Next.js, which made legitimate
+      // same-site requests from kretech.in fail this check even though the
+      // Origin was genuinely kretech.in. NextAuth's own /api/auth routes carry
+      // a dedicated CSRF token and are excluded.
       const method = request.method.toUpperCase();
       const isMutation = method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE";
       if (isMutation && !pathname.startsWith("/api/auth")) {
         const origin = request.headers.get("origin");
         const host = request.headers.get("host");
         const originHost = origin ? (() => { try { return new URL(origin).host; } catch { return null; } })() : null;
-        if (!originHost || originHost !== host) {
+        const originIsValid = !!originHost && (originHost === host || isKnownAppHost(originHost));
+        if (!originIsValid) {
           return new Response("Forbidden: invalid origin", { status: 403 });
         }
       }
