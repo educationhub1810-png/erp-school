@@ -78,8 +78,9 @@ export function CompanyPage() {
               eyebrow: "OUR FLAGSHIP PRODUCT.",
               heading: "Meet iSMS",
               body: "One dashboard for admissions, attendance, fees, exams, and transport — everything a school runs on, already live in real schools today.",
-              primaryCta: { label: "VISIT ISMS", href: ISMS_HOME_URL },
               secondaryCta: { label: "SEE FEATURES", href: "#work" },
+              frame: "mac",
+              frameLabel: "isms.study",
               image: {
                 src: "/dashboard-screenshot.png",
                 alt: "iSMS dashboard",
@@ -137,7 +138,7 @@ export function CompanyPage() {
             </a>
           </Reveal>
           <Reveal delay={150} className="group hover:-translate-y-1 transition-transform duration-300">
-            <div className="relative rounded-3xl overflow-hidden bg-white ring-1 ring-gray-100 min-h-[420px] flex items-center justify-center p-10 shadow-2xl shadow-gray-900/10 transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#00A5FD] group-hover:to-[#035BD8]">
+            <div className="relative rounded-3xl overflow-hidden bg-white ring-1 ring-gray-100 min-h-[420px] flex items-center justify-center p-10 shadow-2xl shadow-gray-900/10 transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#00A5FD] group-hover:via-[#035BD8] group-hover:to-[#151E3D]">
               <div className="pointer-events-none absolute -top-10 -left-10 w-64 h-64 rounded-full bg-[#00A5FD]/10 blur-3xl transition-opacity duration-300 group-hover:opacity-0" />
               <Image
                 src="/kretech-logo-crop.png"
