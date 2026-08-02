@@ -104,22 +104,22 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
             </div>
           )}
         </div>
-      </div>
 
-      <button
-        onClick={() => go(-1)}
-        aria-label="Previous slide"
-        className="hidden sm:flex absolute left-3 top-[46%] -translate-y-1/2 w-10 h-10 rounded-full bg-white ring-1 ring-gray-200 shadow-md items-center justify-center text-gray-600 hover:bg-gray-950 hover:text-white transition-colors z-10"
-      >
-        <ChevronLeft className="w-4 h-4" />
-      </button>
-      <button
-        onClick={() => go(1)}
-        aria-label="Next slide"
-        className="hidden sm:flex absolute right-3 top-[46%] -translate-y-1/2 w-10 h-10 rounded-full bg-white ring-1 ring-gray-200 shadow-md items-center justify-center text-gray-600 hover:bg-gray-950 hover:text-white transition-colors z-10"
-      >
-        <ChevronRight className="w-4 h-4" />
-      </button>
+        <button
+          onClick={() => go(-1)}
+          aria-label="Previous slide"
+          className="hidden sm:flex absolute -left-3 top-[46%] -translate-y-1/2 w-10 h-10 rounded-full bg-white ring-1 ring-gray-200 shadow-md items-center justify-center text-gray-600 hover:bg-gray-950 hover:text-white transition-colors z-10"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => go(1)}
+          aria-label="Next slide"
+          className="hidden sm:flex absolute -right-3 top-[46%] -translate-y-1/2 w-10 h-10 rounded-full bg-white ring-1 ring-gray-200 shadow-md items-center justify-center text-gray-600 hover:bg-gray-950 hover:text-white transition-colors z-10"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
 
       <div className="relative flex items-center justify-center gap-2 pb-10">
         {slides.map((_, i) => (
