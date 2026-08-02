@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isCompanyHost, isKnownAppHost, productUrl } from "@/lib/company-domain";
+import { isCompanyHost, isKnownAppHost, productUrl, shouldRedirectToProduct } from "@/lib/company-domain";
 
 describe("isCompanyHost", () => {
   it("recognizes the apex and www company domains", () => {
@@ -36,6 +36,30 @@ describe("isKnownAppHost", () => {
     expect(isKnownAppHost("evil.test")).toBe(false);
     expect(isKnownAppHost("kretech.in.evil.test")).toBe(false);
     expect(isKnownAppHost(null)).toBe(false);
+  });
+});
+
+describe("shouldRedirectToProduct", () => {
+  it("does not redirect the company page root", () => {
+    expect(shouldRedirectToProduct("kretech.in", "/")).toBe(false);
+    expect(shouldRedirectToProduct("www.kretech.in", "/")).toBe(false);
+  });
+
+  it("redirects other page paths on a company host", () => {
+    expect(shouldRedirectToProduct("kretech.in", "/login")).toBe(true);
+    expect(shouldRedirectToProduct("www.kretech.in", "/teacher/dashboard")).toBe(true);
+  });
+
+  it("never redirects API routes, even on a company host", () => {
+    expect(shouldRedirectToProduct("kretech.in", "/api/public/demo-request")).toBe(false);
+    expect(shouldRedirectToProduct("www.kretech.in", "/api/public/contact")).toBe(false);
+    expect(shouldRedirectToProduct("kretech.in", "/api/v1/students")).toBe(false);
+  });
+
+  it("never redirects on a non-company host", () => {
+    expect(shouldRedirectToProduct("isms.study", "/login")).toBe(false);
+    expect(shouldRedirectToProduct("localhost:3000", "/login")).toBe(false);
+    expect(shouldRedirectToProduct(null, "/login")).toBe(false);
   });
 });
 

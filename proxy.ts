@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import type { NextFetchEvent, NextMiddleware, NextRequest } from "next/server";
 import { authConfig } from "./auth.config";
-import { isCompanyHost, productUrl } from "./lib/company-domain";
+import { productUrl, shouldRedirectToProduct } from "./lib/company-domain";
 
 const { auth } = NextAuth(authConfig);
 
@@ -13,12 +13,16 @@ const { auth } = NextAuth(authConfig);
 const authProxy = auth as unknown as NextMiddleware;
 
 // "/" already renders the KreTech company page on kretech.in (see
-// app/page.tsx, host-aware). Every other path (login, dashboards, ...)
+// app/page.tsx, host-aware). Every other *page* path (login, dashboards, ...)
 // bounces to the same path on isms.study instead of serving the product
-// app — kretech.in stays a thin company front door.
+// app — kretech.in stays a thin company front door. API routes are excluded:
+// the company page's own fetch calls (e.g. the demo-request form) must be
+// served by this same deployment, not redirected cross-origin to isms.study
+// — a redirected fetch() there gets blocked by connect-src 'self' CSP anyway.
 export function proxy(request: NextRequest, event: NextFetchEvent) {
-  if (isCompanyHost(request.headers.get("host")) && request.nextUrl.pathname !== "/") {
-    return NextResponse.redirect(productUrl(request.nextUrl.pathname, request.nextUrl.search));
+  const { pathname } = request.nextUrl;
+  if (shouldRedirectToProduct(request.headers.get("host"), pathname)) {
+    return NextResponse.redirect(productUrl(pathname, request.nextUrl.search));
   }
   return authProxy(request, event);
 }

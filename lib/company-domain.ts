@@ -25,3 +25,12 @@ export function isKnownAppHost(host: string | null): boolean {
 export function productUrl(pathname: string, search: string): string {
   return `${PRODUCT_ORIGIN}${pathname}${search}`;
 }
+
+// kretech.in serves "/" itself (the company page) and redirects every other
+// *page* path to the same path on isms.study. API routes are excluded — the
+// company page's own fetch calls (e.g. the demo-request form) must be
+// answered by this same deployment, not bounced cross-origin to isms.study,
+// which a same-origin CSP (connect-src 'self') would block client-side anyway.
+export function shouldRedirectToProduct(host: string | null, pathname: string): boolean {
+  return isCompanyHost(host) && pathname !== "/" && !pathname.startsWith("/api/");
+}
