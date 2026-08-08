@@ -90,7 +90,8 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
               </div>
             </div>
           ) : (
-            <div className="relative h-[280px] sm:h-[380px] lg:h-[500px] rounded-3xl overflow-hidden bg-white shadow-xl shadow-gray-900/5">
+            <div className="relative h-[280px] sm:h-[380px] lg:h-[500px] rounded-[2rem] overflow-hidden bg-white ring-1 ring-[#035BD8]/15 shadow-2xl shadow-[#035BD8]/20">
+              <div className="pointer-events-none absolute -top-16 -right-16 w-56 h-56 rounded-full bg-gradient-to-br from-[#00A5FD]/10 to-[#035BD8]/10 blur-2xl" />
               <div key={`visual-${index}`} className="absolute inset-0 animate-in fade-in duration-500">
                 <Image
                   src={slide.image.src}
