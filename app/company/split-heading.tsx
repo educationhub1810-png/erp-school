@@ -50,7 +50,7 @@ export function SplitHeading({
         <span key={i}>
           <span className="inline-block overflow-hidden align-top pb-[0.15em] -mb-[0.15em]">
             <span
-              className="inline-block transition-transform duration-[900ms] will-change-transform"
+              className="inline-block transition-transform duration-[900ms]"
               style={{
                 transform: visible ? "translateY(0%)" : "translateY(115%)",
                 transitionDelay: `${delay + i * 55}ms`,
